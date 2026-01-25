@@ -1,15 +1,44 @@
+import { useState } from 'react';
 import { Outlet, Link } from 'react-router-dom';
+import { HiMenu, HiX } from 'react-icons/hi';
+import logo from '../assets/images/logo/logo.png';
+import './Layout.css';
 
 // Layout component with navigation
 function Layout() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+  };
+
   return (
-    <div>
+    <div className="layout">
       <nav>
-        <Link to="/">Головна</Link>
-        <Link to="/catalog">Каталог</Link>
-        <Link to="/constructor">Конструктор</Link>
-        <Link to="/profile">Профіль</Link>
-        <Link to="/auth">Вхід</Link>
+        <div className="nav-container">
+          <Link to="/" className="nav-logo" onClick={closeMenu}>
+            <img src={logo} alt="Prickle" className="logo-img" />
+          </Link>
+          <button 
+            className="burger-menu"
+            onClick={toggleMenu}
+            aria-label="Toggle menu"
+            aria-expanded={isMenuOpen}
+          >
+            {isMenuOpen ? <HiX /> : <HiMenu />}
+          </button>
+          <ul className={`nav-links ${isMenuOpen ? 'nav-links-open' : ''}`}>
+            <li><Link to="/" onClick={closeMenu}>Головна</Link></li>
+            <li><Link to="/catalog" onClick={closeMenu}>Каталог</Link></li>
+            <li><Link to="/constructor" onClick={closeMenu}>Конструктор</Link></li>
+            <li><Link to="/profile" onClick={closeMenu}>Профіль</Link></li>
+            <li><Link to="/auth" className="nav-btn-login" onClick={closeMenu}>Увійти</Link></li>
+          </ul>
+        </div>
       </nav>
       <main>
         <Outlet />
