@@ -1,0 +1,24 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+    <File Path="nuget.config" />
+  </Folder>
+  <Folder Name="/src/" />
+  <Folder Name="/src/aspire/">
+    <Project Path="src/aspire/Prickle.AppHost/Prickle.AppHost.csproj" Id="2d57d974-8973-4689-bc03-67774c9d38e0" />
+    <Project Path="src/aspire/Prickle.ServiceDefaults/Prickle.ServiceDefaults.csproj" Id="98738bc1-7bd8-40eb-bb27-fc4d43aa0099" />
+  </Folder>
+  <Folder Name="/src/backend/">
+    <Project Path="src/backend/Prickle.Api/Prickle.Api.csproj" Id="8fe1f5b7-94a2-4e94-a34c-8ffcca31f590" />
+    <Project Path="src/backend/Prickle.Application/Prickle.Application.csproj" Id="37f4392b-78b8-41c0-9a85-7e9a6b4fa134" />
+    <Project Path="src/backend/Prickle.Domain/Prickle.Domain.csproj" Id="c6c4ea0e-530b-451b-91af-9b7b4e20d0ff" />
+    <Project Path="src/backend/Prickle.Infrastructure/Prickle.Infrastructure.csproj" Id="38a085d3-beb2-49ca-abbc-e45c8f3d5a2a" />
+  </Folder>
+  <Folder Name="/src/shared/">
+    <Project Path="src/shared/SharedKernel/SharedKernel.csproj" />
+  </Folder>
+</Solution>

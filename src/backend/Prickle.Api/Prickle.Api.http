@@ -1,0 +1,6 @@
+@Prickle.Api_HostAddress = http://localhost:5183
+
+GET {{Prickle.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

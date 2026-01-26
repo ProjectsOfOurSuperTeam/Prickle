@@ -1,0 +1,5 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\Prickle.Application\Prickle.Application.csproj" />
+  </ItemGroup>
+</Project>
