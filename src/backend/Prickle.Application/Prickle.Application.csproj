@@ -1,5 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <PackageReference Include="Google.GenAI" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Prickle.Domain\Prickle.Domain.csproj" />
   </ItemGroup>
 </Project>
