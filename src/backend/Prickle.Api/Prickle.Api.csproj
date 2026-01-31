@@ -1,12 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Aspire.Keycloak.Authentication" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Scalar.AspNetCore" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\aspire\Prickle.ServiceDefaults\Prickle.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\Prickle.Infrastructure\Prickle.Infrastructure.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\aspire\Prickle.ServiceDefaults\Prickle.ServiceDefaults.csproj" />
+		<ProjectReference Include="..\Prickle.Infrastructure\Prickle.Infrastructure.csproj" />
+</ItemGroup>
 
 </Project>
