@@ -18,7 +18,7 @@ public static class DependencyInjection
         services.AddEndpointsApiExplorer();
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();
-
+        services.AddOpenApi();
         return services;
     }
 }
