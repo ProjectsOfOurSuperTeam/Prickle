@@ -364,3 +364,7 @@ FodyWeavers.xsd
 /src/aspire/Vsengua.AppHost/appsettings.Development.json
 /src/aspire/Vsengua.AppHost/aspire-output/
 /src/aspire/Vsengua.AppHost/certs/
+
+
+.idea
+.vite
