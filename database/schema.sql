@@ -35,8 +35,8 @@ CREATE TABLE plants (
     humidity_level INT NOT NULL CHECK (humidity_level BETWEEN 1 AND 5),
     max_size FLOAT NOT NULL,
     soil_formula_id UUID NOT NULL REFERENCES soil_formulas(id),
-    image BYTEA,
-    image_isometric BYTEA
+    image VARCHAR(500),
+    image_isometric VARCHAR(500)
 );
 
 CREATE INDEX ix_plants_soil_formula_id ON plants(soil_formula_id);

@@ -1,6 +1,5 @@
 /**
  * Entity definitions for Prickle frontend.
- * Images are stored as blob/base64 data.
  */
 
 import './user.js';

@@ -9,6 +9,6 @@
  * @property {number} humidityLevel - 1-5, humidity sensitivity
  * @property {number} maxSize - For container volume calculation
  * @property {string} soilFormulaId - FK to SoilFormula
- * @property {string|null} image - Base64 or blob data for display
- * @property {string|null} imageIsometric - Base64 or blob data for constructor PNG sprite
+ * @property {string|null} image - Path to image file (e.g. "entities/plants/echeveria_elegans.png")
+ * @property {string|null} imageIsometric - Path to isometric sprite for constructor
  */

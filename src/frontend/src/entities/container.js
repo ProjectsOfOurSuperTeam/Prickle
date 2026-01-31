@@ -5,6 +5,6 @@
  * @property {string|null} description
  * @property {number} volumeLiters
  * @property {boolean} isClosed - Has lid (affects watering)
- * @property {string|null} imageBase - Blob data for empty vase (bottom layer)
- * @property {string|null} imageMask - Semi-transparent glass image (top layer for reflections)
+ * @property {string|null} imageBase - Path to empty vase image (bottom layer)
+ * @property {string|null} imageMask - Path to semi-transparent glass image (top layer for reflections)
  */

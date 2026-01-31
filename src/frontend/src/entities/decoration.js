@@ -4,6 +4,6 @@
  * @property {string} name - e.g. "Біла галька", "Фігурка маяка"
  * @property {string|null} description
  * @property {'Каміння'|'Пісок'|'Фігурки'} category
- * @property {string|null} image - Blob data for image
- * @property {string|null} imageIsometric - Blob data for constructor PNG sprite
+ * @property {string|null} image - Path to image file
+ * @property {string|null} imageIsometric - Path to isometric sprite for constructor
  */
