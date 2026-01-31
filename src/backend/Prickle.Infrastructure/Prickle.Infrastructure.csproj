@@ -2,6 +2,7 @@
 	<ItemGroup>
 		<PackageReference Include="EFCore.NamingConventions" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+		<PackageReference Include="Aspire.Keycloak.Authentication" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Prickle.Application\Prickle.Application.csproj" />
