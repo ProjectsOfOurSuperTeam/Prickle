@@ -5,6 +5,11 @@
     <UserSecretsId>fc3c7102-54a3-449b-b8b5-4a4069c5fd90</UserSecretsId>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Keycloak" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <ProjectReference Include="..\..\backend\Prickle.Api\Prickle.Api.csproj" />

@@ -1,8 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <ItemGroup>
-    <PackageReference Include="Google.GenAI" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Prickle.Domain\Prickle.Domain.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Google.GenAI" />
+		<PackageReference Include="Mediator.Abstractions" />
+		<PackageReference Include="Mediator.SourceGenerator">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.EntityFrameworkCore" />
+		<PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+		<PackageReference Include="Scrutor" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Prickle.Domain\Prickle.Domain.csproj" />
+	</ItemGroup>
 </Project>
