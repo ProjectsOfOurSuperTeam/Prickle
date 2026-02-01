@@ -1,7 +1,10 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
+var redis = builder.AddRedis("redis");
+
 var postgres = builder.AddPostgres("postgres")
-    .WithPgAdmin()
+    .WithImage("ankane/pgvector")
+    .WithImageTag("latest")
     .WithLifetime(ContainerLifetime.Persistent);
 
 var prickleDb = postgres.AddDatabase("prickleDb");

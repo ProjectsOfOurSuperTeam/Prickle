@@ -1,5 +1,6 @@
 ﻿namespace Prickle.Api.Endpoints;
 
-public class Tags
+public static class Tags
 {
+    public const string Soil = nameof(Soil);
 }
