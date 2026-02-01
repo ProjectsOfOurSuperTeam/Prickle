@@ -21,7 +21,7 @@
 		<PackageVersion Include="Aspire.Keycloak.Authentication" Version="13.1.0-preview.1.25616.3" />
 		<!--Api-->
 		<PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.2" />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.2" />
 		<PackageVersion Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.1" />
 		<!--Aspire-->
 		<PackageVersion Include="Aspire.Hosting.Keycloak" Version="13.1.0-preview.1.25616.3" />

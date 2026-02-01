@@ -8,6 +8,14 @@ public static class SoilErrors
             "SoilType.NameEmpty",
             "Soil type name cannot be empty."
         );
+        public static Error SoilTypeAlreadyExists(string name) => Error.Problem(
+            "SoilType.AlreadyExists",
+            $"Soil type with name '{name}' already exists."
+        );
+        public static Error FailedToCreate(string name) => Error.Problem(
+            "SoilType.FailedToCreate",
+            $"Failed to create soil type with name '{name}'."
+        );
     }
     public static class SoilFormulas
     {

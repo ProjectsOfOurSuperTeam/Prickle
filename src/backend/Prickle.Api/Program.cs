@@ -22,14 +22,17 @@ app.CreateApiVersionSet();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.ApplyMigrations();
+
     app.MapOpenApi();
     app.MapScalarApiReference();
+
 }
 
 app.MapDefaultEndpoints();
 app.MapEndpoints();
 app.UseHttpsRedirection();
-app.UseAuthentication();
-app.UseAuthorization();
+//app.UseAuthentication();
+//app.UseAuthorization();
 
 await app.RunAsync();

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Prickle.Application.Abstractions.Database;
+using Prickle.Domain.Soil;
 
 namespace Prickle.Infrastructure.Database;
 
@@ -9,6 +10,18 @@ public sealed class ApplicationDbContext : DbContext, IApplicationDbContext
         : base(options)
     {
     }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+    }
+
+    public DbSet<SoilType> SoilTypes { get; set; }
+
+    public DbSet<SoilFormulas> SoilFormulas { get; set; }
+
+    public DbSet<SoilTypeSoilFormula> SoilTypeSoilFormulas { get; set; }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

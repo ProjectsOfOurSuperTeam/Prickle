@@ -1,6 +1,4 @@
-﻿
-
-namespace Prickle.Domain.Soil;
+﻿namespace Prickle.Domain.Soil;
 
 public sealed class SoilFormulaItem
 {
