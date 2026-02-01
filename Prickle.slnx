@@ -21,4 +21,7 @@
   <Folder Name="/src/shared/">
     <Project Path="src/shared/SharedKernel/SharedKernel.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Prickle.Unit.Tests/Prickle.Unit.Tests.csproj" Id="91341444-e203-48c5-ba79-0483ce5d6489" />
+  </Folder>
 </Solution>
