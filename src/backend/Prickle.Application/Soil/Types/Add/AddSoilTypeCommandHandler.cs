@@ -1,5 +1,4 @@
-﻿using Mediator;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Prickle.Application.Abstractions.Database;
 using Prickle.Domain.Soil;
 
@@ -12,12 +11,13 @@ internal sealed class AddSoilTypeCommandHandler
     public async ValueTask<Result<SoilTypeResponse>> Handle(AddSoilTypeCommand command,
         CancellationToken cancellationToken)
     {
-        var nameToMatch = command.Name.Trim();
+        var nameToMatch = command.Name.ToUpperInvariant().Trim();
 
+#pragma warning disable CA1862 // Use the 'StringComparison' method overloads to perform case-insensitive string comparisons
         var existingSoilType = await dbContext.SoilTypes
-            .FirstOrDefaultAsync(soilType =>
-                EF.Functions.Like(soilType.Name, nameToMatch),
+            .FirstOrDefaultAsync(soilType => soilType.Name.ToUpper() == nameToMatch,
                 cancellationToken);
+#pragma warning restore CA1862 // Use the 'StringComparison' method overloads to perform case-insensitive string comparisons
 
         if (existingSoilType is not null)
         {
@@ -37,11 +37,7 @@ internal sealed class AddSoilTypeCommandHandler
             return Result.Failure<SoilTypeResponse>(SoilErrors.SoilType.FailedToCreate(command.Name));
         }
 
-        var response = new SoilTypeResponse
-        {
-            Id = dbResult.Entity.Id,
-            Name = dbResult.Entity.Name
-        };
+        var response = new SoilTypeResponse(dbResult.Entity.Id, dbResult.Entity.Name);
 
         return Result.Success(response);
     }
