@@ -56,8 +56,7 @@ CREATE TABLE containers (
     description TEXT,
     volume_liters FLOAT NOT NULL,
     is_closed BOOLEAN NOT NULL DEFAULT FALSE,
-    image_base VARCHAR(500),
-    image_mask VARCHAR(500)
+    image VARCHAR(500)
 );
 
 -- Decoration Categories
