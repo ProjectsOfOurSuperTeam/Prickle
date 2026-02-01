@@ -16,6 +16,10 @@ public static class SoilErrors
             "SoilType.FailedToCreate",
             $"Failed to create soil type with name '{name}'."
         );
+        public static Error SoilTypeNotFound(int id) => Error.Problem(
+            "SoilType.NotFound",
+            $"Soil type with ID '{id}' was not found."
+        );
     }
     public static class SoilFormulas
     {
