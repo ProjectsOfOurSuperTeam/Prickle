@@ -3,7 +3,6 @@
 
 -- Enums
 CREATE TYPE user_role AS ENUM ('User', 'Admin');
-CREATE TYPE decoration_category AS ENUM ('Каміння', 'Пісок', 'Фігурки');
 CREATE TYPE project_item_type AS ENUM ('Plant', 'Decoration', 'Soil');
 
 -- Users
@@ -14,6 +13,13 @@ CREATE TABLE users (
     email VARCHAR(255) NOT NULL,
     role user_role NOT NULL DEFAULT 'User',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Plant Categories
+CREATE TABLE plant_categories (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL UNIQUE,
+    description TEXT
 );
 
 -- Soil Formulas (soil types for plants)
@@ -34,11 +40,13 @@ CREATE TABLE plants (
     water_need INT NOT NULL CHECK (water_need BETWEEN 1 AND 5),
     humidity_level INT NOT NULL CHECK (humidity_level BETWEEN 1 AND 5),
     max_size FLOAT NOT NULL,
+    category_id UUID NOT NULL REFERENCES plant_categories(id),
     soil_formula_id UUID NOT NULL REFERENCES soil_formulas(id),
     image VARCHAR(500),
     image_isometric VARCHAR(500)
 );
 
+CREATE INDEX ix_plants_category_id ON plants(category_id);
 CREATE INDEX ix_plants_soil_formula_id ON plants(soil_formula_id);
 
 -- Containers (Glass forms)
@@ -48,8 +56,15 @@ CREATE TABLE containers (
     description TEXT,
     volume_liters FLOAT NOT NULL,
     is_closed BOOLEAN NOT NULL DEFAULT FALSE,
-    image_base BYTEA,
-    image_mask BYTEA
+    image_base VARCHAR(500),
+    image_mask VARCHAR(500)
+);
+
+-- Decoration Categories
+CREATE TABLE decoration_categories (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL UNIQUE,
+    description TEXT
 );
 
 -- Decorations
@@ -57,10 +72,12 @@ CREATE TABLE decorations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    category decoration_category NOT NULL,
-    image BYTEA,
-    image_isometric BYTEA
+    category_id UUID NOT NULL REFERENCES decoration_categories(id),
+    image VARCHAR(500),
+    image_isometric VARCHAR(500)
 );
+
+CREATE INDEX ix_decorations_category_id ON decorations(category_id);
 
 -- Projects (Saved designs)
 CREATE TABLE projects (
