@@ -37,6 +37,6 @@ public class SoilTypeTests
 
         // Assert
         result.IsFailure.ShouldBeTrue();
-        result.Error.ShouldBe(SoilErrors.SoilType.SoilTypeNameEmpty);
+        result.Error.ShouldBe(SoilErrors.SoilType.EmptyName);
     }
 }
