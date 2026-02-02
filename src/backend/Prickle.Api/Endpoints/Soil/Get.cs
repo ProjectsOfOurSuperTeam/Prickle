@@ -1,5 +1,5 @@
-﻿
-using Microsoft.AspNetCore.Mvc;
+﻿using Prickle.Application.Soil.Types;
+using Prickle.Application.Soil.Types.Get;
 
 namespace Prickle.Api.Endpoints.Soil;
 
@@ -8,11 +8,25 @@ internal sealed class Get : IEndpoint
     public const string EndpointName = "GetSoilTypes";
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet(ApiEndpoints.Soil.Get, async ([FromRoute] int id, CancellationToken cancellationToken) =>
+        app.MapGet(ApiEndpoints.Soil.Get, async (
+            [FromRoute] int id,
+            IMediator mediator,
+            CancellationToken cancellationToken) =>
         {
+            var result = await mediator.Send(new GetSoilTypeQuery(id), cancellationToken);
 
+            return result.Match(
+                soilTypeResponse => Results.Ok(soilTypeResponse),
+                CustomResults.Problem
+            );
         })
         .WithName(EndpointName)
-        .WithTags(Tags.Soil);
+        .WithTags(Tags.Soil)
+        .WithDescription("Retrieves a specific soil type by its ID.")
+        .WithSummary("Get a specific soil type.")
+        .Produces<SoilTypeResponse>(StatusCodes.Status200OK)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status401Unauthorized);
+        //TODO
     }
 }

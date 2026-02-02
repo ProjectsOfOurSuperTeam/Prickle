@@ -17,10 +17,21 @@ public sealed class SoilType : Entity
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            return Result.Failure<SoilType>(SoilErrors.SoilType.SoilTypeNameEmpty);
+            return Result.Failure<SoilType>(SoilErrors.SoilType.EmptyName);
         }
 
         var soilType = new SoilType(name.Trim());
         return Result.Success(soilType);
+    }
+
+    public Result<SoilType> Update(string newName)
+    {
+        if (string.IsNullOrWhiteSpace(newName))
+        {
+            return Result.Failure<SoilType>(SoilErrors.SoilType.EmptyName);
+        }
+
+        Name = newName.Trim();
+        return Result.Success(this);
     }
 }

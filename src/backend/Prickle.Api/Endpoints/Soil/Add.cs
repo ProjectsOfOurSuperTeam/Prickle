@@ -1,9 +1,4 @@
-﻿
-using Mediator;
-using Microsoft.AspNetCore.Mvc;
-using Prickle.Api.Extensions;
-using Prickle.Api.Infrastructure;
-using Prickle.Application.Soil.Types;
+﻿using Prickle.Application.Soil.Types;
 using Prickle.Application.Soil.Types.Add;
 
 namespace Prickle.Api.Endpoints.Soil;

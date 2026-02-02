@@ -4,17 +4,21 @@ public static class SoilErrors
 {
     public static class SoilType
     {
-        public static readonly Error SoilTypeNameEmpty = Error.Problem(
-            "SoilType.NameEmpty",
+        public static readonly Error EmptyName = Error.Problem(
+            "SoilType.EmptyName",
             "Soil type name cannot be empty."
         );
-        public static Error SoilTypeAlreadyExists(string name) => Error.Problem(
+        public static Error AlreadyExists(string name) => Error.Problem(
             "SoilType.AlreadyExists",
             $"Soil type with name '{name}' already exists."
         );
         public static Error FailedToCreate(string name) => Error.Problem(
             "SoilType.FailedToCreate",
             $"Failed to create soil type with name '{name}'."
+        );
+        public static Error NotFound(int id) => Error.Problem(
+            "SoilType.NotFound",
+            $"Soil type with ID '{id}' was not found."
         );
     }
     public static class SoilFormulas

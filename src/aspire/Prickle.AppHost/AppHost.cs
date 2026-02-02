@@ -3,14 +3,13 @@ var builder = DistributedApplication.CreateBuilder(args);
 var redis = builder.AddRedis("redis");
 
 var postgres = builder.AddPostgres("postgres")
-    .WithImage("ankane/pgvector")
-    .WithImageTag("latest")
     .WithLifetime(ContainerLifetime.Persistent);
 
 var prickleDb = postgres.AddDatabase("prickleDb");
 
 var keycloak = builder.AddKeycloak("keycloak", 8080)
-                      .WithDataVolume();
+                      .WithDataVolume()
+                      .WithLifetime(ContainerLifetime.Persistent);
 
 var geminiApiKey = builder.AddParameter("GeminiApiKey", secret: true);
 
