@@ -30,7 +30,7 @@ public sealed class AddSoilFormulaEndpointTest : ApiBaseIntegrationTest
         var soilType1 = await CreateSoilType(client, cts);
         var soilType2 = await CreateSoilType(client, cts);
 
-        var formulaItems = new List<AddSoilFormulaItemDTO>
+        var formulaItems = new List<SoilFormulaItemDTO>
         {
             new(soilType1.Id, 60, 0),
             new(soilType2.Id, 40, 1)
@@ -68,7 +68,7 @@ public sealed class AddSoilFormulaEndpointTest : ApiBaseIntegrationTest
         using var client = CreateHttpClient("api");
 
         var soilType = await CreateSoilType(client, cts);
-        var formulaItems = new List<AddSoilFormulaItemDTO> { new(soilType.Id, 100, 0) };
+        var formulaItems = new List<SoilFormulaItemDTO> { new(soilType.Id, 100, 0) };
         var newSoilFormula = new SoilFormulaEndpoints.Add.AddSoilFormulaRequest(string.Empty, formulaItems);
 
         // Act
@@ -88,7 +88,7 @@ public sealed class AddSoilFormulaEndpointTest : ApiBaseIntegrationTest
 
         var soilType = await CreateSoilType(client, cts);
         var longName = _faker.Random.String2(256); // Max is 255
-        var formulaItems = new List<AddSoilFormulaItemDTO> { new(soilType.Id, 100, 0) };
+        var formulaItems = new List<SoilFormulaItemDTO> { new(soilType.Id, 100, 0) };
         var newSoilFormula = new SoilFormulaEndpoints.Add.AddSoilFormulaRequest(longName, formulaItems);
 
         // Act
@@ -108,7 +108,7 @@ public sealed class AddSoilFormulaEndpointTest : ApiBaseIntegrationTest
 
         var soilType = await CreateSoilType(client, cts);
         var formulaName = $"{_faker.Lorem.Word()}-{Guid.NewGuid():N}";
-        var formulaItems = new List<AddSoilFormulaItemDTO> { new(soilType.Id, 100, 0) };
+        var formulaItems = new List<SoilFormulaItemDTO> { new(soilType.Id, 100, 0) };
         var newSoilFormula = new SoilFormulaEndpoints.Add.AddSoilFormulaRequest(formulaName, formulaItems);
 
         // Act - Add the soil formula first time
@@ -133,7 +133,7 @@ public sealed class AddSoilFormulaEndpointTest : ApiBaseIntegrationTest
         var soilType = await CreateSoilType(client, cts);
         var baseFormulaName = $"{_faker.Lorem.Word()}-{Guid.NewGuid():N}";
         var formulaNameLower = baseFormulaName.ToLowerInvariant();
-        var formulaItems = new List<AddSoilFormulaItemDTO> { new(soilType.Id, 100, 0) };
+        var formulaItems = new List<SoilFormulaItemDTO> { new(soilType.Id, 100, 0) };
 
         var firstRequest = new SoilFormulaEndpoints.Add.AddSoilFormulaRequest(formulaNameLower, formulaItems);
         var secondRequest = new SoilFormulaEndpoints.Add.AddSoilFormulaRequest(formulaNameLower.ToUpperInvariant(), formulaItems);
@@ -159,7 +159,7 @@ public sealed class AddSoilFormulaEndpointTest : ApiBaseIntegrationTest
 
         var soilType = await CreateSoilType(client, cts);
         var formulaName = $"{_faker.Lorem.Word()}-{Guid.NewGuid():N}";
-        var formulaItems = new List<AddSoilFormulaItemDTO> { new(soilType.Id, 100, 0) };
+        var formulaItems = new List<SoilFormulaItemDTO> { new(soilType.Id, 100, 0) };
         var newSoilFormula = new SoilFormulaEndpoints.Add.AddSoilFormulaRequest($"  {formulaName}  ", formulaItems);
 
         // Act
@@ -180,7 +180,7 @@ public sealed class AddSoilFormulaEndpointTest : ApiBaseIntegrationTest
         await AppHostFactory.App.StartAsync(cts).WaitAsync(AppHostFixture.StartStopTimeout, cts);
         using var client = CreateHttpClient("api");
 
-        var formulaItems = new List<AddSoilFormulaItemDTO>();
+        var formulaItems = new List<SoilFormulaItemDTO>();
         var newSoilFormula = new SoilFormulaEndpoints.Add.AddSoilFormulaRequest(_faker.Lorem.Word(), formulaItems);
 
         // Act
@@ -201,7 +201,7 @@ public sealed class AddSoilFormulaEndpointTest : ApiBaseIntegrationTest
         await AppHostFactory.App.StartAsync(cts).WaitAsync(AppHostFixture.StartStopTimeout, cts);
         using var client = CreateHttpClient("api");
 
-        var formulaItems = new List<AddSoilFormulaItemDTO> { new(invalidSoilTypeId, 100, 0) };
+        var formulaItems = new List<SoilFormulaItemDTO> { new(invalidSoilTypeId, 100, 0) };
         var newSoilFormula = new SoilFormulaEndpoints.Add.AddSoilFormulaRequest(_faker.Lorem.Word(), formulaItems);
 
         // Act
@@ -224,7 +224,7 @@ public sealed class AddSoilFormulaEndpointTest : ApiBaseIntegrationTest
         using var client = CreateHttpClient("api");
 
         var soilType = await CreateSoilType(client, cts);
-        var formulaItems = new List<AddSoilFormulaItemDTO> { new(soilType.Id, invalidPercentage, 0) };
+        var formulaItems = new List<SoilFormulaItemDTO> { new(soilType.Id, invalidPercentage, 0) };
         var newSoilFormula = new SoilFormulaEndpoints.Add.AddSoilFormulaRequest(_faker.Lorem.Word(), formulaItems);
 
         // Act
@@ -246,7 +246,7 @@ public sealed class AddSoilFormulaEndpointTest : ApiBaseIntegrationTest
         using var client = CreateHttpClient("api");
 
         var soilType = await CreateSoilType(client, cts);
-        var formulaItems = new List<AddSoilFormulaItemDTO> { new(soilType.Id, 100, invalidOrder) };
+        var formulaItems = new List<SoilFormulaItemDTO> { new(soilType.Id, 100, invalidOrder) };
         var newSoilFormula = new SoilFormulaEndpoints.Add.AddSoilFormulaRequest(_faker.Lorem.Word(), formulaItems);
 
         // Act
@@ -268,7 +268,7 @@ public sealed class AddSoilFormulaEndpointTest : ApiBaseIntegrationTest
         var soilType2 = await CreateSoilType(client, cts);
         var soilType3 = await CreateSoilType(client, cts);
 
-        var formulaItems = new List<AddSoilFormulaItemDTO>
+        var formulaItems = new List<SoilFormulaItemDTO>
         {
             new(soilType1.Id, 50, 0),
             new(soilType2.Id, 30, 1),
@@ -300,7 +300,7 @@ public sealed class AddSoilFormulaEndpointTest : ApiBaseIntegrationTest
         using var client = CreateHttpClient("api");
 
         var soilType = await CreateSoilType(client, cts);
-        var formulaItems = new List<AddSoilFormulaItemDTO> { new(soilType.Id, 100, 0) };
+        var formulaItems = new List<SoilFormulaItemDTO> { new(soilType.Id, 100, 0) };
         var newSoilFormula = new SoilFormulaEndpoints.Add.AddSoilFormulaRequest($"{_faker.Lorem.Word()}-{Guid.NewGuid():N}", formulaItems);
 
         // Act
@@ -328,7 +328,7 @@ public sealed class AddSoilFormulaEndpointTest : ApiBaseIntegrationTest
         // Make the name unique by adding a GUID suffix to avoid conflicts with other tests
         var formulaName = $"{formulaNamePrefix}-{Guid.NewGuid():N}";
         var soilType = await CreateSoilType(client, cts);
-        var formulaItems = new List<AddSoilFormulaItemDTO> { new(soilType.Id, 100, 0) };
+        var formulaItems = new List<SoilFormulaItemDTO> { new(soilType.Id, 100, 0) };
         var newSoilFormula = new SoilFormulaEndpoints.Add.AddSoilFormulaRequest(formulaName, formulaItems);
 
         // Act
@@ -354,7 +354,7 @@ public sealed class AddSoilFormulaEndpointTest : ApiBaseIntegrationTest
         var soilType3 = await CreateSoilType(client, cts);
         var soilType4 = await CreateSoilType(client, cts);
 
-        var formulaItems = new List<AddSoilFormulaItemDTO>
+        var formulaItems = new List<SoilFormulaItemDTO>
         {
             new(soilType1.Id, 40, 0),
             new(soilType2.Id, 25, 1),

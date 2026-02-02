@@ -6,7 +6,7 @@ namespace Prickle.Api.Endpoints.Soil.Formulas;
 
 internal sealed class Add : IEndpoint
 {
-    public sealed record AddSoilFormulaRequest(string Name, IEnumerable<AddSoilFormulaItemDTO> FormulaItems);
+    public sealed record AddSoilFormulaRequest(string Name, IEnumerable<SoilFormulaItemDTO> FormulaItems);
     public const string EndpointName = "AddSoilFormula";
 
     public void MapEndpoint(IEndpointRouteBuilder app)

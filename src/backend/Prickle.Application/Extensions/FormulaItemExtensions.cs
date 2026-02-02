@@ -5,7 +5,7 @@ namespace Prickle.Application.Extensions;
 
 internal static class FormulaItemExtensions
 {
-    extension(AddSoilFormulaItemDTO dto)
+    extension(SoilFormulaItemDTO dto)
     {
         public Result<SoilFormulaItem> ToSoilFormulaItem()
         {
@@ -13,7 +13,7 @@ internal static class FormulaItemExtensions
         }
     }
 
-    extension(IEnumerable<AddSoilFormulaItemDTO> dtos)
+    extension(IEnumerable<SoilFormulaItemDTO> dtos)
     {
         public Result<List<SoilFormulaItem>> ToSoilFormulaItems()
         {
