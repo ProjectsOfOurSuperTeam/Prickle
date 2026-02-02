@@ -1,4 +1,4 @@
-using Prickle.Api;
+﻿using Prickle.Api;
 using Prickle.Api.Endpoints;
 using Prickle.Api.Extensions;
 using Prickle.Application;

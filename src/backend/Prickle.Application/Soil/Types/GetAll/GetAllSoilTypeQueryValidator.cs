@@ -1,4 +1,4 @@
-namespace Prickle.Application.Soil.Types.GetAll;
+﻿namespace Prickle.Application.Soil.Types.GetAll;
 
 internal sealed class GetAllSoilTypeQueryValidator : AbstractValidator<GetAllSoilTypeQuery>
 {

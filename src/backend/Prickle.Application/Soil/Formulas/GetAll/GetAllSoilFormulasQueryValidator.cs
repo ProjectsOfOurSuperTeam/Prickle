@@ -1,4 +1,4 @@
-namespace Prickle.Application.Soil.Formulas.GetAll;
+﻿namespace Prickle.Application.Soil.Formulas.GetAll;
 
 internal sealed class GetAllSoilFormulasQueryValidator : AbstractValidator<GetAllSoilFormulasQuery>
 {

@@ -1,4 +1,4 @@
-using Prickle.Application.Soil.Formulas.Delete;
+﻿using Prickle.Application.Soil.Formulas.Delete;
 
 namespace Prickle.Api.Endpoints.Soil.Formulas;
 
