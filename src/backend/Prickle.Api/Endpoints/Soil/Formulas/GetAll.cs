@@ -1,4 +1,4 @@
-using Prickle.Application.Soil.Formulas;
+﻿using Prickle.Application.Soil.Formulas;
 using Prickle.Application.Soil.Formulas.GetAll;
 using SharedKernel;
 

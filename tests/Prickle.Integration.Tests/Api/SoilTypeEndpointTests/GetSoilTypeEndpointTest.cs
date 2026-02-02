@@ -1,4 +1,4 @@
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using Bogus;
 using Prickle.Api.Endpoints;
 using Prickle.Api.Endpoints.Soil.Types;
