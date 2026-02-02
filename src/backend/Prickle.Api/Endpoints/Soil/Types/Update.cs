@@ -1,8 +1,7 @@
-﻿
-using Prickle.Application.Soil.Types;
+﻿using Prickle.Application.Soil.Types;
 using Prickle.Application.Soil.Types.Update;
 
-namespace Prickle.Api.Endpoints.Soil;
+namespace Prickle.Api.Endpoints.Soil.Types;
 
 internal sealed class Update : IEndpoint
 {
@@ -10,7 +9,7 @@ internal sealed class Update : IEndpoint
     public const string EndpointName = "UpdateSoilType";
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPatch(ApiEndpoints.Soil.Update,
+        app.MapPatch(ApiEndpoints.Soil.Types.Update,
             async (
                 [FromRoute] int id,
                 UpdateSoilTypeRequest request,
@@ -25,7 +24,7 @@ internal sealed class Update : IEndpoint
                 );
             })
             .WithName(EndpointName)
-            .WithTags(Tags.Soil)
+            .WithTags(Tags.Soil, Tags.SoilTypes)
             .WithDescription("Updates the name of an existing soil type identified by its ID.")
             .WithSummary("Update a soil type.")
             .Produces<SoilTypeResponse>(StatusCodes.Status200OK)

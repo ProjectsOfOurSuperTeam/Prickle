@@ -23,7 +23,7 @@ public sealed class SoilFormulaItem
             return Result.Failure<SoilFormulaItem>(SoilErrors.SoilFormulas.InvalidSoilTypeId);
         }
 
-        if (percentage <= 0 || percentage > 100)
+        if (percentage is <= 0 or > 100)
         {
             return Result.Failure<SoilFormulaItem>(SoilErrors.SoilFormulas.InvalidPercentage);
         }

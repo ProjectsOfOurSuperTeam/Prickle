@@ -1,7 +1,7 @@
 using System.Net.Http.Json;
 using Bogus;
 using Prickle.Api.Endpoints;
-using Prickle.Api.Endpoints.Soil;
+using Prickle.Api.Endpoints.Soil.Types;
 using Prickle.Application.Soil.Types;
 
 namespace Prickle.Integration.Tests.Api.SoilTypeEndpointTests;
@@ -31,11 +31,11 @@ public sealed class GetAllSoilTypeEndpointTest : ApiBaseIntegrationTest
         var firstSoilTypeName = $"{testPrefix}-First";
         var secondSoilTypeName = $"{testPrefix}-Second";
 
-        await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, new Add.AddSoilTypeRequest(firstSoilTypeName), cts);
-        await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, new Add.AddSoilTypeRequest(secondSoilTypeName), cts);
+        await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, new Add.AddSoilTypeRequest(firstSoilTypeName), cts);
+        await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, new Add.AddSoilTypeRequest(secondSoilTypeName), cts);
 
         // Act
-        var response = await client.GetAsync(ApiEndpoints.Soil.GetAll, cts);
+        var response = await client.GetAsync(ApiEndpoints.Soil.Types.GetAll, cts);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -59,11 +59,11 @@ public sealed class GetAllSoilTypeEndpointTest : ApiBaseIntegrationTest
         for (var i = 1; i <= 5; i++)
         {
             var soilTypeName = $"{testPrefix}-Soil{i:D2}";
-            await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, new Add.AddSoilTypeRequest(soilTypeName), cts);
+            await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, new Add.AddSoilTypeRequest(soilTypeName), cts);
         }
 
         // Act - Get first page with page size 2
-        var response = await client.GetAsync($"{ApiEndpoints.Soil.GetAll}?page=1&pageSize=2", cts);
+        var response = await client.GetAsync($"{ApiEndpoints.Soil.Types.GetAll}?page=1&pageSize=2", cts);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -87,11 +87,11 @@ public sealed class GetAllSoilTypeEndpointTest : ApiBaseIntegrationTest
         var searchableName = $"{uniquePrefix}-SearchableType";
         var otherName = $"{uniquePrefix}-OtherType";
 
-        await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, new Add.AddSoilTypeRequest(searchableName), cts);
-        await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, new Add.AddSoilTypeRequest(otherName), cts);
+        await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, new Add.AddSoilTypeRequest(searchableName), cts);
+        await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, new Add.AddSoilTypeRequest(otherName), cts);
 
         // Act - Filter by "Searchable"
-        var response = await client.GetAsync($"{ApiEndpoints.Soil.GetAll}?name=Searchable", cts);
+        var response = await client.GetAsync($"{ApiEndpoints.Soil.Types.GetAll}?name=Searchable", cts);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -111,7 +111,7 @@ public sealed class GetAllSoilTypeEndpointTest : ApiBaseIntegrationTest
 
         // Act - Filter by non-existent name
         var nonExistentName = $"NonExistent-{Guid.NewGuid():N}";
-        var response = await client.GetAsync($"{ApiEndpoints.Soil.GetAll}?name={nonExistentName}", cts);
+        var response = await client.GetAsync($"{ApiEndpoints.Soil.Types.GetAll}?name={nonExistentName}", cts);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -135,11 +135,11 @@ public sealed class GetAllSoilTypeEndpointTest : ApiBaseIntegrationTest
         foreach (var name in names)
         {
             var soilTypeName = $"{testPrefix}-{name}";
-            await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, new Add.AddSoilTypeRequest(soilTypeName), cts);
+            await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, new Add.AddSoilTypeRequest(soilTypeName), cts);
         }
 
         // Act - Sort by name ascending
-        var response = await client.GetAsync($"{ApiEndpoints.Soil.GetAll}?sortBy=name&name={testPrefix}", cts);
+        var response = await client.GetAsync($"{ApiEndpoints.Soil.Types.GetAll}?sortBy=name&name={testPrefix}", cts);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -167,11 +167,11 @@ public sealed class GetAllSoilTypeEndpointTest : ApiBaseIntegrationTest
         foreach (var name in names)
         {
             var soilTypeName = $"{testPrefix}-{name}";
-            await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, new Add.AddSoilTypeRequest(soilTypeName), cts);
+            await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, new Add.AddSoilTypeRequest(soilTypeName), cts);
         }
 
         // Act - Sort by name descending
-        var response = await client.GetAsync($"{ApiEndpoints.Soil.GetAll}?sortBy=-name&name={testPrefix}", cts);
+        var response = await client.GetAsync($"{ApiEndpoints.Soil.Types.GetAll}?sortBy=-name&name={testPrefix}", cts);
         _testOutputHelper.WriteLine(await response.Content.ReadAsStringAsync(cts));
         // Assert
 
@@ -199,11 +199,11 @@ public sealed class GetAllSoilTypeEndpointTest : ApiBaseIntegrationTest
         for (var i = 1; i <= 5; i++)
         {
             var soilTypeName = $"{testPrefix}-Clay{i:D2}";
-            await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, new Add.AddSoilTypeRequest(soilTypeName), cts);
+            await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, new Add.AddSoilTypeRequest(soilTypeName), cts);
         }
 
         // Act - Filter by "Clay" and get first page with size 2
-        var response = await client.GetAsync($"{ApiEndpoints.Soil.GetAll}?name=Clay&page=1&pageSize=2", cts);
+        var response = await client.GetAsync($"{ApiEndpoints.Soil.Types.GetAll}?name=Clay&page=1&pageSize=2", cts);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -228,11 +228,11 @@ public sealed class GetAllSoilTypeEndpointTest : ApiBaseIntegrationTest
         foreach (var name in names)
         {
             var soilTypeName = $"{testPrefix}-{name}";
-            await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, new Add.AddSoilTypeRequest(soilTypeName), cts);
+            await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, new Add.AddSoilTypeRequest(soilTypeName), cts);
         }
 
         // Act - Filter by prefix, sort by name descending, and paginate
-        var response = await client.GetAsync($"{ApiEndpoints.Soil.GetAll}?name={testPrefix}&sortBy=-name&page=1&pageSize=2", cts);
+        var response = await client.GetAsync($"{ApiEndpoints.Soil.Types.GetAll}?name={testPrefix}&sortBy=-name&page=1&pageSize=2", cts);
         _testOutputHelper.WriteLine(await response.Content.ReadAsStringAsync(cts));
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -259,11 +259,11 @@ public sealed class GetAllSoilTypeEndpointTest : ApiBaseIntegrationTest
         for (var i = 1; i <= 5; i++)
         {
             var soilTypeName = $"{testPrefix}-Item{i:D2}";
-            await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, new Add.AddSoilTypeRequest(soilTypeName), cts);
+            await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, new Add.AddSoilTypeRequest(soilTypeName), cts);
         }
 
         // Act - Get second page with page size 2
-        var response = await client.GetAsync($"{ApiEndpoints.Soil.GetAll}?name={testPrefix}&page=2&pageSize=2&sortBy=name", cts);
+        var response = await client.GetAsync($"{ApiEndpoints.Soil.Types.GetAll}?name={testPrefix}&page=2&pageSize=2&sortBy=name", cts);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -284,7 +284,7 @@ public sealed class GetAllSoilTypeEndpointTest : ApiBaseIntegrationTest
         using var client = CreateHttpClient("api");
 
         // Act - Request without specifying page size
-        var response = await client.GetAsync(ApiEndpoints.Soil.GetAll, cts);
+        var response = await client.GetAsync(ApiEndpoints.Soil.Types.GetAll, cts);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -303,11 +303,11 @@ public sealed class GetAllSoilTypeEndpointTest : ApiBaseIntegrationTest
 
         // Create only 2 soil types
         var testPrefix = $"BeyondPage-{Guid.NewGuid():N}";
-        await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, new Add.AddSoilTypeRequest($"{testPrefix}-One"), cts);
-        await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, new Add.AddSoilTypeRequest($"{testPrefix}-Two"), cts);
+        await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, new Add.AddSoilTypeRequest($"{testPrefix}-One"), cts);
+        await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, new Add.AddSoilTypeRequest($"{testPrefix}-Two"), cts);
 
         // Act - Request page 100 (way beyond available data)
-        var response = await client.GetAsync($"{ApiEndpoints.Soil.GetAll}?name={testPrefix}&page=100&pageSize=2", cts);
+        var response = await client.GetAsync($"{ApiEndpoints.Soil.Types.GetAll}?name={testPrefix}&page=100&pageSize=2", cts);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -327,10 +327,10 @@ public sealed class GetAllSoilTypeEndpointTest : ApiBaseIntegrationTest
 
         // Create a soil type
         var testPrefix = $"Structure-{Guid.NewGuid():N}";
-        await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, new Add.AddSoilTypeRequest($"{testPrefix}-Test"), cts);
+        await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, new Add.AddSoilTypeRequest($"{testPrefix}-Test"), cts);
 
         // Act
-        var response = await client.GetAsync($"{ApiEndpoints.Soil.GetAll}?name={testPrefix}", cts);
+        var response = await client.GetAsync($"{ApiEndpoints.Soil.Types.GetAll}?name={testPrefix}", cts);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -361,11 +361,11 @@ public sealed class GetAllSoilTypeEndpointTest : ApiBaseIntegrationTest
         var testPrefix = $"Consistent-{Guid.NewGuid():N}";
         for (var i = 1; i <= 3; i++)
         {
-            await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, new Add.AddSoilTypeRequest($"{testPrefix}-Item{i}"), cts);
+            await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, new Add.AddSoilTypeRequest($"{testPrefix}-Item{i}"), cts);
         }
 
         // Act - Make two identical requests
-        var url = $"{ApiEndpoints.Soil.GetAll}?name={testPrefix}&sortBy=name";
+        var url = $"{ApiEndpoints.Soil.Types.GetAll}?name={testPrefix}&sortBy=name";
         var firstResponse = await client.GetAsync(url, cts);
         var secondResponse = await client.GetAsync(url, cts);
 
@@ -398,10 +398,10 @@ public sealed class GetAllSoilTypeEndpointTest : ApiBaseIntegrationTest
         // Create a soil type with mixed case
         var testPrefix = $"CaseTest-{Guid.NewGuid():N}";
         var soilTypeName = $"{testPrefix}-MixedCaseType";
-        await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, new Add.AddSoilTypeRequest(soilTypeName), cts);
+        await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, new Add.AddSoilTypeRequest(soilTypeName), cts);
 
         // Act - Search with matching case
-        var response = await client.GetAsync($"{ApiEndpoints.Soil.GetAll}?name=mixedcase", cts);
+        var response = await client.GetAsync($"{ApiEndpoints.Soil.Types.GetAll}?name=mixedcase", cts);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -423,17 +423,17 @@ public sealed class GetAllSoilTypeEndpointTest : ApiBaseIntegrationTest
         var firstSoilTypeName = $"{testPrefix}-First";
         var secondSoilTypeName = $"{testPrefix}-Second";
 
-        var firstCreateResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, new Add.AddSoilTypeRequest(firstSoilTypeName), cts);
+        var firstCreateResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, new Add.AddSoilTypeRequest(firstSoilTypeName), cts);
         var firstCreatedSoilType = await firstCreateResponse.Content.ReadFromJsonAsync<SoilTypeResponse>(cancellationToken: cts);
 
-        await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, new Add.AddSoilTypeRequest(secondSoilTypeName), cts);
+        await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, new Add.AddSoilTypeRequest(secondSoilTypeName), cts);
 
         // Delete the first one
-        var deleteUrl = ApiEndpoints.Soil.Delete.Replace("{id:int}", firstCreatedSoilType!.Id.ToString());
+        var deleteUrl = ApiEndpoints.Soil.Types.Delete.Replace("{id:int}", firstCreatedSoilType!.Id.ToString());
         await client.DeleteAsync(deleteUrl, cts);
 
         // Act - Get all with filter
-        var response = await client.GetAsync($"{ApiEndpoints.Soil.GetAll}?name={testPrefix}", cts);
+        var response = await client.GetAsync($"{ApiEndpoints.Soil.Types.GetAll}?name={testPrefix}", cts);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -457,11 +457,11 @@ public sealed class GetAllSoilTypeEndpointTest : ApiBaseIntegrationTest
         var testPrefix = $"LargePageSize-{Guid.NewGuid():N}";
         for (var i = 1; i <= 3; i++)
         {
-            await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, new Add.AddSoilTypeRequest($"{testPrefix}-Item{i}"), cts);
+            await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, new Add.AddSoilTypeRequest($"{testPrefix}-Item{i}"), cts);
         }
 
         // Act - Request with maximum allowed page size (25)
-        var response = await client.GetAsync($"{ApiEndpoints.Soil.GetAll}?name={testPrefix}&pageSize=25", cts);
+        var response = await client.GetAsync($"{ApiEndpoints.Soil.Types.GetAll}?name={testPrefix}&pageSize=25", cts);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -481,12 +481,12 @@ public sealed class GetAllSoilTypeEndpointTest : ApiBaseIntegrationTest
 
         // Create soil types
         var testPrefix = $"Partial-{Guid.NewGuid():N}";
-        await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, new Add.AddSoilTypeRequest($"{testPrefix}-SandyLoam"), cts);
-        await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, new Add.AddSoilTypeRequest($"{testPrefix}-ClayLoam"), cts);
-        await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, new Add.AddSoilTypeRequest($"{testPrefix}-Peat"), cts);
+        await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, new Add.AddSoilTypeRequest($"{testPrefix}-SandyLoam"), cts);
+        await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, new Add.AddSoilTypeRequest($"{testPrefix}-ClayLoam"), cts);
+        await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, new Add.AddSoilTypeRequest($"{testPrefix}-Peat"), cts);
 
         // Act - Search for partial match "Loam"
-        var response = await client.GetAsync($"{ApiEndpoints.Soil.GetAll}?name=Loam", cts);
+        var response = await client.GetAsync($"{ApiEndpoints.Soil.Types.GetAll}?name=Loam", cts);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -508,7 +508,7 @@ public sealed class GetAllSoilTypeEndpointTest : ApiBaseIntegrationTest
         using var client = CreateHttpClient("api");
 
         // Act
-        var response = await client.GetAsync($"{ApiEndpoints.Soil.GetAll}?page={invalidPage}", cts);
+        var response = await client.GetAsync($"{ApiEndpoints.Soil.Types.GetAll}?page={invalidPage}", cts);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -527,7 +527,7 @@ public sealed class GetAllSoilTypeEndpointTest : ApiBaseIntegrationTest
         using var client = CreateHttpClient("api");
 
         // Act
-        var response = await client.GetAsync($"{ApiEndpoints.Soil.GetAll}?pageSize={invalidPageSize}", cts);
+        var response = await client.GetAsync($"{ApiEndpoints.Soil.Types.GetAll}?pageSize={invalidPageSize}", cts);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -542,7 +542,7 @@ public sealed class GetAllSoilTypeEndpointTest : ApiBaseIntegrationTest
         using var client = CreateHttpClient("api");
 
         // Act
-        var response = await client.GetAsync($"{ApiEndpoints.Soil.GetAll}?sortBy=invalidfield", cts);
+        var response = await client.GetAsync($"{ApiEndpoints.Soil.Types.GetAll}?sortBy=invalidfield", cts);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -563,13 +563,13 @@ public sealed class GetAllSoilTypeEndpointTest : ApiBaseIntegrationTest
         for (var i = 1; i <= 3; i++)
         {
             var soilTypeName = $"{testPrefix}-Item{i}";
-            var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, new Add.AddSoilTypeRequest(soilTypeName), cts);
+            var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, new Add.AddSoilTypeRequest(soilTypeName), cts);
             var created = await createResponse.Content.ReadFromJsonAsync<SoilTypeResponse>(cancellationToken: cts);
             createdIds.Add(created!.Id);
         }
 
         // Act - Sort by id ascending
-        var response = await client.GetAsync($"{ApiEndpoints.Soil.GetAll}?sortBy=id&name={testPrefix}", cts);
+        var response = await client.GetAsync($"{ApiEndpoints.Soil.Types.GetAll}?sortBy=id&name={testPrefix}", cts);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -599,11 +599,11 @@ public sealed class GetAllSoilTypeEndpointTest : ApiBaseIntegrationTest
         for (var i = 1; i <= 3; i++)
         {
             var soilTypeName = $"{testPrefix}-Item{i}";
-            await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, new Add.AddSoilTypeRequest(soilTypeName), cts);
+            await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, new Add.AddSoilTypeRequest(soilTypeName), cts);
         }
 
         // Act - Sort by id descending
-        var response = await client.GetAsync($"{ApiEndpoints.Soil.GetAll}?sortBy=-id&name={testPrefix}", cts);
+        var response = await client.GetAsync($"{ApiEndpoints.Soil.Types.GetAll}?sortBy=-id&name={testPrefix}", cts);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);

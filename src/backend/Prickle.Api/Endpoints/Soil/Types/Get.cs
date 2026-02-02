@@ -1,14 +1,14 @@
 ﻿using Prickle.Application.Soil.Types;
 using Prickle.Application.Soil.Types.Get;
 
-namespace Prickle.Api.Endpoints.Soil;
+namespace Prickle.Api.Endpoints.Soil.Types;
 
 internal sealed class Get : IEndpoint
 {
     public const string EndpointName = "GetSoilTypes";
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet(ApiEndpoints.Soil.Get, async (
+        app.MapGet(ApiEndpoints.Soil.Types.Get, async (
             [FromRoute] int id,
             IMediator mediator,
             CancellationToken cancellationToken) =>
@@ -21,7 +21,7 @@ internal sealed class Get : IEndpoint
             );
         })
         .WithName(EndpointName)
-        .WithTags(Tags.Soil)
+        .WithTags(Tags.Soil, Tags.SoilTypes)
         .WithDescription("Retrieves a specific soil type by its ID.")
         .WithSummary("Get a specific soil type.")
         .Produces<SoilTypeResponse>(StatusCodes.Status200OK)

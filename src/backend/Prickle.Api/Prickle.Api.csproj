@@ -16,6 +16,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<InternalsVisibleTo Include="Prickle.Integration.Tests"/>
+		<InternalsVisibleTo Include="Prickle.Integration.Tests" />
 	</ItemGroup>
 </Project>

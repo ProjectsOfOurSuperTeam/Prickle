@@ -50,5 +50,25 @@ public static class SoilErrors
             "SoilFormulas.InvalidOrder",
             "Order must be zero or a positive integer."
         );
+
+        public static Error AlreadyExists(string name) => Error.Problem(
+            "SoilFormulas.AlreadyExists",
+            $"Soil formula with name '{name}' already exists."
+        );
+
+        public static Error FailedToCreate(string name) => Error.Problem(
+            "SoilFormulas.FailedToCreate",
+            $"Failed to create soil formula with name '{name}'."
+        );
+
+        public static Error NotFound(Guid id) => Error.Problem(
+            "SoilFormulas.NotFound",
+            $"Soil formula with ID '{id}' was not found."
+        );
+
+        public static Error FailedToUpdate(Guid id) => Error.Problem(
+            "SoilFormulas.FailedToUpdate",
+            $"Failed to update soil formula with ID '{id}'."
+        );
     }
 }

@@ -1,14 +1,13 @@
-﻿
-using Prickle.Application.Soil.Types.Delete;
+﻿using Prickle.Application.Soil.Types.Delete;
 
-namespace Prickle.Api.Endpoints.Soil;
+namespace Prickle.Api.Endpoints.Soil.Types;
 
 internal sealed class Delete : IEndpoint
 {
     public const string EndpointName = "DeleteSoilType";
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapDelete(ApiEndpoints.Soil.Delete,
+        app.MapDelete(ApiEndpoints.Soil.Types.Delete,
             async (
                 [FromRoute] int id,
                 IMediator mediator,
@@ -22,7 +21,7 @@ internal sealed class Delete : IEndpoint
                 );
             })
             .WithName(EndpointName)
-            .WithTags(Tags.Soil)
+            .WithTags(Tags.Soil, Tags.SoilTypes)
             .WithDescription("Deletes an existing soil type identified by its ID.")
             .WithSummary("Delete a soil type.")
             .Produces(StatusCodes.Status204NoContent)

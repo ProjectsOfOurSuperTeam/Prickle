@@ -1,7 +1,7 @@
 ﻿using System.Net.Http.Json;
 using Bogus;
 using Prickle.Api.Endpoints;
-using Prickle.Api.Endpoints.Soil;
+using Prickle.Api.Endpoints.Soil.Types;
 using Prickle.Application.Soil.Types;
 
 namespace Prickle.Integration.Tests.Api.SoilTypeEndpointTests;
@@ -26,7 +26,7 @@ public sealed class AddSoilTypeEndpointTest : ApiBaseIntegrationTest
         var newSoilType = new Add.AddSoilTypeRequest(_faker.Lorem.Word());
 
         // Act
-        var response = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, newSoilType, cts);
+        var response = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, newSoilType, cts);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
@@ -47,7 +47,7 @@ public sealed class AddSoilTypeEndpointTest : ApiBaseIntegrationTest
         var newSoilType = new Add.AddSoilTypeRequest(string.Empty);
 
         // Act
-        var response = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, newSoilType, cts);
+        var response = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, newSoilType, cts);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -64,7 +64,7 @@ public sealed class AddSoilTypeEndpointTest : ApiBaseIntegrationTest
         var newSoilType = new Add.AddSoilTypeRequest(longName);
 
         // Act
-        var response = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, newSoilType, cts);
+        var response = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, newSoilType, cts);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -81,11 +81,11 @@ public sealed class AddSoilTypeEndpointTest : ApiBaseIntegrationTest
         var newSoilType = new Add.AddSoilTypeRequest(soilTypeName);
 
         // Act - Add the soil type first time
-        var firstResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, newSoilType, cts);
+        var firstResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, newSoilType, cts);
         firstResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
 
         // Act - Try to add the same soil type again
-        var secondResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, newSoilType, cts);
+        var secondResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, newSoilType, cts);
 
         // Assert
         secondResponse.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -104,11 +104,11 @@ public sealed class AddSoilTypeEndpointTest : ApiBaseIntegrationTest
         var secondRequest = new Add.AddSoilTypeRequest(soilTypeName.ToUpperInvariant());
 
         // Act - Add the soil type with lowercase
-        var firstResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, firstRequest, cts);
+        var firstResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, firstRequest, cts);
         firstResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
 
         // Act - Try to add with uppercase
-        var secondResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, secondRequest, cts);
+        var secondResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, secondRequest, cts);
 
         // Assert
         secondResponse.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -125,7 +125,7 @@ public sealed class AddSoilTypeEndpointTest : ApiBaseIntegrationTest
         var newSoilType = new Add.AddSoilTypeRequest($"  {soilTypeName}  ");
 
         // Act
-        var response = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, newSoilType, cts);
+        var response = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, newSoilType, cts);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
@@ -149,7 +149,7 @@ public sealed class AddSoilTypeEndpointTest : ApiBaseIntegrationTest
         var newSoilType = new Add.AddSoilTypeRequest(soilTypeName);
 
         // Act
-        var response = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, newSoilType, cts);
+        var response = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, newSoilType, cts);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
