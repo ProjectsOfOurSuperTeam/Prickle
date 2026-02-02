@@ -1,0 +1,33 @@
+﻿
+using Prickle.Application.Soil.Types.Delete;
+
+namespace Prickle.Api.Endpoints.Soil;
+
+internal sealed class Delete : IEndpoint
+{
+    public const string EndpointName = "DeleteSoilType";
+    public void MapEndpoint(IEndpointRouteBuilder app)
+    {
+        app.MapDelete(ApiEndpoints.Soil.Delete,
+            async (
+                [FromRoute] int id,
+                IMediator mediator,
+                CancellationToken cancellationToken) =>
+            {
+                var command = new DeleteSoilTypeCommand(id);
+                var result = await mediator.Send(command, cancellationToken);
+                return result.Match(
+                    () => Results.NoContent(),
+                    CustomResults.Problem
+                );
+            })
+            .WithName(EndpointName)
+            .WithTags(Tags.Soil)
+            .WithDescription("Deletes an existing soil type identified by its ID.")
+            .WithSummary("Delete a soil type.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+    }
+}

@@ -1,6 +1,4 @@
-﻿
-using Prickle.Api.Infrastructure;
-using Prickle.Application.Soil.Types;
+﻿using Prickle.Application.Soil.Types;
 using Prickle.Application.Soil.Types.Get;
 
 namespace Prickle.Api.Endpoints.Soil;

@@ -21,7 +21,7 @@ internal sealed class AddSoilTypeCommandHandler
 
         if (existingSoilType is not null)
         {
-            return Result.Failure<SoilTypeResponse>(SoilErrors.SoilType.SoilTypeAlreadyExists(command.Name));
+            return Result.Failure<SoilTypeResponse>(SoilErrors.SoilType.AlreadyExists(command.Name));
         }
 
         var soilTypeResult = SoilType.Create(command.Name);

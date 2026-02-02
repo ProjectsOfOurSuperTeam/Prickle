@@ -14,7 +14,11 @@ internal sealed class GetAllSoilTypeQueryHandler
 
         if (!string.IsNullOrWhiteSpace(query.Name))
         {
-            soilTypesQuery = soilTypesQuery.Where(c => c.Name.Contains(query.Name));
+#pragma warning disable CA1862 // Use the 'StringComparison' method overloads to perform case-insensitive string comparisons
+
+            soilTypesQuery = soilTypesQuery.Where(c => c.Name.ToLower().Contains(query.Name.ToLowerInvariant()));
+#pragma warning restore CA1862 // Use the 'StringComparison' method overloads to perform case-insensitive string comparisons
+
         }
 
         if (!string.IsNullOrWhiteSpace(query.SortField))

@@ -19,6 +19,6 @@ internal sealed class GetSoilTypeQueryHandler
             .FirstOrDefaultAsync(cancellationToken);
         return soilType is not null
             ? Result.Success(soilType)
-            : Result.Failure<SoilTypeResponse>(SoilErrors.SoilType.SoilTypeNotFound(query.Id));
+            : Result.Failure<SoilTypeResponse>(SoilErrors.SoilType.NotFound(query.Id));
     }
 }

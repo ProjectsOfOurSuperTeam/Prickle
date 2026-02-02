@@ -1,5 +1,4 @@
-﻿using Prickle.Api.Infrastructure;
-using Prickle.Application.Soil.Types;
+﻿using Prickle.Application.Soil.Types;
 using Prickle.Application.Soil.Types.GetAll;
 using SharedKernel;
 
@@ -9,8 +8,8 @@ internal sealed class GetAll : IEndpoint
 {
     public sealed record GetAllSoilTypesRequest : PagedRequest
     {
-        public string? Name { get; init; }
         public string? SortBy { get; init; }
+        public string? Name { get; init; }
     }
     public const string EndpointName = "GetAllSoilTypes";
 
@@ -26,8 +25,8 @@ internal sealed class GetAll : IEndpoint
                 SortField = request.SortBy?.Trim('+', '-'),
                 SortOrder = request.SortBy is null ? SortOrder.Unsorted :
                 request.SortBy.StartsWith('-') ? SortOrder.Descending : SortOrder.Ascending,
-                Page = request.Page,
-                PageSize = request.PageSize
+                Page = request.Page ?? PagedRequest.DefaultPage,
+                PageSize = request.PageSize ?? PagedRequest.DefaultPageSize
             };
 
             var result = await mediator.Send(query, cancellationToken);
