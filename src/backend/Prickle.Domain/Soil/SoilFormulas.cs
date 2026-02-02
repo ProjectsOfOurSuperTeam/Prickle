@@ -17,7 +17,8 @@ public sealed class SoilFormulas : Entity
 
     public static Result<SoilFormulas> Create(string name, List<SoilFormulaItem> formulaItems)
     {
-        if (string.IsNullOrWhiteSpace(name))
+        var normalizedName = name.Trim();
+        if (string.IsNullOrWhiteSpace(normalizedName))
         {
             return Result.Failure<SoilFormulas>(SoilErrors.SoilFormulas.SoilFormulasNameEmpty);
         }
@@ -47,7 +48,7 @@ public sealed class SoilFormulas : Entity
         var finalEntities = processedItems
         .Select(x => new SoilTypeSoilFormula(newItemId, x.SoilTypeId, x.Percentage, x.Order))
         .ToList();
-        var soilFormulas = new SoilFormulas(newItemId, name, finalEntities);
+        var soilFormulas = new SoilFormulas(newItemId, normalizedName, finalEntities);
         return Result.Success(soilFormulas);
     }
 }
