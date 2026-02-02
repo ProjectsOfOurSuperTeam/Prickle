@@ -16,7 +16,7 @@ internal sealed class GetAllSoilTypeQueryHandler
         {
 #pragma warning disable CA1862 // Use the 'StringComparison' method overloads to perform case-insensitive string comparisons
 
-            soilTypesQuery = soilTypesQuery.Where(c => c.Name.ToLower().Contains(query.Name.ToLowerInvariant()));
+            soilTypesQuery = soilTypesQuery.Where(c => c.Name.ToUpper().Contains(query.Name.ToUpperInvariant()));
 #pragma warning restore CA1862 // Use the 'StringComparison' method overloads to perform case-insensitive string comparisons
 
         }

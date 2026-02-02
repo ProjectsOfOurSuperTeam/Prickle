@@ -1,7 +1,7 @@
 ﻿using Prickle.Application.Soil.Types;
 using Prickle.Application.Soil.Types.Add;
 
-namespace Prickle.Api.Endpoints.Soil;
+namespace Prickle.Api.Endpoints.Soil.Types;
 
 internal sealed class Add : IEndpoint
 {
@@ -9,7 +9,7 @@ internal sealed class Add : IEndpoint
     public const string EndpointName = "AddSoilType";
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost(ApiEndpoints.Soil.Add, async (
+        app.MapPost(ApiEndpoints.Soil.Types.Add, async (
             [FromBody] AddSoilTypeRequest request,
             IMediator mediator,
             CancellationToken cancellationToken) =>
@@ -22,7 +22,7 @@ internal sealed class Add : IEndpoint
                );
         })
         .WithName(EndpointName)
-        .WithTags(Tags.Soil)
+        .WithTags(Tags.Soil, Tags.SoilTypes)
         .WithDescription("Adds a new soil type to the system.")
         .WithSummary("Add a new soil type")
         .Accepts<AddSoilTypeRequest>("application/json")

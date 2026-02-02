@@ -3,4 +3,5 @@
 public static class Tags
 {
     public const string Soil = nameof(Soil);
+    public const string SoilTypes = nameof(SoilTypes);
 }

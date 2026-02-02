@@ -1,7 +1,7 @@
 using System.Net.Http.Json;
 using Bogus;
 using Prickle.Api.Endpoints;
-using Prickle.Api.Endpoints.Soil;
+using Prickle.Api.Endpoints.Soil.Types;
 using Prickle.Application.Soil.Types;
 
 namespace Prickle.Integration.Tests.Api.SoilTypeEndpointTests;
@@ -27,11 +27,11 @@ public sealed class DeleteSoilTypeEndpointTest : ApiBaseIntegrationTest
         // Create a soil type first
         var soilTypeName = $"{_faker.Lorem.Word()}-{Guid.NewGuid():N}";
         var createRequest = new Add.AddSoilTypeRequest(soilTypeName);
-        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, createRequest, cts);
+        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, createRequest, cts);
         var createdSoilType = await createResponse.Content.ReadFromJsonAsync<SoilTypeResponse>(cancellationToken: cts);
 
         // Act
-        var url = ApiEndpoints.Soil.Delete.Replace("{id:int}", createdSoilType!.Id.ToString());
+        var url = ApiEndpoints.Soil.Types.Delete.Replace("{id:int}", createdSoilType!.Id.ToString());
         var response = await client.DeleteAsync(url, cts);
 
         // Assert
@@ -48,7 +48,7 @@ public sealed class DeleteSoilTypeEndpointTest : ApiBaseIntegrationTest
         var nonExistentId = _faker.Random.Int(999999, 9999999);
 
         // Act
-        var url = ApiEndpoints.Soil.Delete.Replace("{id:int}", nonExistentId.ToString());
+        var url = ApiEndpoints.Soil.Types.Delete.Replace("{id:int}", nonExistentId.ToString());
         var response = await client.DeleteAsync(url, cts);
 
         // Assert
@@ -67,7 +67,7 @@ public sealed class DeleteSoilTypeEndpointTest : ApiBaseIntegrationTest
         using var client = CreateHttpClient("api");
 
         // Act
-        var url = ApiEndpoints.Soil.Delete.Replace("{id:int}", invalidId.ToString());
+        var url = ApiEndpoints.Soil.Types.Delete.Replace("{id:int}", invalidId.ToString());
         var response = await client.DeleteAsync(url, cts);
 
         // Assert
@@ -85,15 +85,15 @@ public sealed class DeleteSoilTypeEndpointTest : ApiBaseIntegrationTest
         // Create a soil type
         var soilTypeName = $"{_faker.Lorem.Word()}-{Guid.NewGuid():N}";
         var createRequest = new Add.AddSoilTypeRequest(soilTypeName);
-        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, createRequest, cts);
+        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, createRequest, cts);
         var createdSoilType = await createResponse.Content.ReadFromJsonAsync<SoilTypeResponse>(cancellationToken: cts);
 
         // Act - Delete the soil type
-        var deleteUrl = ApiEndpoints.Soil.Delete.Replace("{id:int}", createdSoilType!.Id.ToString());
+        var deleteUrl = ApiEndpoints.Soil.Types.Delete.Replace("{id:int}", createdSoilType!.Id.ToString());
         var deleteResponse = await client.DeleteAsync(deleteUrl, cts);
 
         // Act - Try to get the deleted soil type
-        var getUrl = ApiEndpoints.Soil.Get.Replace("{id:int}", createdSoilType.Id.ToString());
+        var getUrl = ApiEndpoints.Soil.Types.Get.Replace("{id:int}", createdSoilType.Id.ToString());
         var getResponse = await client.GetAsync(getUrl, cts);
 
         // Assert
@@ -112,11 +112,11 @@ public sealed class DeleteSoilTypeEndpointTest : ApiBaseIntegrationTest
         // Create a soil type
         var soilTypeName = $"{_faker.Lorem.Word()}-{Guid.NewGuid():N}";
         var createRequest = new Add.AddSoilTypeRequest(soilTypeName);
-        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, createRequest, cts);
+        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, createRequest, cts);
         var createdSoilType = await createResponse.Content.ReadFromJsonAsync<SoilTypeResponse>(cancellationToken: cts);
 
         // Act - Delete the soil type first time
-        var url = ApiEndpoints.Soil.Delete.Replace("{id:int}", createdSoilType!.Id.ToString());
+        var url = ApiEndpoints.Soil.Types.Delete.Replace("{id:int}", createdSoilType!.Id.ToString());
         var firstDeleteResponse = await client.DeleteAsync(url, cts);
 
         // Act - Try to delete the same soil type again
@@ -138,15 +138,15 @@ public sealed class DeleteSoilTypeEndpointTest : ApiBaseIntegrationTest
         // Create a soil type
         var soilTypeName = $"{_faker.Lorem.Word()}-{Guid.NewGuid():N}";
         var createRequest = new Add.AddSoilTypeRequest(soilTypeName);
-        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, createRequest, cts);
+        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, createRequest, cts);
         var createdSoilType = await createResponse.Content.ReadFromJsonAsync<SoilTypeResponse>(cancellationToken: cts);
 
         // Act - Delete the soil type
-        var deleteUrl = ApiEndpoints.Soil.Delete.Replace("{id:int}", createdSoilType!.Id.ToString());
+        var deleteUrl = ApiEndpoints.Soil.Types.Delete.Replace("{id:int}", createdSoilType!.Id.ToString());
         var deleteResponse = await client.DeleteAsync(deleteUrl, cts);
 
         // Act - Create a new soil type with the same name
-        var recreateResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, createRequest, cts);
+        var recreateResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, createRequest, cts);
 
         // Assert
         deleteResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -170,21 +170,21 @@ public sealed class DeleteSoilTypeEndpointTest : ApiBaseIntegrationTest
         var firstSoilTypeName = $"{_faker.Lorem.Word()}-{Guid.NewGuid():N}";
         var secondSoilTypeName = $"{_faker.Lorem.Word()}-{Guid.NewGuid():N}";
 
-        var firstCreateResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add,
+        var firstCreateResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add,
             new Add.AddSoilTypeRequest(firstSoilTypeName), cts);
         var firstCreatedSoilType = await firstCreateResponse.Content.ReadFromJsonAsync<SoilTypeResponse>(cancellationToken: cts);
 
-        var secondCreateResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add,
+        var secondCreateResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add,
             new Add.AddSoilTypeRequest(secondSoilTypeName), cts);
         var secondCreatedSoilType = await secondCreateResponse.Content.ReadFromJsonAsync<SoilTypeResponse>(cancellationToken: cts);
 
         // Act - Delete only the first soil type
-        var deleteUrl = ApiEndpoints.Soil.Delete.Replace("{id:int}", firstCreatedSoilType!.Id.ToString());
+        var deleteUrl = ApiEndpoints.Soil.Types.Delete.Replace("{id:int}", firstCreatedSoilType!.Id.ToString());
         var deleteResponse = await client.DeleteAsync(deleteUrl, cts);
 
         // Act - Try to get both soil types
-        var firstGetUrl = ApiEndpoints.Soil.Get.Replace("{id:int}", firstCreatedSoilType.Id.ToString());
-        var secondGetUrl = ApiEndpoints.Soil.Get.Replace("{id:int}", secondCreatedSoilType!.Id.ToString());
+        var firstGetUrl = ApiEndpoints.Soil.Types.Get.Replace("{id:int}", firstCreatedSoilType.Id.ToString());
+        var secondGetUrl = ApiEndpoints.Soil.Types.Get.Replace("{id:int}", secondCreatedSoilType!.Id.ToString());
 
         var firstGetResponse = await client.GetAsync(firstGetUrl, cts);
         var secondGetResponse = await client.GetAsync(secondGetUrl, cts);
@@ -211,17 +211,17 @@ public sealed class DeleteSoilTypeEndpointTest : ApiBaseIntegrationTest
         // Create a soil type
         var soilTypeName = $"{_faker.Lorem.Word()}-{Guid.NewGuid():N}";
         var createRequest = new Add.AddSoilTypeRequest(soilTypeName);
-        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, createRequest, cts);
+        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, createRequest, cts);
         var createdSoilType = await createResponse.Content.ReadFromJsonAsync<SoilTypeResponse>(cancellationToken: cts);
 
         // Act - Delete the soil type
-        var deleteUrl = ApiEndpoints.Soil.Delete.Replace("{id:int}", createdSoilType!.Id.ToString());
+        var deleteUrl = ApiEndpoints.Soil.Types.Delete.Replace("{id:int}", createdSoilType!.Id.ToString());
         var deleteResponse = await client.DeleteAsync(deleteUrl, cts);
 
         // Act - Try to update the deleted soil type
         var newName = $"{_faker.Lorem.Word()}-{Guid.NewGuid():N}";
         var updateRequest = new Update.UpdateSoilTypeRequest(newName);
-        var updateUrl = ApiEndpoints.Soil.Update.Replace("{id:int}", createdSoilType.Id.ToString());
+        var updateUrl = ApiEndpoints.Soil.Types.Update.Replace("{id:int}", createdSoilType.Id.ToString());
         var updateResponse = await client.PatchAsJsonAsync(updateUrl, updateRequest, cts);
 
         // Assert
@@ -240,10 +240,10 @@ public sealed class DeleteSoilTypeEndpointTest : ApiBaseIntegrationTest
         // Act - Create and immediately delete
         var soilTypeName = $"{_faker.Lorem.Word()}-{Guid.NewGuid():N}";
         var createRequest = new Add.AddSoilTypeRequest(soilTypeName);
-        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, createRequest, cts);
+        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, createRequest, cts);
         var createdSoilType = await createResponse.Content.ReadFromJsonAsync<SoilTypeResponse>(cancellationToken: cts);
 
-        var deleteUrl = ApiEndpoints.Soil.Delete.Replace("{id:int}", createdSoilType!.Id.ToString());
+        var deleteUrl = ApiEndpoints.Soil.Types.Delete.Replace("{id:int}", createdSoilType!.Id.ToString());
         var deleteResponse = await client.DeleteAsync(deleteUrl, cts);
 
         // Assert
@@ -262,17 +262,17 @@ public sealed class DeleteSoilTypeEndpointTest : ApiBaseIntegrationTest
         // Create a soil type
         var originalName = $"{_faker.Lorem.Word()}-{Guid.NewGuid():N}";
         var createRequest = new Add.AddSoilTypeRequest(originalName);
-        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, createRequest, cts);
+        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, createRequest, cts);
         var createdSoilType = await createResponse.Content.ReadFromJsonAsync<SoilTypeResponse>(cancellationToken: cts);
 
         // Update the soil type
         var newName = $"{_faker.Lorem.Word()}-{Guid.NewGuid():N}";
         var updateRequest = new Update.UpdateSoilTypeRequest(newName);
-        var updateUrl = ApiEndpoints.Soil.Update.Replace("{id:int}", createdSoilType!.Id.ToString());
+        var updateUrl = ApiEndpoints.Soil.Types.Update.Replace("{id:int}", createdSoilType!.Id.ToString());
         var updateResponse = await client.PatchAsJsonAsync(updateUrl, updateRequest, cts);
 
         // Act - Delete the updated soil type
-        var deleteUrl = ApiEndpoints.Soil.Delete.Replace("{id:int}", createdSoilType.Id.ToString());
+        var deleteUrl = ApiEndpoints.Soil.Types.Delete.Replace("{id:int}", createdSoilType.Id.ToString());
         var deleteResponse = await client.DeleteAsync(deleteUrl, cts);
 
         // Assert
@@ -280,7 +280,7 @@ public sealed class DeleteSoilTypeEndpointTest : ApiBaseIntegrationTest
         deleteResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
         // Verify deletion
-        var getUrl = ApiEndpoints.Soil.Get.Replace("{id:int}", createdSoilType.Id.ToString());
+        var getUrl = ApiEndpoints.Soil.Types.Get.Replace("{id:int}", createdSoilType.Id.ToString());
         var getResponse = await client.GetAsync(getUrl, cts);
         getResponse.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }

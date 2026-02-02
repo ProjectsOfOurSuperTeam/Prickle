@@ -1,7 +1,7 @@
 using System.Net.Http.Json;
 using Bogus;
 using Prickle.Api.Endpoints;
-using Prickle.Api.Endpoints.Soil;
+using Prickle.Api.Endpoints.Soil.Types;
 using Prickle.Application.Soil.Types;
 
 namespace Prickle.Integration.Tests.Api.SoilTypeEndpointTests;
@@ -29,13 +29,13 @@ public sealed class UpdateSoilTypeEndpointTest : ApiBaseIntegrationTest
         // Create a soil type first
         var originalName = $"{_faker.Lorem.Word()}-{Guid.NewGuid():N}";
         var createRequest = new Add.AddSoilTypeRequest(originalName);
-        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, createRequest, cts);
+        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, createRequest, cts);
         var createdSoilType = await createResponse.Content.ReadFromJsonAsync<SoilTypeResponse>(cancellationToken: cts);
 
         // Act
         var newName = $"{_faker.Lorem.Word()}-{Guid.NewGuid():N}";
         var updateRequest = new Update.UpdateSoilTypeRequest(newName);
-        var url = ApiEndpoints.Soil.Update.Replace("{id:int}", createdSoilType!.Id.ToString());
+        var url = ApiEndpoints.Soil.Types.Update.Replace("{id:int}", createdSoilType!.Id.ToString());
         var response = await client.PatchAsJsonAsync(url, updateRequest, cts);
 
         // Assert
@@ -57,7 +57,7 @@ public sealed class UpdateSoilTypeEndpointTest : ApiBaseIntegrationTest
 
         // Act
         var updateRequest = new Update.UpdateSoilTypeRequest($"{_faker.Lorem.Word()}-{Guid.NewGuid():N}");
-        var url = ApiEndpoints.Soil.Update.Replace("{id:int}", nonExistentId.ToString());
+        var url = ApiEndpoints.Soil.Types.Update.Replace("{id:int}", nonExistentId.ToString());
         var response = await client.PatchAsJsonAsync(url, updateRequest, cts);
 
         // Assert
@@ -77,7 +77,7 @@ public sealed class UpdateSoilTypeEndpointTest : ApiBaseIntegrationTest
 
         // Act
         var updateRequest = new Update.UpdateSoilTypeRequest($"{_faker.Lorem.Word()}-{Guid.NewGuid():N}");
-        var url = ApiEndpoints.Soil.Update.Replace("{id:int}", invalidId.ToString());
+        var url = ApiEndpoints.Soil.Types.Update.Replace("{id:int}", invalidId.ToString());
         var response = await client.PatchAsJsonAsync(url, updateRequest, cts);
 
         // Assert
@@ -94,12 +94,12 @@ public sealed class UpdateSoilTypeEndpointTest : ApiBaseIntegrationTest
 
         // Create a soil type first
         var createRequest = new Add.AddSoilTypeRequest($"{_faker.Lorem.Word()}-{Guid.NewGuid():N}");
-        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, createRequest, cts);
+        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, createRequest, cts);
         var createdSoilType = await createResponse.Content.ReadFromJsonAsync<SoilTypeResponse>(cancellationToken: cts);
 
         // Act
         var updateRequest = new Update.UpdateSoilTypeRequest(string.Empty);
-        var url = ApiEndpoints.Soil.Update.Replace("{id:int}", createdSoilType!.Id.ToString());
+        var url = ApiEndpoints.Soil.Types.Update.Replace("{id:int}", createdSoilType!.Id.ToString());
         var response = await client.PatchAsJsonAsync(url, updateRequest, cts);
 
         // Assert
@@ -116,13 +116,13 @@ public sealed class UpdateSoilTypeEndpointTest : ApiBaseIntegrationTest
 
         // Create a soil type first
         var createRequest = new Add.AddSoilTypeRequest($"{_faker.Lorem.Word()}-{Guid.NewGuid():N}");
-        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, createRequest, cts);
+        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, createRequest, cts);
         var createdSoilType = await createResponse.Content.ReadFromJsonAsync<SoilTypeResponse>(cancellationToken: cts);
 
         // Act
         var longName = _faker.Random.String2(256); // Max is 255
         var updateRequest = new Update.UpdateSoilTypeRequest(longName);
-        var url = ApiEndpoints.Soil.Update.Replace("{id:int}", createdSoilType!.Id.ToString());
+        var url = ApiEndpoints.Soil.Types.Update.Replace("{id:int}", createdSoilType!.Id.ToString());
         var response = await client.PatchAsJsonAsync(url, updateRequest, cts);
 
         // Assert
@@ -141,17 +141,17 @@ public sealed class UpdateSoilTypeEndpointTest : ApiBaseIntegrationTest
         var firstName = $"{_faker.Lorem.Word()}-{Guid.NewGuid():N}";
         var secondName = $"{_faker.Lorem.Word()}-{Guid.NewGuid():N}";
 
-        var firstCreateResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add,
+        var firstCreateResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add,
             new Add.AddSoilTypeRequest(firstName), cts);
         var firstCreatedSoilType = await firstCreateResponse.Content.ReadFromJsonAsync<SoilTypeResponse>(cancellationToken: cts);
 
-        var secondCreateResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add,
+        var secondCreateResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add,
             new Add.AddSoilTypeRequest(secondName), cts);
         var secondCreatedSoilType = await secondCreateResponse.Content.ReadFromJsonAsync<SoilTypeResponse>(cancellationToken: cts);
 
         // Act - Try to update second soil type to first soil type's name
         var updateRequest = new Update.UpdateSoilTypeRequest(firstName);
-        var url = ApiEndpoints.Soil.Update.Replace("{id:int}", secondCreatedSoilType!.Id.ToString());
+        var url = ApiEndpoints.Soil.Types.Update.Replace("{id:int}", secondCreatedSoilType!.Id.ToString());
         var response = await client.PatchAsJsonAsync(url, updateRequest, cts);
 
         // Assert
@@ -171,17 +171,17 @@ public sealed class UpdateSoilTypeEndpointTest : ApiBaseIntegrationTest
         var firstName = baseFirstName.ToLowerInvariant();
         var secondName = $"{_faker.Lorem.Word()}-{Guid.NewGuid():N}";
 
-        var firstCreateResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add,
+        var firstCreateResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add,
             new Add.AddSoilTypeRequest(firstName), cts);
         var firstCreatedSoilType = await firstCreateResponse.Content.ReadFromJsonAsync<SoilTypeResponse>(cancellationToken: cts);
 
-        var secondCreateResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add,
+        var secondCreateResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add,
             new Add.AddSoilTypeRequest(secondName), cts);
         var secondCreatedSoilType = await secondCreateResponse.Content.ReadFromJsonAsync<SoilTypeResponse>(cancellationToken: cts);
 
         // Act - Try to update second soil type to first soil type's name (different casing)
         var updateRequest = new Update.UpdateSoilTypeRequest(firstName.ToUpperInvariant());
-        var url = ApiEndpoints.Soil.Update.Replace("{id:int}", secondCreatedSoilType!.Id.ToString());
+        var url = ApiEndpoints.Soil.Types.Update.Replace("{id:int}", secondCreatedSoilType!.Id.ToString());
         var response = await client.PatchAsJsonAsync(url, updateRequest, cts);
 
         // Assert
@@ -199,12 +199,12 @@ public sealed class UpdateSoilTypeEndpointTest : ApiBaseIntegrationTest
         // Create a soil type
         var originalName = $"{_faker.Lorem.Word()}-{Guid.NewGuid():N}";
         var createRequest = new Add.AddSoilTypeRequest(originalName);
-        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, createRequest, cts);
+        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, createRequest, cts);
         var createdSoilType = await createResponse.Content.ReadFromJsonAsync<SoilTypeResponse>(cancellationToken: cts);
 
         // Act - Update to the same name
         var updateRequest = new Update.UpdateSoilTypeRequest(originalName);
-        var url = ApiEndpoints.Soil.Update.Replace("{id:int}", createdSoilType!.Id.ToString());
+        var url = ApiEndpoints.Soil.Types.Update.Replace("{id:int}", createdSoilType!.Id.ToString());
         var response = await client.PatchAsJsonAsync(url, updateRequest, cts);
 
         // Assert
@@ -224,13 +224,13 @@ public sealed class UpdateSoilTypeEndpointTest : ApiBaseIntegrationTest
 
         // Create a soil type
         var createRequest = new Add.AddSoilTypeRequest($"{_faker.Lorem.Word()}-{Guid.NewGuid():N}");
-        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, createRequest, cts);
+        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, createRequest, cts);
         var createdSoilType = await createResponse.Content.ReadFromJsonAsync<SoilTypeResponse>(cancellationToken: cts);
 
         // Act
         var newName = $"{_faker.Lorem.Word()}-{Guid.NewGuid():N}";
         var updateRequest = new Update.UpdateSoilTypeRequest($"  {newName}  ");
-        var url = ApiEndpoints.Soil.Update.Replace("{id:int}", createdSoilType!.Id.ToString());
+        var url = ApiEndpoints.Soil.Types.Update.Replace("{id:int}", createdSoilType!.Id.ToString());
         var response = await client.PatchAsJsonAsync(url, updateRequest, cts);
         var content = await response.Content.ReadAsStringAsync(cts);
         // Assert
@@ -250,13 +250,13 @@ public sealed class UpdateSoilTypeEndpointTest : ApiBaseIntegrationTest
 
         // Create a soil type
         var createRequest = new Add.AddSoilTypeRequest($"{_faker.Lorem.Word()}-{Guid.NewGuid():N}");
-        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, createRequest, cts);
+        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, createRequest, cts);
         var createdSoilType = await createResponse.Content.ReadFromJsonAsync<SoilTypeResponse>(cancellationToken: cts);
 
         // Act - Update multiple times
         var firstNewName = $"{_faker.Lorem.Word()}-{Guid.NewGuid():N}";
         var firstUpdateRequest = new Update.UpdateSoilTypeRequest(firstNewName);
-        var url = ApiEndpoints.Soil.Update.Replace("{id:int}", createdSoilType!.Id.ToString());
+        var url = ApiEndpoints.Soil.Types.Update.Replace("{id:int}", createdSoilType!.Id.ToString());
         var firstResponse = await client.PatchAsJsonAsync(url, firstUpdateRequest, cts);
 
         var secondNewName = $"{_faker.Lorem.Word()}-{Guid.NewGuid():N}";
@@ -285,17 +285,17 @@ public sealed class UpdateSoilTypeEndpointTest : ApiBaseIntegrationTest
 
         // Create a soil type
         var createRequest = new Add.AddSoilTypeRequest($"{_faker.Lorem.Word()}-{Guid.NewGuid():N}");
-        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, createRequest, cts);
+        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, createRequest, cts);
         var createdSoilType = await createResponse.Content.ReadFromJsonAsync<SoilTypeResponse>(cancellationToken: cts);
 
         // Act - Update
         var newName = $"{_faker.Lorem.Word()}-{Guid.NewGuid():N}";
         var updateRequest = new Update.UpdateSoilTypeRequest(newName);
-        var updateUrl = ApiEndpoints.Soil.Update.Replace("{id:int}", createdSoilType!.Id.ToString());
+        var updateUrl = ApiEndpoints.Soil.Types.Update.Replace("{id:int}", createdSoilType!.Id.ToString());
         var updateResponse = await client.PatchAsJsonAsync(updateUrl, updateRequest, cts);
 
         // Act - Get to verify persistence
-        var getUrl = ApiEndpoints.Soil.Get.Replace("{id:int}", createdSoilType.Id.ToString());
+        var getUrl = ApiEndpoints.Soil.Types.Get.Replace("{id:int}", createdSoilType.Id.ToString());
         var getResponse = await client.GetAsync(getUrl, cts);
 
         // Assert
@@ -320,13 +320,13 @@ public sealed class UpdateSoilTypeEndpointTest : ApiBaseIntegrationTest
 
         // Create a soil type
         var createRequest = new Add.AddSoilTypeRequest($"{_faker.Lorem.Word()}-{Guid.NewGuid():N}");
-        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Add, createRequest, cts);
+        var createResponse = await client.PostAsJsonAsync(ApiEndpoints.Soil.Types.Add, createRequest, cts);
         var createdSoilType = await createResponse.Content.ReadFromJsonAsync<SoilTypeResponse>(cancellationToken: cts);
 
         // Act - Make the name unique by adding a GUID suffix
         var newName = $"{namePrefix}-{Guid.NewGuid():N}";
         var updateRequest = new Update.UpdateSoilTypeRequest(newName);
-        var url = ApiEndpoints.Soil.Update.Replace("{id:int}", createdSoilType!.Id.ToString());
+        var url = ApiEndpoints.Soil.Types.Update.Replace("{id:int}", createdSoilType!.Id.ToString());
         var response = await client.PatchAsJsonAsync(url, updateRequest, cts);
 
         // Assert

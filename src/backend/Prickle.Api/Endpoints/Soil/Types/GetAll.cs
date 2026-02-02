@@ -2,7 +2,7 @@
 using Prickle.Application.Soil.Types.GetAll;
 using SharedKernel;
 
-namespace Prickle.Api.Endpoints.Soil;
+namespace Prickle.Api.Endpoints.Soil.Types;
 
 internal sealed class GetAll : IEndpoint
 {
@@ -15,7 +15,7 @@ internal sealed class GetAll : IEndpoint
 
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet(ApiEndpoints.Soil.GetAll, async (
+        app.MapGet(ApiEndpoints.Soil.Types.GetAll, async (
                 [AsParameters] GetAllSoilTypesRequest request,
                 IMediator mediator,
                 CancellationToken cancellationToken) =>
@@ -37,7 +37,7 @@ internal sealed class GetAll : IEndpoint
             );
         })
         .WithName(EndpointName)
-        .WithTags(Tags.Soil)
+        .WithTags(Tags.Soil, Tags.SoilTypes)
         .WithDescription("Retrieves all soil types with optional filtering, sorting, and paging. " +
                          "Sort by any field using SortBy. Prefix with '-' for descending, '+' or no prefix for ascending. " +
                          "Example: '-name' for descending by name.")

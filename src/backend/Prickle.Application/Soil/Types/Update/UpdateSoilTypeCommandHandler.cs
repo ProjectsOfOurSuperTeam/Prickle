@@ -17,7 +17,7 @@ internal sealed class UpdateSoilTypeCommandHandler
         }
 
 #pragma warning disable CA1862 // Use the 'StringComparison' method overloads to perform case-insensitive string comparisons
-        var nameToMatch = command.NewName.ToUpper();
+        var nameToMatch = command.NewName.ToUpperInvariant();
         var existingSoilType = await dbContext.SoilTypes
             .FirstOrDefaultAsync(st => st.Name.ToUpper() == nameToMatch && st.Id != command.Id, cancellationToken);
 #pragma warning restore CA1862 // Use the 'StringComparison' method overloads to perform case-insensitive string comparisons

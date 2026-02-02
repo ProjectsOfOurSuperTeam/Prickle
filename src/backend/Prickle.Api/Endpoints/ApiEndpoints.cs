@@ -7,10 +7,14 @@ public static class ApiEndpoints
     public static class Soil
     {
         private const string Base = ApiBase + "/soil";
-        public const string Add = Base;
-        public const string Get = $"{Base}/{{id:int}}";
-        public const string GetAll = Base;
-        public const string Update = $"{Base}/{{id:int}}";
-        public const string Delete = $"{Base}/{{id:int}}";
+        public static class Types
+        {
+            private const string TypesBase = Base + "/types";
+            public const string Add = TypesBase;
+            public const string Get = $"{TypesBase}/{{id:int}}";
+            public const string GetAll = TypesBase;
+            public const string Update = $"{TypesBase}/{{id:int}}";
+            public const string Delete = $"{TypesBase}/{{id:int}}";
+        }
     }
 }
