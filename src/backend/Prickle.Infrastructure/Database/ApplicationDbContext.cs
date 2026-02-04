@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Prickle.Application.Abstractions.Database;
 using Prickle.Domain.Soil;
+using SmartEnum.EFCore;
 
 namespace Prickle.Infrastructure.Database;
 
@@ -10,7 +11,10 @@ public sealed class ApplicationDbContext : DbContext, IApplicationDbContext
         : base(options)
     {
     }
-
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        configurationBuilder.ConfigureSmartEnum();
+    }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
