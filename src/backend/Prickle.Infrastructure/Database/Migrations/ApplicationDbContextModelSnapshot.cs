@@ -22,6 +22,43 @@ namespace Prickle.Infrastructure.Database.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Prickle.Domain.Decorations.Decoration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("integer")
+                        .HasColumnName("category");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<string>("ImageIsometricUrl")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("image_isometric_url");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("image_url");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.HasKey("Id")
+                        .HasName("pk_decorations");
+
+                    b.ToTable("decorations", (string)null);
+                });
+
             modelBuilder.Entity("Prickle.Domain.Soil.SoilFormulas", b =>
                 {
                     b.Property<Guid>("Id")

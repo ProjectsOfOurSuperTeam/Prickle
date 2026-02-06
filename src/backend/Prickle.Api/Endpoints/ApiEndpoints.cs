@@ -3,7 +3,6 @@
 public static class ApiEndpoints
 {
     public const string ApiBase = "/api";
-
     public static class Soil
     {
         private const string Base = ApiBase + "/soil";
@@ -25,5 +24,11 @@ public static class ApiEndpoints
             public const string Update = $"{FormulasBase}/{{id:guid}}";
             public const string Delete = $"{FormulasBase}/{{id:guid}}";
         }
+    }
+
+    public static class Decorations
+    {
+        public const string DecorationsBase = ApiBase + "/decorations";
+        public const string GetCategories = $"{DecorationsBase}/categories";
     }
 }

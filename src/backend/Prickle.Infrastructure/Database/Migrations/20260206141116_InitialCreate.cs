@@ -13,6 +13,22 @@ namespace Prickle.Infrastructure.Database.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "decorations",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    name = table.Column<string>(type: "text", nullable: false),
+                    description = table.Column<string>(type: "text", nullable: false),
+                    category = table.Column<int>(type: "integer", nullable: false),
+                    image_url = table.Column<string>(type: "text", nullable: false),
+                    image_isometric_url = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_decorations", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "soil_formulas",
                 columns: table => new
                 {
@@ -72,6 +88,9 @@ namespace Prickle.Infrastructure.Database.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "decorations");
+
             migrationBuilder.DropTable(
                 name: "soil_type_soil_formulas");
 

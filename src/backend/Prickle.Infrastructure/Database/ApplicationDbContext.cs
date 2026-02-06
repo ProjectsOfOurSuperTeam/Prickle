@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Prickle.Application.Abstractions.Database;
+using Prickle.Domain.Decorations;
 using Prickle.Domain.Soil;
 using SmartEnum.EFCore;
 
@@ -26,6 +27,8 @@ public sealed class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<SoilFormulas> SoilFormulas { get; set; }
 
     public DbSet<SoilTypeSoilFormula> SoilTypeSoilFormulas { get; set; }
+
+    public DbSet<Decoration> Decorations { get; set; }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
