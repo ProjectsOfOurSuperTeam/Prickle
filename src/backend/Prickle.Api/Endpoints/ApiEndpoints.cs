@@ -30,5 +30,10 @@ public static class ApiEndpoints
     {
         public const string DecorationsBase = ApiBase + "/decorations";
         public const string GetCategories = $"{DecorationsBase}/categories";
+        public const string Add = DecorationsBase;
+        public const string Get = $"{DecorationsBase}/{{id:guid}}";
+        public const string GetAll = DecorationsBase;
+        public const string Update = $"{DecorationsBase}/{{id:guid}}";
+        public const string Delete = $"{DecorationsBase}/{{id:guid}}";
     }
 }

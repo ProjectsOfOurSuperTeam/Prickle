@@ -34,27 +34,35 @@ namespace Prickle.Infrastructure.Database.Migrations
                         .HasColumnName("category");
 
                     b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("description");
 
                     b.Property<string>("ImageIsometricUrl")
-                        .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)")
                         .HasColumnName("image_isometric_url");
 
                     b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)")
                         .HasColumnName("image_url");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("name");
 
                     b.HasKey("Id")
                         .HasName("pk_decorations");
+
+                    b.HasIndex("Category")
+                        .HasDatabaseName("ix_decorations_category");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("ix_decorations_name");
 
                     b.ToTable("decorations", (string)null);
                 });

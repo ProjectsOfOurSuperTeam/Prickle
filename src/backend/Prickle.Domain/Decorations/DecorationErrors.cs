@@ -21,4 +21,9 @@ public static class DecorationErrors
         "Decoration.FailedToCreate",
         $"Failed to create decoration with name '{name}'"
     );
+
+    public static Error InvalidCategory(int category) => Error.Problem(
+        "Decoration.InvalidCategory",
+        $"Invalid decoration category '{category}'"
+    );
 }

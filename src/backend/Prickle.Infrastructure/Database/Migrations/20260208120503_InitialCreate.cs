@@ -17,11 +17,11 @@ namespace Prickle.Infrastructure.Database.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
-                    name = table.Column<string>(type: "text", nullable: false),
-                    description = table.Column<string>(type: "text", nullable: false),
+                    name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     category = table.Column<int>(type: "integer", nullable: false),
-                    image_url = table.Column<string>(type: "text", nullable: false),
-                    image_isometric_url = table.Column<string>(type: "text", nullable: false)
+                    image_url = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
+                    image_isometric_url = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -78,6 +78,17 @@ namespace Prickle.Infrastructure.Database.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_decorations_category",
+                table: "decorations",
+                column: "category");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_decorations_name",
+                table: "decorations",
+                column: "name",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "ix_soil_type_soil_formulas_soil_type_id",

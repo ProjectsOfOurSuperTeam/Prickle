@@ -4,20 +4,20 @@ public sealed class Decoration : Entity
 {
     public Guid Id { get; private set; }
     public string Name { get; private set; } = default!;
-    public string Description { get; private set; } = default!;
+    public string? Description { get; private set; } = default!;
     public DecorationCategory Category { get; private set; }
-    public string ImageUrl { get; private set; }
-    public string ImageIsometricUrl { get; private set; }
+    public string? ImageUrl { get; private set; }
+    public string? ImageIsometricUrl { get; private set; }
 
     private Decoration() { }
 
     private Decoration(
         Guid id,
         string name,
-        string description,
+        string? description,
         DecorationCategory category,
-        string imageUrl,
-        string imageIsometricUrl)
+        string? imageUrl,
+        string? imageIsometricUrl)
     {
         Id = id;
         Name = name;
@@ -29,10 +29,10 @@ public sealed class Decoration : Entity
 
     public static Result<Decoration> Create(
         string name,
-        string description,
+        string? description,
         DecorationCategory category,
-        string imageUrl,
-        string imageIsometricUrl)
+        string? imageUrl,
+        string? imageIsometricUrl)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -52,10 +52,10 @@ public sealed class Decoration : Entity
 
     public Result<Decoration> Update(
         string name,
-        string description,
+        string? description,
         DecorationCategory category,
-        string imageUrl,
-        string imageIsometricUrl)
+        string? imageUrl,
+        string? imageIsometricUrl)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
