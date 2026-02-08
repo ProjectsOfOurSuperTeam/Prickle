@@ -1,6 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Prickle.Application.Abstractions.Database;
+using Prickle.Domain.Containers;
+using Prickle.Domain.Decorations;
 using Prickle.Domain.Soil;
+using SmartEnum.EFCore;
 
 namespace Prickle.Infrastructure.Database;
 
@@ -10,7 +13,10 @@ public sealed class ApplicationDbContext : DbContext, IApplicationDbContext
         : base(options)
     {
     }
-
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        configurationBuilder.ConfigureSmartEnum();
+    }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -23,6 +29,8 @@ public sealed class ApplicationDbContext : DbContext, IApplicationDbContext
 
     public DbSet<SoilTypeSoilFormula> SoilTypeSoilFormulas { get; set; }
 
+    public DbSet<Decoration> Decorations { get; set; }
+    public DbSet<Container> Containers { get; set; }
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         return await base.SaveChangesAsync(cancellationToken);

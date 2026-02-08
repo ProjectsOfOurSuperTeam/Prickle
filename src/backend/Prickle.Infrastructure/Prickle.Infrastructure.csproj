@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<ItemGroup>
+		<PackageReference Include="Ardalis.SmartEnum.EFCore" />
 		<PackageReference Include="EFCore.NamingConventions" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
 		<PackageReference Include="Aspire.Keycloak.Authentication" />

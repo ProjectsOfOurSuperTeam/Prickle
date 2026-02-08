@@ -3,7 +3,6 @@
 public static class ApiEndpoints
 {
     public const string ApiBase = "/api";
-
     public static class Soil
     {
         private const string Base = ApiBase + "/soil";
@@ -25,5 +24,26 @@ public static class ApiEndpoints
             public const string Update = $"{FormulasBase}/{{id:guid}}";
             public const string Delete = $"{FormulasBase}/{{id:guid}}";
         }
+    }
+
+    public static class Decorations
+    {
+        public const string DecorationsBase = ApiBase + "/decorations";
+        public const string GetCategories = $"{DecorationsBase}/categories";
+        public const string Add = DecorationsBase;
+        public const string Get = $"{DecorationsBase}/{{id:guid}}";
+        public const string GetAll = DecorationsBase;
+        public const string Update = $"{DecorationsBase}/{{id:guid}}";
+        public const string Delete = $"{DecorationsBase}/{{id:guid}}";
+    }
+
+    public static class Containers
+    {
+        public const string ContainersBase = ApiBase + "/containers";
+        public const string Add = ContainersBase;
+        public const string Get = $"{ContainersBase}/{{id:guid}}";
+        public const string GetAll = ContainersBase;
+        public const string Update = $"{ContainersBase}/{{id:guid}}";
+        public const string Delete = $"{ContainersBase}/{{id:guid}}";
     }
 }
