@@ -36,4 +36,14 @@ public static class ApiEndpoints
         public const string Update = $"{DecorationsBase}/{{id:guid}}";
         public const string Delete = $"{DecorationsBase}/{{id:guid}}";
     }
+
+    public static class Containers
+    {
+        public const string ContainersBase = ApiBase + "/containers";
+        public const string Add = ContainersBase;
+        public const string Get = $"{ContainersBase}/{{id:guid}}";
+        public const string GetAll = ContainersBase;
+        public const string Update = $"{ContainersBase}/{{id:guid}}";
+        public const string Delete = $"{ContainersBase}/{{id:guid}}";
+    }
 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Prickle.Domain.Containers;
 using Prickle.Domain.Decorations;
 using Prickle.Domain.Soil;
 
@@ -10,6 +11,7 @@ public interface IApplicationDbContext
     DbSet<SoilFormulas> SoilFormulas { get; }
     DbSet<SoilTypeSoilFormula> SoilTypeSoilFormulas { get; }
     DbSet<Decoration> Decorations { get; }
+    DbSet<Container> Containers { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

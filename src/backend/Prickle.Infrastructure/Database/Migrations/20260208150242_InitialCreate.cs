@@ -13,6 +13,23 @@ namespace Prickle.Infrastructure.Database.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "containers",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    volume = table.Column<float>(type: "real", nullable: false),
+                    is_closed = table.Column<bool>(type: "boolean", nullable: false),
+                    image_url = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
+                    image_isometric_url = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_containers", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "decorations",
                 columns: table => new
                 {
@@ -80,6 +97,12 @@ namespace Prickle.Infrastructure.Database.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "ix_containers_name",
+                table: "containers",
+                column: "name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "ix_decorations_category",
                 table: "decorations",
                 column: "category");
@@ -99,6 +122,9 @@ namespace Prickle.Infrastructure.Database.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "containers");
+
             migrationBuilder.DropTable(
                 name: "decorations");
 
