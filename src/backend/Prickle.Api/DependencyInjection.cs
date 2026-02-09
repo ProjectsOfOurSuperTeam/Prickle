@@ -1,7 +1,5 @@
 ﻿using System.Reflection;
 using Asp.Versioning;
-using Prickle.Api.Extensions;
-using Prickle.Api.Infrastructure;
 
 namespace Prickle.Api;
 

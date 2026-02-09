@@ -60,4 +60,19 @@ public static class ApiEndpoints
         public const string Update = $"{PlantsBase}/{{id:guid}}";
         public const string Delete = $"{PlantsBase}/{{id:guid}}";
     }
+
+    public static class Projects
+    {
+        public const string ProjectsBase = ApiBase + "/projects";
+        public const string Add = ProjectsBase;
+        public const string Get = $"{ProjectsBase}/{{id:guid}}";
+        public const string GetAll = ProjectsBase;
+        public const string Update = $"{ProjectsBase}/{{id:guid}}";
+        public const string Delete = $"{ProjectsBase}/{{id:guid}}";
+        public const string Publish = $"{ProjectsBase}/{{id:guid}}/publish";
+        public const string Unpublish = $"{ProjectsBase}/{{id:guid}}/unpublish";
+        public const string AddItem = $"{ProjectsBase}/{{id:guid}}/items";
+        public const string UpdateItem = $"{ProjectsBase}/{{projectId:guid}}/items/{{itemId:guid}}";
+        public const string RemoveItem = $"{ProjectsBase}/{{projectId:guid}}/items/{{itemId:guid}}";
+    }
 }

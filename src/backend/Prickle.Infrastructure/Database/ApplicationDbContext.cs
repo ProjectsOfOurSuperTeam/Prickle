@@ -3,6 +3,7 @@ using Prickle.Application.Abstractions.Database;
 using Prickle.Domain.Containers;
 using Prickle.Domain.Decorations;
 using Prickle.Domain.Plants;
+using Prickle.Domain.Projects;
 using Prickle.Domain.Soil;
 using SmartEnum.EFCore;
 
@@ -16,6 +17,8 @@ public sealed class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Decoration> Decorations { get; set; }
     public DbSet<Container> Containers { get; set; }
     public DbSet<Plant> Plants { get; set; }
+    public DbSet<Project> Projects { get; set; }
+    public DbSet<ProjectItem> ProjectItems { get; set; }
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
     {

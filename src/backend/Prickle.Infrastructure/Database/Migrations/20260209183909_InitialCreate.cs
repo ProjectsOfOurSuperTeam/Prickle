@@ -71,6 +71,28 @@ namespace Prickle.Infrastructure.Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "projects",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    user_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    container_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    preview = table.Column<byte[]>(type: "BYTEA", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()"),
+                    is_published = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_projects", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_projects_containers_container_id",
+                        column: x => x.container_id,
+                        principalTable: "containers",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "plants",
                 columns: table => new
                 {
@@ -123,6 +145,29 @@ namespace Prickle.Infrastructure.Database.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "project_items",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    project_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    item_type = table.Column<int>(type: "integer", nullable: false),
+                    item_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    pos_x = table.Column<int>(type: "integer", nullable: false),
+                    pos_y = table.Column<int>(type: "integer", nullable: false),
+                    pos_z = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_project_items", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_project_items_projects_project_id",
+                        column: x => x.project_id,
+                        principalTable: "projects",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "ix_containers_name",
                 table: "containers",
@@ -172,6 +217,32 @@ namespace Prickle.Infrastructure.Database.Migrations
                 column: "water_need");
 
             migrationBuilder.CreateIndex(
+                name: "ix_project_items_item_type",
+                table: "project_items",
+                column: "item_type");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_project_items_project_id",
+                table: "project_items",
+                column: "project_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_projects_container_id",
+                table: "projects",
+                column: "container_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_projects_created_at",
+                table: "projects",
+                column: "created_at",
+                descending: new bool[0]);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_projects_user_id",
+                table: "projects",
+                column: "user_id");
+
+            migrationBuilder.CreateIndex(
                 name: "ix_soil_type_soil_formulas_soil_type_id",
                 table: "soil_type_soil_formulas",
                 column: "soil_type_id");
@@ -181,22 +252,28 @@ namespace Prickle.Infrastructure.Database.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "containers");
-
-            migrationBuilder.DropTable(
                 name: "decorations");
 
             migrationBuilder.DropTable(
                 name: "plants");
 
             migrationBuilder.DropTable(
+                name: "project_items");
+
+            migrationBuilder.DropTable(
                 name: "soil_type_soil_formulas");
+
+            migrationBuilder.DropTable(
+                name: "projects");
 
             migrationBuilder.DropTable(
                 name: "soil_formulas");
 
             migrationBuilder.DropTable(
                 name: "soil_types");
+
+            migrationBuilder.DropTable(
+                name: "containers");
         }
     }
 }

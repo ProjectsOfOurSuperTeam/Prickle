@@ -12,7 +12,7 @@ using Prickle.Infrastructure.Database;
 namespace Prickle.Infrastructure.Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260209181119_InitialCreate")]
+    [Migration("20260209183909_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -195,6 +195,96 @@ namespace Prickle.Infrastructure.Database.Migrations
                     b.ToTable("plants", (string)null);
                 });
 
+            modelBuilder.Entity("Prickle.Domain.Projects.Project", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ContainerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("container_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<bool>("IsPublished")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_published");
+
+                    b.Property<byte[]>("Preview")
+                        .HasColumnType("BYTEA")
+                        .HasColumnName("preview");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_projects");
+
+                    b.HasIndex("ContainerId")
+                        .HasDatabaseName("ix_projects_container_id");
+
+                    b.HasIndex("CreatedAt")
+                        .IsDescending()
+                        .HasDatabaseName("ix_projects_created_at");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_projects_user_id");
+
+                    b.ToTable("projects", (string)null);
+                });
+
+            modelBuilder.Entity("Prickle.Domain.Projects.ProjectItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("item_id");
+
+                    b.Property<int>("ItemType")
+                        .HasColumnType("integer")
+                        .HasColumnName("item_type");
+
+                    b.Property<int>("PosX")
+                        .HasColumnType("integer")
+                        .HasColumnName("pos_x");
+
+                    b.Property<int>("PosY")
+                        .HasColumnType("integer")
+                        .HasColumnName("pos_y");
+
+                    b.Property<int>("PosZ")
+                        .HasColumnType("integer")
+                        .HasColumnName("pos_z");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("project_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_project_items");
+
+                    b.HasIndex("ItemType")
+                        .HasDatabaseName("ix_project_items_item_type");
+
+                    b.HasIndex("ProjectId")
+                        .HasDatabaseName("ix_project_items_project_id");
+
+                    b.ToTable("project_items", (string)null);
+                });
+
             modelBuilder.Entity("Prickle.Domain.Soil.SoilFormulas", b =>
                 {
                     b.Property<Guid>("Id")
@@ -272,6 +362,26 @@ namespace Prickle.Infrastructure.Database.Migrations
                         .HasConstraintName("fk_plants_soil_formulas_soil_formula_id");
                 });
 
+            modelBuilder.Entity("Prickle.Domain.Projects.Project", b =>
+                {
+                    b.HasOne("Prickle.Domain.Containers.Container", null)
+                        .WithMany()
+                        .HasForeignKey("ContainerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_projects_containers_container_id");
+                });
+
+            modelBuilder.Entity("Prickle.Domain.Projects.ProjectItem", b =>
+                {
+                    b.HasOne("Prickle.Domain.Projects.Project", null)
+                        .WithMany("Items")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_project_items_projects_project_id");
+                });
+
             modelBuilder.Entity("Prickle.Domain.Soil.SoilTypeSoilFormula", b =>
                 {
                     b.HasOne("Prickle.Domain.Soil.SoilFormulas", null)
@@ -287,6 +397,11 @@ namespace Prickle.Infrastructure.Database.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_soil_type_soil_formulas_soil_types_soil_type_id");
+                });
+
+            modelBuilder.Entity("Prickle.Domain.Projects.Project", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("Prickle.Domain.Soil.SoilFormulas", b =>
