@@ -46,4 +46,18 @@ public static class ApiEndpoints
         public const string Update = $"{ContainersBase}/{{id:guid}}";
         public const string Delete = $"{ContainersBase}/{{id:guid}}";
     }
+
+    public static class Plants
+    {
+        public const string PlantsBase = ApiBase + "/plants";
+        public const string GetLightLevels = $"{PlantsBase}/light-levels";
+        public const string GetWaterNeeds = $"{PlantsBase}/water-needs";
+        public const string GetHumidityLevels = $"{PlantsBase}/humidity-levels";
+        public const string GetItemSizes = $"{PlantsBase}/item-sizes";
+        public const string Add = PlantsBase;
+        public const string Get = $"{PlantsBase}/{{id:guid}}";
+        public const string GetAll = PlantsBase;
+        public const string Update = $"{PlantsBase}/{{id:guid}}";
+        public const string Delete = $"{PlantsBase}/{{id:guid}}";
+    }
 }

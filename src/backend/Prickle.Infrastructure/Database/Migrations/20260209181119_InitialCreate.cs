@@ -71,6 +71,33 @@ namespace Prickle.Infrastructure.Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "plants",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    name_latin = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    image_url = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
+                    image_isometric_url = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
+                    light_level = table.Column<int>(type: "integer", nullable: false),
+                    water_need = table.Column<int>(type: "integer", nullable: false),
+                    humidity_level = table.Column<int>(type: "integer", nullable: false),
+                    item_max_size = table.Column<int>(type: "integer", nullable: false),
+                    soil_formula_id = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_plants", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_plants_soil_formulas_soil_formula_id",
+                        column: x => x.soil_formula_id,
+                        principalTable: "soil_formulas",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "soil_type_soil_formulas",
                 columns: table => new
                 {
@@ -114,6 +141,37 @@ namespace Prickle.Infrastructure.Database.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "ix_plants_humidity_level",
+                table: "plants",
+                column: "humidity_level");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_plants_light_level",
+                table: "plants",
+                column: "light_level");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_plants_name",
+                table: "plants",
+                column: "name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_plants_name_latin",
+                table: "plants",
+                column: "name_latin");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_plants_soil_formula_id",
+                table: "plants",
+                column: "soil_formula_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_plants_water_need",
+                table: "plants",
+                column: "water_need");
+
+            migrationBuilder.CreateIndex(
                 name: "ix_soil_type_soil_formulas_soil_type_id",
                 table: "soil_type_soil_formulas",
                 column: "soil_type_id");
@@ -127,6 +185,9 @@ namespace Prickle.Infrastructure.Database.Migrations
 
             migrationBuilder.DropTable(
                 name: "decorations");
+
+            migrationBuilder.DropTable(
+                name: "plants");
 
             migrationBuilder.DropTable(
                 name: "soil_type_soil_formulas");

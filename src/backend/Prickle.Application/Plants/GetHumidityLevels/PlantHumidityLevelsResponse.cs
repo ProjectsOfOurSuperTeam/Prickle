@@ -1,0 +1,3 @@
+namespace Prickle.Application.Plants.GetHumidityLevels;
+
+public sealed record PlantHumidityLevelsResponse(IReadOnlyList<PlantHumidityLevelResponse> HumidityLevels);

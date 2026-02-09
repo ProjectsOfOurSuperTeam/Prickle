@@ -113,6 +113,85 @@ namespace Prickle.Infrastructure.Database.Migrations
                     b.ToTable("decorations", (string)null);
                 });
 
+            modelBuilder.Entity("Prickle.Domain.Plants.Plant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("description");
+
+                    b.Property<int>("HumidityLevel")
+                        .HasColumnType("integer")
+                        .HasColumnName("humidity_level");
+
+                    b.Property<string>("ImageIsometricUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)")
+                        .HasColumnName("image_isometric_url");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)")
+                        .HasColumnName("image_url");
+
+                    b.Property<int>("ItemMaxSize")
+                        .HasColumnType("integer")
+                        .HasColumnName("item_max_size");
+
+                    b.Property<int>("LightLevel")
+                        .HasColumnType("integer")
+                        .HasColumnName("light_level");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("NameLatin")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("name_latin");
+
+                    b.Property<Guid>("SoilFormulaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("soil_formula_id");
+
+                    b.Property<int>("WaterNeed")
+                        .HasColumnType("integer")
+                        .HasColumnName("water_need");
+
+                    b.HasKey("Id")
+                        .HasName("pk_plants");
+
+                    b.HasIndex("HumidityLevel")
+                        .HasDatabaseName("ix_plants_humidity_level");
+
+                    b.HasIndex("LightLevel")
+                        .HasDatabaseName("ix_plants_light_level");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("ix_plants_name");
+
+                    b.HasIndex("NameLatin")
+                        .HasDatabaseName("ix_plants_name_latin");
+
+                    b.HasIndex("SoilFormulaId")
+                        .HasDatabaseName("ix_plants_soil_formula_id");
+
+                    b.HasIndex("WaterNeed")
+                        .HasDatabaseName("ix_plants_water_need");
+
+                    b.ToTable("plants", (string)null);
+                });
+
             modelBuilder.Entity("Prickle.Domain.Soil.SoilFormulas", b =>
                 {
                     b.Property<Guid>("Id")
@@ -178,6 +257,16 @@ namespace Prickle.Infrastructure.Database.Migrations
                         .HasDatabaseName("ix_soil_type_soil_formulas_soil_type_id");
 
                     b.ToTable("soil_type_soil_formulas", (string)null);
+                });
+
+            modelBuilder.Entity("Prickle.Domain.Plants.Plant", b =>
+                {
+                    b.HasOne("Prickle.Domain.Soil.SoilFormulas", null)
+                        .WithMany()
+                        .HasForeignKey("SoilFormulaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_plants_soil_formulas_soil_formula_id");
                 });
 
             modelBuilder.Entity("Prickle.Domain.Soil.SoilTypeSoilFormula", b =>
