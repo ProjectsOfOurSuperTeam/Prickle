@@ -9,8 +9,7 @@ var postgres = builder.AddPostgres("postgres")
 var prickleDb = postgres.AddDatabase("prickleDb");
 
 var keycloak = builder.AddKeycloak("keycloak", 8080)
-                      .WithDataVolume()
-                      .WithLifetime(ContainerLifetime.Persistent);
+                      .WithRealmImport("./realms");
 
 var geminiApiKey = builder.AddParameter("GeminiApiKey", secret: true);
 
