@@ -823,10 +823,12 @@
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
         "https://oidcdebugger.com/debug",
+        "https://localhost:7107/*",
         "/*"
       ],
       "webOrigins": [
         "https://oidcdebugger.com",
+        "https://localhost:7107",
         "/*"
       ],
       "notBefore": 0,

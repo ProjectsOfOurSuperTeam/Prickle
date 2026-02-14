@@ -9,7 +9,9 @@ var postgres = builder.AddPostgres("postgres")
 var prickleDb = postgres.AddDatabase("prickleDb");
 
 var keycloak = builder.AddKeycloak("keycloak", 8080)
+                      .WithExternalHttpEndpoints()
                       .WithRealmImport("./realms");
+var identityUrl = keycloak.GetEndpoint("http");
 
 var geminiApiKey = builder.AddParameter("GeminiApiKey", secret: true);
 
@@ -20,6 +22,7 @@ var api = builder.AddProject<Projects.Prickle_Api>("api")
         e.Url += "/scalar";
     })
     .WithEnvironment("GEMINI_API_KEY", geminiApiKey).WaitFor(geminiApiKey)
+    .WithEnvironment("IDENTITY_URL", identityUrl)
     .WithReference(keycloak).WaitFor(keycloak)
     .WithReference(prickleDb).WaitFor(prickleDb);
 
