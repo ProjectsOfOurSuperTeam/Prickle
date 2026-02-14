@@ -1,5 +1,12 @@
 ﻿using System.Reflection;
+using System.Text;
 using Asp.Versioning;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
+using Prickle.Api.Auth;
+using Prickle.Application.Abstractions.Authentication;
 
 namespace Prickle.Api;
 

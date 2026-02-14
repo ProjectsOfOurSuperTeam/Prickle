@@ -3,7 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Prickle.Application.Abstractions.Authentication;
 using Prickle.Application.Abstractions.Database;
+using Prickle.Infrastructure.Authentication;
 using Prickle.Infrastructure.Database;
 using Prickle.Infrastructure.DomainEvents;
 
@@ -45,10 +47,23 @@ public static class DependencyInjection
 
     private static IServiceCollection AddAuthenticationInternal(
         this IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        bool requireHttpsMetadata = false)
     {
-        //TODO
+        services.AddAuthentication()
+                .AddKeycloakJwtBearer(
+                    serviceName: "keycloak",
+                    realm: "prickle",
+                    options =>
+                    {
+                        options.Audience = "api";
+
+                        // For development only - disable HTTPS metadata validation
+                        // In production, use explicit Authority configuration instead
+                        options.RequireHttpsMetadata = requireHttpsMetadata;
+                    });
         services.AddHttpContextAccessor();
+        services.AddScoped<IUserContext, UserContext>();
 
         return services;
     }
@@ -56,7 +71,10 @@ public static class DependencyInjection
     private static IServiceCollection AddAuthorizationInternal(this IServiceCollection services)
     {
         //TODO
-        services.AddAuthorization();
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
+        });
 
         return services;
     }
