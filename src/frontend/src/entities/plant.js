@@ -8,6 +8,8 @@
  * @property {number} waterNeed - 1-5, watering frequency
  * @property {number} humidityLevel - 1-5, humidity sensitivity
  * @property {number} maxSize - For container volume calculation
+ * @property {string} categoryId - FK to PlantCategory
+ * @property {import('./plantCategory.js').PlantCategory} [category] - Populated category (optional)
  * @property {string} soilFormulaId - FK to SoilFormula
  * @property {string|null} image - Path to image file (e.g. "entities/plants/echeveria_elegans.png")
  * @property {string|null} imageIsometric - Path to isometric sprite for constructor
