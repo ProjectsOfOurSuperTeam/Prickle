@@ -106,6 +106,15 @@
           "clientRole": true,
           "containerId": "a96e4bb9-5f3f-4442-a067-b3dd27de2afe",
           "attributes": {}
+        },
+        {
+          "id": "a1b2c3d4-e5f6-9876-5432-1234567890ab",
+          "name": "User",
+          "description": "User role for API",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "a96e4bb9-5f3f-4442-a067-b3dd27de2afe",
+          "attributes": {}
         }
       ],
       "realm-management": [
@@ -498,6 +507,9 @@
         "account": [
           "view-profile",
           "manage-account"
+        ],
+        "api": [
+          "User"
         ]
       }
     },
@@ -522,7 +534,8 @@
           "manage-account"
         ],
         "api": [
-          "Admin"
+          "Admin",
+          "User"
         ]
       }
     }
