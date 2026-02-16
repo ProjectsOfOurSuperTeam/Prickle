@@ -1,5 +1,6 @@
 ﻿using Prickle.Application.Soil.Formulas;
 using Prickle.Application.Soil.Formulas.Update;
+using Prickle.Infrastructure.Authentication;
 
 namespace Prickle.Api.Endpoints.Soil.Formulas;
 
@@ -32,6 +33,7 @@ internal sealed class Update : IEndpoint
             .Produces<SoilFormulaResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .HasPermission(AuthorizationPolicies.Admin);
     }
 }

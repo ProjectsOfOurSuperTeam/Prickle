@@ -1,3 +1,3 @@
-namespace Prickle.Application.Projects.GetAll;
+﻿namespace Prickle.Application.Projects.GetAll;
 
-public sealed record GetAllProjectsQuery(Guid? UserId, bool? IsPublished) : PagedSortingOptions, IQuery<Result<ProjectsResponse>>;
+public sealed record GetAllProjectsQuery(Guid CallerUserId, Guid? UserId, bool? IsPublished) : PagedSortingOptions, IQuery<Result<ProjectsResponse>>;

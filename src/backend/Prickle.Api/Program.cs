@@ -26,7 +26,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference(options =>
     {
-        var identityUrl = config["IDENTITY_URL"] ?? "https://localhost:61160";
+        var identityUrl = config["services:keycloak:https:0"] ?? "https://localhost:8080";
         var realm = "prickle";
 
         options
@@ -45,9 +45,10 @@ if (app.Environment.IsDevelopment())
 
 }
 
+app.MapDefaultEndpoints();
+app.MapEndpoints();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapDefaultEndpoints();
-app.MapEndpoints();
+
 await app.RunAsync();

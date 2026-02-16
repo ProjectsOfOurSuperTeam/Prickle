@@ -1,4 +1,5 @@
 ﻿using Prickle.Application.Decorations.GetCategories;
+using Prickle.Infrastructure.Authentication;
 
 namespace Prickle.Api.Endpoints.Decorations;
 
@@ -24,6 +25,7 @@ internal sealed class GetCategories : IEndpoint
         .WithSummary("Get all decoration categories")
         .Produces<DecorationCategoriesResponse>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status401Unauthorized);
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .HasPermission(AuthorizationPolicies.User);
     }
 }

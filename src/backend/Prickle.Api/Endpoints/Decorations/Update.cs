@@ -1,6 +1,7 @@
-using Prickle.Application.Decorations;
+﻿using Prickle.Application.Decorations;
 using Prickle.Application.Decorations.Update;
 using Prickle.Domain.Decorations;
+using Prickle.Infrastructure.Authentication;
 using SharedKernel;
 
 namespace Prickle.Api.Endpoints.Decorations;
@@ -61,6 +62,7 @@ internal sealed class Update : IEndpoint
             .Produces<DecorationResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .HasPermission(AuthorizationPolicies.Admin);
     }
 }

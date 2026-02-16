@@ -1,5 +1,7 @@
+﻿using Prickle.Application.Abstractions.Authentication;
 using Prickle.Application.Projects;
 using Prickle.Application.Projects.Get;
+using Prickle.Infrastructure.Authentication;
 
 namespace Prickle.Api.Endpoints.Projects;
 
@@ -11,10 +13,11 @@ internal sealed class Get : IEndpoint
     {
         app.MapGet(ApiEndpoints.Projects.Get, async (
             [FromRoute] Guid id,
+            IUserContext userContext,
             IMediator mediator,
             CancellationToken cancellationToken) =>
         {
-            var result = await mediator.Send(new GetProjectQuery(id), cancellationToken);
+            var result = await mediator.Send(new GetProjectQuery(id, userContext.UserId), cancellationToken);
             return result.Match(
                 project => Results.Ok(project),
                 CustomResults.Problem);
@@ -25,6 +28,7 @@ internal sealed class Get : IEndpoint
         .WithSummary("Get a project by ID")
         .Produces<ProjectResponse>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status401Unauthorized);
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .HasPermission(AuthorizationPolicies.User);
     }
 }

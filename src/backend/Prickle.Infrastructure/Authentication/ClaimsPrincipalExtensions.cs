@@ -12,4 +12,13 @@ internal static class ClaimsPrincipalExtensions
             ? parsedUserId
             : throw new ApplicationException("User id is unavailable");
     }
+
+    public static string GetUserEmail(this ClaimsPrincipal? principal)
+    {
+        var email = principal?.FindFirstValue(ClaimTypes.Email);
+
+        return !string.IsNullOrWhiteSpace(email)
+            ? email
+            : throw new ApplicationException("User email is unavailable");
+    }
 }

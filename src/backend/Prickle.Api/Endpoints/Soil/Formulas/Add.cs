@@ -1,6 +1,7 @@
 ﻿
 using Prickle.Application.Soil.Formulas;
 using Prickle.Application.Soil.Formulas.Add;
+using Prickle.Infrastructure.Authentication;
 
 namespace Prickle.Api.Endpoints.Soil.Formulas;
 
@@ -32,6 +33,8 @@ internal sealed class Add : IEndpoint
         .Accepts<AddSoilFormulaRequest>("application/json")
         .Produces<SoilFormulaResponse>(StatusCodes.Status201Created)
         .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status401Unauthorized);
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .HasPermission(AuthorizationPolicies.Admin);
     }
 }

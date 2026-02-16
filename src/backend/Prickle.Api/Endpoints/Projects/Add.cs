@@ -1,5 +1,7 @@
+﻿using Prickle.Application.Abstractions.Authentication;
 using Prickle.Application.Projects;
 using Prickle.Application.Projects.Add;
+using Prickle.Infrastructure.Authentication;
 
 namespace Prickle.Api.Endpoints.Projects;
 
@@ -7,7 +9,6 @@ internal sealed class Add : IEndpoint
 {
     public sealed record AddProjectRequest
     {
-        public required Guid UserId { get; init; }
         public required Guid ContainerId { get; init; }
         public byte[]? Preview { get; init; }
     }
@@ -18,12 +19,13 @@ internal sealed class Add : IEndpoint
     {
         app.MapPost(ApiEndpoints.Projects.Add, async (
             [FromBody] AddProjectRequest request,
+            IUserContext userContext,
             IMediator mediator,
             CancellationToken cancellationToken) =>
         {
             var result = await mediator.Send(
                 new AddProjectCommand(
-                    request.UserId,
+                    userContext.UserId,
                     request.ContainerId,
                     request.Preview
                 ),
@@ -40,6 +42,7 @@ internal sealed class Add : IEndpoint
         .Accepts<AddProjectRequest>("application/json")
         .Produces<ProjectResponse>(StatusCodes.Status201Created)
         .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status401Unauthorized);
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .HasPermission(AuthorizationPolicies.User);
     }
 }

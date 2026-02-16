@@ -1,5 +1,6 @@
 ﻿using Prickle.Application.Soil.Types;
 using Prickle.Application.Soil.Types.Update;
+using Prickle.Infrastructure.Authentication;
 
 namespace Prickle.Api.Endpoints.Soil.Types;
 
@@ -30,7 +31,7 @@ internal sealed class Update : IEndpoint
             .Produces<SoilTypeResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
-            .ProducesProblem(StatusCodes.Status404NotFound);
-        //TODO
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .HasPermission(AuthorizationPolicies.Admin);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Prickle.Application.Soil.Types;
 using Prickle.Application.Soil.Types.Get;
+using Prickle.Infrastructure.Authentication;
 
 namespace Prickle.Api.Endpoints.Soil.Types;
 
@@ -26,7 +27,7 @@ internal sealed class Get : IEndpoint
         .WithSummary("Get a specific soil type.")
         .Produces<SoilTypeResponse>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status401Unauthorized);
-        //TODO
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .HasPermission(AuthorizationPolicies.User);
     }
 }

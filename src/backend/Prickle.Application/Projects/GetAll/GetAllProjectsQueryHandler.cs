@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Prickle.Application.Abstractions.Database;
 using Prickle.Domain.Projects;
 
@@ -23,6 +23,8 @@ internal sealed class GetAllProjectsQueryHandler
         {
             projectsQuery = projectsQuery.Where(p => p.IsPublished == query.IsPublished.Value);
         }
+
+        projectsQuery = projectsQuery.Where(p => p.IsPublished || p.UserId == query.CallerUserId);
 
         if (!string.IsNullOrWhiteSpace(query.SortField))
         {

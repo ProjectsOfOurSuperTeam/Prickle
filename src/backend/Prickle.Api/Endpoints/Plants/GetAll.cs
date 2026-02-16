@@ -1,5 +1,6 @@
-using Prickle.Application.Plants;
+﻿using Prickle.Application.Plants;
 using Prickle.Application.Plants.GetAll;
+using Prickle.Infrastructure.Authentication;
 using SharedKernel;
 
 namespace Prickle.Api.Endpoints.Plants;
@@ -44,6 +45,7 @@ internal sealed class GetAll : IEndpoint
         .WithSummary("Get all plants")
         .Produces<PlantsResponse>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status401Unauthorized);
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .HasPermission(AuthorizationPolicies.User);
     }
 }

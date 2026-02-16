@@ -33,7 +33,7 @@ internal sealed class KeycloakSecuritySchemeTransformer(IConfiguration configura
 {
     public Task TransformAsync(OpenApiDocument document, OpenApiDocumentTransformerContext context, CancellationToken cancellationToken)
     {
-        var identityUrl = configuration["IDENTITY_URL"] ?? "https://localhost:61160";
+        var identityUrl = configuration["services:keycloak:https:0"] ?? "https://localhost:8080";
         var realm = "prickle";
 
         document.Info = new OpenApiInfo

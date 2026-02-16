@@ -1,5 +1,6 @@
 ﻿using Prickle.Application.Soil.Types;
 using Prickle.Application.Soil.Types.Add;
+using Prickle.Infrastructure.Authentication;
 
 namespace Prickle.Api.Endpoints.Soil.Types;
 
@@ -28,7 +29,8 @@ internal sealed class Add : IEndpoint
         .Accepts<AddSoilTypeRequest>("application/json")
         .Produces<SoilTypeResponse>(StatusCodes.Status201Created)
         .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status401Unauthorized);
-        //TODO
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .HasPermission(AuthorizationPolicies.Admin);
     }
 }

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Prickle.Application.Abstractions.Authentication;
 using Prickle.Application.Abstractions.Database;
 using Prickle.Infrastructure.Authentication;
-using Prickle.Infrastructure.Authorization;
 using Prickle.Infrastructure.Database;
 using Prickle.Infrastructure.DomainEvents;
 
@@ -51,22 +50,22 @@ public static class DependencyInjection
         IConfiguration configuration,
         bool requireHttpsMetadata = false)
     {
-        var identityUrl = configuration["IDENTITY_URL"] ?? "http://localhost:8080";
         var realm = "prickle";
-
-        services.AddAuthentication()
+        var identityUrl = configuration["services:keycloak:https:0"] ?? "https://localhost:8080";
+        services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
                 .AddKeycloakJwtBearer(
-                    serviceName: "keycloak",
-                    realm: realm,
+                    "keycloak",
+                    realm,
                     options =>
                     {
-                        // Override the authority to use the actual Keycloak URL instead of service discovery
-                        options.Authority = $"{identityUrl}/realms/{realm}";
-                        options.Audience = "api";
-
-                        // For development only - disable HTTPS metadata validation
-                        // In production, use explicit Authority configuration instead
+                        options.Audience = "web-api";
                         options.RequireHttpsMetadata = requireHttpsMetadata;
+
                     });
         services.AddHttpContextAccessor();
         services.AddScoped<IUserContext, UserContext>();
@@ -76,8 +75,6 @@ public static class DependencyInjection
 
     private static IServiceCollection AddAuthorizationInternal(this IServiceCollection services)
     {
-        services.AddTransient<IClaimsTransformation, KeycloakRolesClaimsTransformation>();
-
         services.AddAuthorization(options =>
         {
             options.AddPolicy(

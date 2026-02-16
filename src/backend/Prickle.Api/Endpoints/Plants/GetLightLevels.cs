@@ -1,4 +1,5 @@
-using Prickle.Application.Plants.GetLightLevels;
+﻿using Prickle.Application.Plants.GetLightLevels;
+using Prickle.Infrastructure.Authentication;
 
 namespace Prickle.Api.Endpoints.Plants;
 
@@ -24,6 +25,7 @@ internal sealed class GetLightLevels : IEndpoint
         .WithSummary("Get all plant light levels")
         .Produces<PlantLightLevelsResponse>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status401Unauthorized);
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .HasPermission(AuthorizationPolicies.User);
     }
 }

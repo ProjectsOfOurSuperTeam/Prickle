@@ -18,4 +18,11 @@ internal sealed class UserContext : IUserContext
             .User
             .GetUserId() ??
         throw new UserContextUnavailableException();
+
+    public string Email =>
+        _httpContextAccessor
+            .HttpContext?
+            .User
+            .GetUserEmail() ??
+        throw new UserContextUnavailableException();
 }
