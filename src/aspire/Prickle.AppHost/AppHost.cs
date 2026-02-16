@@ -9,7 +9,8 @@ var postgres = builder.AddPostgres("postgres")
 var prickleDb = postgres.AddDatabase("prickleDb");
 
 var keycloak = builder.AddKeycloak("keycloak", 8080)
-                      .WithRealmImport("./realms");
+    .WithDataVolume()
+    .WithRealmImport("./realms");
 
 var geminiApiKey = builder.AddParameter("GeminiApiKey", secret: true);
 
@@ -19,7 +20,7 @@ var api = builder.AddProject<Projects.Prickle_Api>("api")
         e.DisplayText = "Scalar";
         e.Url += "/scalar";
     })
-    .WithEnvironment("GEMINI_API_KEY", geminiApiKey).WaitFor(geminiApiKey)
+    .WithEnvironment("GEMINI_API_KEY", geminiApiKey)
     .WithReference(keycloak).WaitFor(keycloak)
     .WithReference(prickleDb).WaitFor(prickleDb);
 

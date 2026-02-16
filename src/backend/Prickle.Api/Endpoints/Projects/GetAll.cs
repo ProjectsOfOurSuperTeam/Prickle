@@ -1,5 +1,7 @@
+﻿using Prickle.Application.Abstractions.Authentication;
 using Prickle.Application.Projects;
 using Prickle.Application.Projects.GetAll;
+using Prickle.Infrastructure.Authentication;
 using SharedKernel;
 
 namespace Prickle.Api.Endpoints.Projects;
@@ -19,10 +21,11 @@ internal sealed class GetAll : IEndpoint
     {
         app.MapGet(ApiEndpoints.Projects.GetAll, async (
                 [AsParameters] GetAllProjectsRequest request,
+                IUserContext userContext,
                 IMediator mediator,
                 CancellationToken cancellationToken) =>
         {
-            var query = new GetAllProjectsQuery(request.UserId, request.IsPublished)
+            var query = new GetAllProjectsQuery(userContext.UserId, request.UserId, request.IsPublished)
             {
                 SortField = request.SortBy?.Trim('+', '-'),
                 SortOrder = request.SortBy is null ? SortOrder.Unsorted :
@@ -45,6 +48,7 @@ internal sealed class GetAll : IEndpoint
         .WithSummary("Get all projects")
         .Produces<ProjectsResponse>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status401Unauthorized);
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .HasPermission(AuthorizationPolicies.User);
     }
 }

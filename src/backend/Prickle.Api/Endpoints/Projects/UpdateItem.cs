@@ -1,5 +1,7 @@
+﻿using Prickle.Application.Abstractions.Authentication;
 using Prickle.Application.Projects;
 using Prickle.Application.Projects.UpdateItem;
+using Prickle.Infrastructure.Authentication;
 
 namespace Prickle.Api.Endpoints.Projects;
 
@@ -7,7 +9,6 @@ internal sealed class UpdateItem : IEndpoint
 {
     public sealed record UpdateProjectItemRequest
     {
-        public required Guid UserId { get; init; }
         public required int PosX { get; init; }
         public required int PosY { get; init; }
         public required int PosZ { get; init; }
@@ -21,13 +22,14 @@ internal sealed class UpdateItem : IEndpoint
             [FromRoute] Guid projectId,
             [FromRoute] Guid itemId,
             [FromBody] UpdateProjectItemRequest request,
+            IUserContext userContext,
             IMediator mediator,
             CancellationToken cancellationToken) =>
         {
             var result = await mediator.Send(
                 new UpdateProjectItemCommand(
                     projectId,
-                    request.UserId,
+                    userContext.UserId,
                     itemId,
                     request.PosX,
                     request.PosY,
@@ -46,6 +48,7 @@ internal sealed class UpdateItem : IEndpoint
         .Accepts<UpdateProjectItemRequest>("application/json")
         .Produces<ProjectItemResponse>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status401Unauthorized);
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .HasPermission(AuthorizationPolicies.User);
     }
 }

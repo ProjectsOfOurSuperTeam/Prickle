@@ -1,6 +1,5 @@
 ﻿using Prickle.Api;
 using Prickle.Api.Endpoints;
-using Prickle.Api.Extensions;
 using Prickle.Application;
 using Prickle.Infrastructure;
 using Scalar.AspNetCore;
@@ -25,14 +24,31 @@ if (app.Environment.IsDevelopment())
     app.ApplyMigrations();
 
     app.MapOpenApi();
-    app.MapScalarApiReference();
+    app.MapScalarApiReference(options =>
+    {
+        var identityUrl = config["services:keycloak:https:0"] ?? "https://localhost:8080";
+        var realm = "prickle";
+
+        options
+            .WithTitle("Prickle API")
+            .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
+            .AddPreferredSecuritySchemes("oauth2")
+            .AddAuthorizationCodeFlow("oauth2", flow =>
+            {
+                flow.ClientId = "public-client";
+                flow.Pkce = Pkce.Sha256;
+                flow.SelectedScopes = ["openid", "profile", "email", "roles"];
+                flow.AuthorizationUrl = $"{identityUrl}/realms/{realm}/protocol/openid-connect/auth";
+                flow.TokenUrl = $"{identityUrl}/realms/{realm}/protocol/openid-connect/token";
+            });
+    });
 
 }
 
 app.MapDefaultEndpoints();
 app.MapEndpoints();
 app.UseHttpsRedirection();
-//app.UseAuthentication();
-//app.UseAuthorization();
+app.UseAuthentication();
+app.UseAuthorization();
 
 await app.RunAsync();

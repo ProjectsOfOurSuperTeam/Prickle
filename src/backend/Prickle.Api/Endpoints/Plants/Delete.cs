@@ -1,5 +1,5 @@
-using Prickle.Application.Plants;
-using Prickle.Application.Plants.Delete;
+﻿using Prickle.Application.Plants.Delete;
+using Prickle.Infrastructure.Authentication;
 
 namespace Prickle.Api.Endpoints.Plants;
 
@@ -23,6 +23,7 @@ internal sealed class Delete : IEndpoint
         .WithSummary("Deletes a plant by its ID.")
         .WithDescription("Deletes a plant by its ID. Returns 204 No Content if the deletion is successful, or 400 Bad Request if the request is invalid.")
         .Produces(StatusCodes.Status204NoContent)
-        .Produces(StatusCodes.Status400BadRequest);
+        .Produces(StatusCodes.Status400BadRequest)
+        .HasPermission(AuthorizationPolicies.Admin);
     }
 }

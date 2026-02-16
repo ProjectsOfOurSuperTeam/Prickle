@@ -1,5 +1,6 @@
-using Prickle.Application.Containers;
+﻿using Prickle.Application.Containers;
 using Prickle.Application.Containers.GetAll;
+using Prickle.Infrastructure.Authentication;
 using SharedKernel;
 
 namespace Prickle.Api.Endpoints.Containers;
@@ -44,6 +45,7 @@ internal sealed class GetAll : IEndpoint
         .WithSummary("Get all containers")
         .Produces<ContainersResponse>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status401Unauthorized);
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .HasPermission(AuthorizationPolicies.User);
     }
 }

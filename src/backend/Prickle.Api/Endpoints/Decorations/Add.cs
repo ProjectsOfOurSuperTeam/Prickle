@@ -1,6 +1,7 @@
 ﻿using Prickle.Application.Decorations;
 using Prickle.Application.Decorations.Add;
 using Prickle.Domain.Decorations;
+using Prickle.Infrastructure.Authentication;
 using SharedKernel;
 
 namespace Prickle.Api.Endpoints.Decorations;
@@ -58,6 +59,8 @@ internal sealed class Add : IEndpoint
         .Accepts<AddDecorationRequest>("application/json")
         .Produces<DecorationResponse>(StatusCodes.Status201Created)
         .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status401Unauthorized);
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .HasPermission(AuthorizationPolicies.Admin);
     }
 }

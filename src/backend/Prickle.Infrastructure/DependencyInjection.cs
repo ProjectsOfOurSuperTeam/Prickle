@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Prickle.Application.Abstractions.Authentication;
 using Prickle.Application.Abstractions.Database;
+using Prickle.Infrastructure.Authentication;
 using Prickle.Infrastructure.Database;
 using Prickle.Infrastructure.DomainEvents;
 
@@ -45,18 +47,44 @@ public static class DependencyInjection
 
     private static IServiceCollection AddAuthenticationInternal(
         this IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        bool requireHttpsMetadata = false)
     {
-        //TODO
+        var realm = "prickle";
+        var identityUrl = configuration["services:keycloak:https:0"] ?? "https://localhost:8080";
+        services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
+                .AddKeycloakJwtBearer(
+                    "keycloak",
+                    realm,
+                    options =>
+                    {
+                        options.Audience = "web-api";
+                        options.RequireHttpsMetadata = requireHttpsMetadata;
+
+                    });
         services.AddHttpContextAccessor();
+        services.AddScoped<IUserContext, UserContext>();
 
         return services;
     }
 
     private static IServiceCollection AddAuthorizationInternal(this IServiceCollection services)
     {
-        //TODO
-        services.AddAuthorization();
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy(
+                AuthorizationPolicies.Admin,
+                policy => policy.RequireRole(AuthorizationRoles.Admin));
+
+            options.AddPolicy(
+                AuthorizationPolicies.User,
+                policy => policy.RequireAuthenticatedUser());
+        });
 
         return services;
     }

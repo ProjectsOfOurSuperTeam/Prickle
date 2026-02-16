@@ -1,4 +1,5 @@
 ﻿using Prickle.Application.Soil.Types.Delete;
+using Prickle.Infrastructure.Authentication;
 
 namespace Prickle.Api.Endpoints.Soil.Types;
 
@@ -27,6 +28,8 @@ internal sealed class Delete : IEndpoint
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .HasPermission(AuthorizationPolicies.Admin);
     }
 }

@@ -1,5 +1,6 @@
 ﻿
 using Prickle.Application.Decorations.Delete;
+using Prickle.Infrastructure.Authentication;
 
 namespace Prickle.Api.Endpoints.Decorations;
 
@@ -23,7 +24,9 @@ internal sealed class Delete : IEndpoint
         .WithSummary("Deletes a decoration by its ID.")
         .WithDescription("Deletes a decoration by its ID. Returns 204 No Content if the deletion is successful, or 400 Bad Request if the request is invalid.")
         .Produces(StatusCodes.Status204NoContent)
-        .Produces(StatusCodes.Status400BadRequest);
+        .Produces(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .HasPermission(AuthorizationPolicies.Admin);
 
     }
 }

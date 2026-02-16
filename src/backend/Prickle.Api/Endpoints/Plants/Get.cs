@@ -1,5 +1,6 @@
-using Prickle.Application.Plants;
+﻿using Prickle.Application.Plants;
 using Prickle.Application.Plants.Get;
+using Prickle.Infrastructure.Authentication;
 
 namespace Prickle.Api.Endpoints.Plants;
 
@@ -24,6 +25,7 @@ internal sealed class Get : IEndpoint
         .WithSummary("Get a plant by ID")
         .Produces<PlantResponse>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status401Unauthorized);
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .HasPermission(AuthorizationPolicies.User);
     }
 }

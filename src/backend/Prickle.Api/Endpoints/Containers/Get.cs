@@ -1,12 +1,12 @@
-using Prickle.Application.Containers;
+﻿using Prickle.Application.Containers;
 using Prickle.Application.Containers.Get;
+using Prickle.Infrastructure.Authentication;
 
 namespace Prickle.Api.Endpoints.Containers;
 
 internal sealed class Get : IEndpoint
 {
     public const string EndpointName = "GetContainer";
-    
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet(ApiEndpoints.Containers.Get, async (
@@ -25,6 +25,7 @@ internal sealed class Get : IEndpoint
         .WithSummary("Get a container by ID")
         .Produces<ContainerResponse>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status401Unauthorized);
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .HasPermission(AuthorizationPolicies.User);
     }
 }

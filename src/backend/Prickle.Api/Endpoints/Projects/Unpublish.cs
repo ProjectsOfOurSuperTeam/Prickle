@@ -1,14 +1,12 @@
+﻿using Prickle.Application.Abstractions.Authentication;
 using Prickle.Application.Projects;
 using Prickle.Application.Projects.Unpublish;
+using Prickle.Infrastructure.Authentication;
 
 namespace Prickle.Api.Endpoints.Projects;
 
 internal sealed class Unpublish : IEndpoint
 {
-    public sealed record UnpublishProjectRequest
-    {
-        public required Guid UserId { get; init; }
-    }
 
     public const string EndpointName = "UnpublishProject";
 
@@ -16,12 +14,12 @@ internal sealed class Unpublish : IEndpoint
     {
         app.MapPost(ApiEndpoints.Projects.Unpublish, async (
             [FromRoute] Guid id,
-            [FromBody] UnpublishProjectRequest request,
+            IUserContext userContext,
             IMediator mediator,
             CancellationToken cancellationToken) =>
         {
             var result = await mediator.Send(
-                new UnpublishProjectCommand(id, request.UserId),
+                new UnpublishProjectCommand(id, userContext.UserId),
                 cancellationToken);
 
             return result.Match(
@@ -32,9 +30,9 @@ internal sealed class Unpublish : IEndpoint
         .WithTags(Tags.Projects)
         .WithSummary("Unpublishes a project.")
         .WithDescription("Marks a project as not published. User must be the owner.")
-        .Accepts<UnpublishProjectRequest>("application/json")
         .Produces<ProjectResponse>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status401Unauthorized);
+        .ProducesProblem(StatusCodes.Status401Unauthorized)
+        .HasPermission(AuthorizationPolicies.User);
     }
 }

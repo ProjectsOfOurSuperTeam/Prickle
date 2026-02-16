@@ -1,5 +1,6 @@
-using Prickle.Application.Containers;
+﻿using Prickle.Application.Containers;
 using Prickle.Application.Containers.Update;
+using Prickle.Infrastructure.Authentication;
 
 namespace Prickle.Api.Endpoints.Containers;
 
@@ -49,6 +50,8 @@ internal sealed class Update : IEndpoint
         .Produces<ContainerResponse>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
-        .ProducesProblem(StatusCodes.Status404NotFound);
+        .ProducesProblem(StatusCodes.Status403Forbidden)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .HasPermission(AuthorizationPolicies.Admin);
     }
 }
