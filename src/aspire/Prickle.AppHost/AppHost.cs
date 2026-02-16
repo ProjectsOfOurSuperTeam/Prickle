@@ -24,4 +24,9 @@ var api = builder.AddProject<Projects.Prickle_Api>("api")
     .WithReference(keycloak).WaitFor(keycloak)
     .WithReference(prickleDb).WaitFor(prickleDb);
 
+var frontend = builder.AddViteApp("frontend", "../../frontend/")
+    .WithNpm()
+    .WithReference(api).WaitFor(api)
+    .WithReference(keycloak).WaitFor(keycloak);
+
 builder.Build().Run();
