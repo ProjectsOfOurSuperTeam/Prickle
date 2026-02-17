@@ -10,6 +10,7 @@ public class Plant : Entity
     public string? Description { get; private set; }
     public string? ImageUrl { get; private set; }
     public string? ImageIsometricUrl { get; private set; }
+    public PlantCategory Category { get; private set; } = default!;
     public PlantLightLevel LightLevel { get; private set; } = default!;
     public PlantWaterNeed WaterNeed { get; private set; } = default!;
     public PlantHumidityLevel HumidityLevel { get; private set; } = default!;
@@ -24,6 +25,7 @@ public class Plant : Entity
         string? description,
         string? imageUrl,
         string? imageIsometricUrl,
+        PlantCategory category,
         PlantLightLevel lightLevel,
         PlantWaterNeed waterNeed,
         PlantHumidityLevel humidityLevel,
@@ -36,6 +38,7 @@ public class Plant : Entity
         Description = description;
         ImageUrl = imageUrl;
         ImageIsometricUrl = imageIsometricUrl;
+        Category = category;
         LightLevel = lightLevel;
         WaterNeed = waterNeed;
         HumidityLevel = humidityLevel;
@@ -49,6 +52,7 @@ public class Plant : Entity
         string? description,
         string? imageUrl,
         string? imageIsometricUrl,
+        PlantCategory category,
         PlantLightLevel lightLevel,
         PlantWaterNeed waterNeed,
         PlantHumidityLevel humidityLevel,
@@ -72,6 +76,7 @@ public class Plant : Entity
             description?.Trim(),
             imageUrl,
             imageIsometricUrl,
+            category,
             lightLevel,
             waterNeed,
             humidityLevel,
@@ -87,6 +92,7 @@ public class Plant : Entity
         string? description,
         string? imageUrl,
         string? imageIsometricUrl,
+        PlantCategory category,
         PlantLightLevel lightLevel,
         PlantWaterNeed waterNeed,
         PlantHumidityLevel humidityLevel,
@@ -108,6 +114,7 @@ public class Plant : Entity
         Description = description?.Trim();
         ImageUrl = imageUrl;
         ImageIsometricUrl = imageIsometricUrl;
+        Category = category;
         LightLevel = lightLevel;
         WaterNeed = waterNeed;
         HumidityLevel = humidityLevel;

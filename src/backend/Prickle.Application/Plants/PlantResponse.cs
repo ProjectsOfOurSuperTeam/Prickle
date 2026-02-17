@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using Ardalis.SmartEnum.SystemTextJson;
 using Prickle.Domain.Plants;
 using Prickle.Domain.Projects;
@@ -13,6 +13,8 @@ public sealed record PlantResponse
     public string? Description { get; init; }
     public string? ImageUrl { get; init; }
     public string? ImageIsometricUrl { get; init; }
+    [JsonConverter(typeof(SmartEnumNameConverter<PlantCategory, int>))]
+    public required PlantCategory Category { get; init; }
     [JsonConverter(typeof(SmartEnumNameConverter<PlantLightLevel, int>))]
     public required PlantLightLevel LightLevel { get; init; }
     [JsonConverter(typeof(SmartEnumNameConverter<PlantWaterNeed, int>))]

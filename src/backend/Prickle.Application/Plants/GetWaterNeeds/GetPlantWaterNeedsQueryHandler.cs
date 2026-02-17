@@ -1,8 +1,8 @@
-using Prickle.Domain.Plants;
+﻿using Prickle.Domain.Plants;
 
 namespace Prickle.Application.Plants.GetWaterNeeds;
 
-internal class GetPlantWaterNeedsQueryHandler
+internal sealed class GetPlantWaterNeedsQueryHandler
     : IQueryHandler<GetPlantWaterNeedsQuery, Result<PlantWaterNeedsResponse>>
 {
     public ValueTask<Result<PlantWaterNeedsResponse>> Handle(GetPlantWaterNeedsQuery query, CancellationToken cancellationToken)

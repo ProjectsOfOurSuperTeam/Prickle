@@ -1,6 +1,4 @@
-using FluentValidation;
-
-namespace Prickle.Application.Projects.GetAll;
+﻿namespace Prickle.Application.Projects.GetAll;
 
 internal sealed class GetAllProjectsQueryValidator : AbstractValidator<GetAllProjectsQuery>
 {

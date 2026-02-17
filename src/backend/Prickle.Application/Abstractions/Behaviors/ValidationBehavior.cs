@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using FluentValidation.Results;
-using Mediator;
 
 namespace Prickle.Application.Abstractions.Behaviors;
 

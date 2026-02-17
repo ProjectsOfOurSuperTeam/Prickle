@@ -1,6 +1,4 @@
-using FluentValidation;
-
-namespace Prickle.Application.Containers.Add;
+﻿namespace Prickle.Application.Containers.Add;
 
 internal sealed class AddContainerCommandValidator : AbstractValidator<AddContainerCommand>
 {

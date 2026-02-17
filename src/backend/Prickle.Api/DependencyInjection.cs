@@ -2,6 +2,7 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
+using Scalar.AspNetCore;
 
 namespace Prickle.Api;
 
@@ -23,6 +24,7 @@ public static class DependencyInjection
         services.AddOpenApi(options =>
         {
             options.AddDocumentTransformer<KeycloakSecuritySchemeTransformer>();
+            options.AddScalarTransformers();
         });
         services.AddEndpoints(Assembly.GetExecutingAssembly());
         return services;
@@ -35,13 +37,6 @@ internal sealed class KeycloakSecuritySchemeTransformer(IConfiguration configura
     {
         var identityUrl = configuration["services:keycloak:https:0"] ?? "https://localhost:8080";
         var realm = "prickle";
-
-        document.Info = new OpenApiInfo
-        {
-            Title = "Prickle API",
-            Version = "v1",
-            Description = "API for Prickle application"
-        };
 
         document.Components ??= new OpenApiComponents();
         document.Components.SecuritySchemes = new Dictionary<string, IOpenApiSecurityScheme>
@@ -67,7 +62,7 @@ internal sealed class KeycloakSecuritySchemeTransformer(IConfiguration configura
             }
         };
 
-        foreach (var operation in document.Paths.Values.SelectMany(path => path.Operations))
+        foreach (var operation in document.Paths.Values.SelectMany(path => path?.Operations ?? []))
         {
             operation.Value.Security ??= [];
             operation.Value.Security.Add(new OpenApiSecurityRequirement

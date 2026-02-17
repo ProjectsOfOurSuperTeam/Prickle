@@ -50,6 +50,7 @@ public static class ApiEndpoints
     public static class Plants
     {
         public const string PlantsBase = ApiBase + "/plants";
+        public const string GetCategories = $"{PlantsBase}/categories";
         public const string GetLightLevels = $"{PlantsBase}/light-levels";
         public const string GetWaterNeeds = $"{PlantsBase}/water-needs";
         public const string GetHumidityLevels = $"{PlantsBase}/humidity-levels";

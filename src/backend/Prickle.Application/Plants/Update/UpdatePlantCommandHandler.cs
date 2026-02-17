@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Prickle.Application.Abstractions.Database;
 using Prickle.Domain.Plants;
 
@@ -37,6 +37,7 @@ internal sealed class UpdatePlantCommandHandler
             command.Description,
             command.ImageUrl,
             command.ImageIsometricUrl,
+            command.Category,
             command.LightLevel,
             command.WaterNeed,
             command.HumidityLevel,
@@ -58,6 +59,7 @@ internal sealed class UpdatePlantCommandHandler
             Description = plant.Description,
             ImageUrl = plant.ImageUrl,
             ImageIsometricUrl = plant.ImageIsometricUrl,
+            Category = plant.Category,
             LightLevel = plant.LightLevel,
             WaterNeed = plant.WaterNeed,
             HumidityLevel = plant.HumidityLevel,

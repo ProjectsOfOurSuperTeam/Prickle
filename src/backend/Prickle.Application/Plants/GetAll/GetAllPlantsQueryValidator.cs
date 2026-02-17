@@ -1,6 +1,4 @@
-using FluentValidation;
-
-namespace Prickle.Application.Plants.GetAll;
+﻿namespace Prickle.Application.Plants.GetAll;
 
 internal sealed class GetAllPlantsQueryValidator : AbstractValidator<GetAllPlantsQuery>
 {

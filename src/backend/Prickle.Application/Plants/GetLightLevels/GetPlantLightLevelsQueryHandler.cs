@@ -1,8 +1,8 @@
-using Prickle.Domain.Plants;
+﻿using Prickle.Domain.Plants;
 
 namespace Prickle.Application.Plants.GetLightLevels;
 
-internal class GetPlantLightLevelsQueryHandler
+internal sealed class GetPlantLightLevelsQueryHandler
     : IQueryHandler<GetPlantLightLevelsQuery, Result<PlantLightLevelsResponse>>
 {
     public ValueTask<Result<PlantLightLevelsResponse>> Handle(GetPlantLightLevelsQuery query, CancellationToken cancellationToken)

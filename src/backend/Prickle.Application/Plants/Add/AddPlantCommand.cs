@@ -1,4 +1,4 @@
-using Prickle.Domain.Plants;
+﻿using Prickle.Domain.Plants;
 using Prickle.Domain.Projects;
 
 namespace Prickle.Application.Plants.Add;
@@ -9,6 +9,7 @@ public sealed record AddPlantCommand(
     string? Description,
     string? ImageUrl,
     string? ImageIsometricUrl,
+    PlantCategory Category,
     PlantLightLevel LightLevel,
     PlantWaterNeed WaterNeed,
     PlantHumidityLevel HumidityLevel,

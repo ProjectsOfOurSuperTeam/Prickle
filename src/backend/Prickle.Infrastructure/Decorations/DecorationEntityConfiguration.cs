@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Prickle.Domain.Decorations;
 
@@ -18,7 +18,7 @@ internal sealed class DecorationEntityConfiguration : IEntityTypeConfiguration<D
             .HasMaxLength(255);
 
         builder.Property(x => x.Description)
-            .HasMaxLength(500);
+            .HasMaxLength(1000);
 
         builder.Property(x => x.ImageUrl)
             .HasMaxLength(2048);

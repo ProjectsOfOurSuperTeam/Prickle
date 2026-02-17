@@ -13,5 +13,6 @@ public static class MigrationExtensions
             scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         dbContext.Database.EnsureDeleted();
         dbContext.Database.Migrate();
+        DbSeeder.SeedAll(dbContext);
     }
 }

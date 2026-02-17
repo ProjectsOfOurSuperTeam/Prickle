@@ -2,7 +2,7 @@
 
 namespace Prickle.Application.Decorations.GetCategories;
 
-internal class GetDecorationCategoriesQueryHandler
+internal sealed class GetDecorationCategoriesQueryHandler
     : IQueryHandler<GetDecorationCategoriesQuery, Result<DecorationCategoriesResponse>>
 {
     public ValueTask<Result<DecorationCategoriesResponse>> Handle(GetDecorationCategoriesQuery query, CancellationToken cancellationToken)

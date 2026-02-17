@@ -1,6 +1,4 @@
-using FluentValidation;
-
-namespace Prickle.Application.Plants.Add;
+﻿namespace Prickle.Application.Plants.Add;
 
 internal sealed class AddPlantCommandValidator : AbstractValidator<AddPlantCommand>
 {

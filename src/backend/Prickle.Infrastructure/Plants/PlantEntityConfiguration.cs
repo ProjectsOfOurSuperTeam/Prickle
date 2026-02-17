@@ -23,13 +23,16 @@ internal sealed class PlantEntityConfiguration : IEntityTypeConfiguration<Plant>
             .HasMaxLength(255);
 
         builder.Property(x => x.Description)
-            .HasMaxLength(500);
+            .HasMaxLength(1000);
 
         builder.Property(x => x.ImageUrl)
             .HasMaxLength(2048);
 
         builder.Property(x => x.ImageIsometricUrl)
             .HasMaxLength(2048);
+
+        builder.Property(x => x.Category)
+            .IsRequired();
 
         builder.Property(x => x.LightLevel)
             .IsRequired();
@@ -50,12 +53,6 @@ internal sealed class PlantEntityConfiguration : IEntityTypeConfiguration<Plant>
             .IsUnique();
 
         builder.HasIndex(x => x.NameLatin);
-
-        builder.HasIndex(x => x.LightLevel);
-
-        builder.HasIndex(x => x.WaterNeed);
-
-        builder.HasIndex(x => x.HumidityLevel);
 
         builder.HasOne<SoilFormulas>()
             .WithMany()

@@ -1,6 +1,4 @@
-using FluentValidation;
-
-namespace Prickle.Application.Containers.GetAll;
+﻿namespace Prickle.Application.Containers.GetAll;
 
 internal sealed class GetAllContainersQueryValidator : AbstractValidator<GetAllContainersQuery>
 {

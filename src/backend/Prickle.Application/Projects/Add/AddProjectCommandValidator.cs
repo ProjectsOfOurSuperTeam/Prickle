@@ -1,6 +1,4 @@
-using FluentValidation;
-
-namespace Prickle.Application.Projects.Add;
+﻿namespace Prickle.Application.Projects.Add;
 
 internal sealed class AddProjectCommandValidator : AbstractValidator<AddProjectCommand>
 {

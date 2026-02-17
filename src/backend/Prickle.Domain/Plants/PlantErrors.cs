@@ -19,6 +19,10 @@ public static class PlantErrors
         "Plant.AlreadyExists",
         $"Plant with name '{name}' already exists"
     );
+    public static Error InvalidCategory(int category) => Error.Problem(
+        "Plant.InvalidCategory",
+        $"Invalid category '{category}'"
+    );
 
     public static Error InvalidLightLevel(int lightLevel) => Error.Problem(
         "Plant.InvalidLightLevel",

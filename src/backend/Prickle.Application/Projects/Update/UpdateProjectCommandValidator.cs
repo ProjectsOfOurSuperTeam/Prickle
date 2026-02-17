@@ -1,6 +1,4 @@
-using FluentValidation;
-
-namespace Prickle.Application.Projects.Update;
+﻿namespace Prickle.Application.Projects.Update;
 
 internal sealed class UpdateProjectCommandValidator : AbstractValidator<UpdateProjectCommand>
 {

@@ -16,6 +16,7 @@ internal sealed class Add : IEndpoint
         public string? Description { get; init; }
         public string? ImageUrl { get; init; }
         public string? ImageIsometricUrl { get; init; }
+        public required int Category { get; init; }
         public required int LightLevel { get; init; }
         public required int WaterNeed { get; init; }
         public required int HumidityLevel { get; init; }
@@ -31,6 +32,17 @@ internal sealed class Add : IEndpoint
             IMediator mediator,
             CancellationToken cancellationToken) =>
         {
+            if (!PlantCategory.TryFromValue(request.Category, out var category))
+            {
+                return await ValueTask.FromResult(
+                    CustomResults.Problem(
+                        Result.Failure(
+                            PlantErrors.InvalidCategory(request.Category)
+                            )
+                        )
+                    );
+            }
+
             if (!PlantLightLevel.TryFromValue(request.LightLevel, out var lightLevel))
             {
                 return await ValueTask.FromResult(
@@ -82,6 +94,7 @@ internal sealed class Add : IEndpoint
                     request.Description,
                     request.ImageUrl,
                     request.ImageIsometricUrl,
+                    category,
                     lightLevel,
                     waterNeed,
                     humidityLevel,

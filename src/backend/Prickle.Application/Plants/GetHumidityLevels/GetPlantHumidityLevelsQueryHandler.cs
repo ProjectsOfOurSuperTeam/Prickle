@@ -1,8 +1,8 @@
-using Prickle.Domain.Plants;
+﻿using Prickle.Domain.Plants;
 
 namespace Prickle.Application.Plants.GetHumidityLevels;
 
-internal class GetPlantHumidityLevelsQueryHandler
+internal sealed class GetPlantHumidityLevelsQueryHandler
     : IQueryHandler<GetPlantHumidityLevelsQuery, Result<PlantHumidityLevelsResponse>>
 {
     public ValueTask<Result<PlantHumidityLevelsResponse>> Handle(GetPlantHumidityLevelsQuery query, CancellationToken cancellationToken)

@@ -30,8 +30,8 @@ namespace Prickle.Infrastructure.Database.Migrations
                         .HasColumnName("id");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
                         .HasColumnName("description");
 
                     b.Property<string>("ImageIsometricUrl")
@@ -80,8 +80,8 @@ namespace Prickle.Infrastructure.Database.Migrations
                         .HasColumnName("category");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
                         .HasColumnName("description");
 
                     b.Property<string>("ImageIsometricUrl")
@@ -120,9 +120,13 @@ namespace Prickle.Infrastructure.Database.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<int>("Category")
+                        .HasColumnType("integer")
+                        .HasColumnName("category");
+
                     b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
                         .HasColumnName("description");
 
                     b.Property<int>("HumidityLevel")
@@ -170,12 +174,6 @@ namespace Prickle.Infrastructure.Database.Migrations
                     b.HasKey("Id")
                         .HasName("pk_plants");
 
-                    b.HasIndex("HumidityLevel")
-                        .HasDatabaseName("ix_plants_humidity_level");
-
-                    b.HasIndex("LightLevel")
-                        .HasDatabaseName("ix_plants_light_level");
-
                     b.HasIndex("Name")
                         .IsUnique()
                         .HasDatabaseName("ix_plants_name");
@@ -185,9 +183,6 @@ namespace Prickle.Infrastructure.Database.Migrations
 
                     b.HasIndex("SoilFormulaId")
                         .HasDatabaseName("ix_plants_soil_formula_id");
-
-                    b.HasIndex("WaterNeed")
-                        .HasDatabaseName("ix_plants_water_need");
 
                     b.ToTable("plants", (string)null);
                 });

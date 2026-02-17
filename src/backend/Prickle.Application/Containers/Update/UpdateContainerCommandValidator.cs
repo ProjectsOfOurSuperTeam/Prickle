@@ -1,6 +1,4 @@
-using FluentValidation;
-
-namespace Prickle.Application.Containers.Update;
+﻿namespace Prickle.Application.Containers.Update;
 
 internal sealed class UpdateContainerCommandValidator : AbstractValidator<UpdateContainerCommand>
 {

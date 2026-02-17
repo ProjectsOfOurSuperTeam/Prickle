@@ -30,8 +30,6 @@ if (app.Environment.IsDevelopment())
         var realm = "prickle";
 
         options
-            .WithTitle("Prickle API")
-            .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
             .AddPreferredSecuritySchemes("oauth2")
             .AddAuthorizationCodeFlow("oauth2", flow =>
             {
@@ -40,7 +38,9 @@ if (app.Environment.IsDevelopment())
                 flow.SelectedScopes = ["openid", "profile", "email", "roles"];
                 flow.AuthorizationUrl = $"{identityUrl}/realms/{realm}/protocol/openid-connect/auth";
                 flow.TokenUrl = $"{identityUrl}/realms/{realm}/protocol/openid-connect/token";
-            });
+            })
+            .DisableDefaultFonts()
+            .DisableTelemetry();
     });
 
 }

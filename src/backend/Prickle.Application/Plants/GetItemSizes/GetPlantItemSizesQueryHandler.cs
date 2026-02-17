@@ -1,8 +1,8 @@
-using Prickle.Domain.Projects;
+﻿using Prickle.Domain.Projects;
 
 namespace Prickle.Application.Plants.GetItemSizes;
 
-internal class GetPlantItemSizesQueryHandler
+internal sealed class GetPlantItemSizesQueryHandler
     : IQueryHandler<GetPlantItemSizesQuery, Result<PlantItemSizesResponse>>
 {
     public ValueTask<Result<PlantItemSizesResponse>> Handle(GetPlantItemSizesQuery query, CancellationToken cancellationToken)

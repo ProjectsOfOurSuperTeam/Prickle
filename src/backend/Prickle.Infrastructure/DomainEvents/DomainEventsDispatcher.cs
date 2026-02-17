@@ -24,7 +24,7 @@ internal sealed class DomainEventsDispatcher(IServiceProvider serviceProvider) :
 
             IEnumerable<object?> handlers = scope.ServiceProvider.GetServices(handlerType);
 
-            foreach (object? handler in handlers)
+            foreach (var handler in handlers)
             {
                 if (handler is null)
                 {

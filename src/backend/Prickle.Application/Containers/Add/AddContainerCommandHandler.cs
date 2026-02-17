@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Prickle.Application.Abstractions.Database;
 using Prickle.Domain.Containers;
 
@@ -39,7 +39,7 @@ internal sealed class AddContainerCommandHandler
         var container = result.Value;
         dbContext.Containers.Add(container);
         await dbContext.SaveChangesAsync(cancellationToken);
-        
+
         var response = new ContainerResponse
         {
             Id = container.Id,
@@ -50,7 +50,7 @@ internal sealed class AddContainerCommandHandler
             ImageUrl = container.ImageUrl,
             ImageIsometricUrl = container.ImageIsometricUrl
         };
-        
+
         return Result.Success(response);
     }
 }

@@ -18,7 +18,7 @@ namespace Prickle.Infrastructure.Database.Migrations
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     volume = table.Column<float>(type: "real", nullable: false),
                     is_closed = table.Column<bool>(type: "boolean", nullable: false),
                     image_url = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
@@ -35,7 +35,7 @@ namespace Prickle.Infrastructure.Database.Migrations
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     category = table.Column<int>(type: "integer", nullable: false),
                     image_url = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
                     image_isometric_url = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true)
@@ -99,9 +99,10 @@ namespace Prickle.Infrastructure.Database.Migrations
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     name_latin = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     image_url = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
                     image_isometric_url = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
+                    category = table.Column<int>(type: "integer", nullable: false),
                     light_level = table.Column<int>(type: "integer", nullable: false),
                     water_need = table.Column<int>(type: "integer", nullable: false),
                     humidity_level = table.Column<int>(type: "integer", nullable: false),
@@ -186,16 +187,6 @@ namespace Prickle.Infrastructure.Database.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "ix_plants_humidity_level",
-                table: "plants",
-                column: "humidity_level");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_plants_light_level",
-                table: "plants",
-                column: "light_level");
-
-            migrationBuilder.CreateIndex(
                 name: "ix_plants_name",
                 table: "plants",
                 column: "name",
@@ -210,11 +201,6 @@ namespace Prickle.Infrastructure.Database.Migrations
                 name: "ix_plants_soil_formula_id",
                 table: "plants",
                 column: "soil_formula_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_plants_water_need",
-                table: "plants",
-                column: "water_need");
 
             migrationBuilder.CreateIndex(
                 name: "ix_project_items_item_type",

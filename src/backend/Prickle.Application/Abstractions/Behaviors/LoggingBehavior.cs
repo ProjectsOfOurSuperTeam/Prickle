@@ -1,5 +1,4 @@
-﻿using Mediator;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 
 namespace Prickle.Application.Abstractions.Behaviors;
 

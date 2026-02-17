@@ -8,6 +8,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Scalar.AspNetCore" />
+		<PackageReference Include="Scalar.AspNetCore.Microsoft" />
 	</ItemGroup>
 
 	<ItemGroup>

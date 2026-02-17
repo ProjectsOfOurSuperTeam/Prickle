@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Prickle.Application.Abstractions.Database;
 using Prickle.Domain.Plants;
 
@@ -51,6 +51,7 @@ internal sealed class GetAllPlantsQueryHandler
                 Description = p.Description,
                 ImageUrl = p.ImageUrl,
                 ImageIsometricUrl = p.ImageIsometricUrl,
+                Category = p.Category,
                 LightLevel = p.LightLevel,
                 WaterNeed = p.WaterNeed,
                 HumidityLevel = p.HumidityLevel,
