@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import { HiMenu, HiX } from 'react-icons/hi';
+import { useAuth } from '../services/useAuth';
 import logo from '../assets/images/logo/logo.png';
 import './Layout.css';
 
 // Layout component with navigation
 function Layout() {
+  const { isAuthenticated } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -35,8 +37,9 @@ function Layout() {
             <li><Link to="/" onClick={closeMenu}>Головна</Link></li>
             <li><Link to="/catalog" onClick={closeMenu}>Каталог</Link></li>
             <li><Link to="/constructor" onClick={closeMenu}>Конструктор</Link></li>
-            <li><Link to="/profile" onClick={closeMenu}>Профіль</Link></li>
-            <li><Link to="/auth" className="nav-btn-login" onClick={closeMenu}>Увійти</Link></li>
+            {isAuthenticated && <li><Link to="/profile" onClick={closeMenu}>Профіль</Link></li>}
+            {isAuthenticated && <li><Link to="/logout" className="nav-btn-login" onClick={closeMenu}>Вийти</Link></li>}
+            {!isAuthenticated && <li><Link to="/auth" className="nav-btn-login" onClick={closeMenu}>Увійти</Link></li>}
           </ul>
         </div>
       </nav>

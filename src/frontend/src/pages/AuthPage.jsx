@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../services/useAuth';
 import './AuthPage.css';
 
@@ -8,8 +8,7 @@ const initialLogin = { email: '', password: '' };
 const initialRegister = { name: '', email: '', password: '', confirmPassword: '' };
 
 function AuthPage() {
-  const navigate = useNavigate();
-  const { login, isLoading, error: authError, clearError } = useAuth();
+  const { login, isLoading, error: authError, clearError, isAuthenticated } = useAuth();
   const [mode, setMode] = useState('login');
   const [loginForm, setLoginForm] = useState(initialLogin);
   const [registerForm, setRegisterForm] = useState(initialRegister);
@@ -68,7 +67,6 @@ function AuthPage() {
     try {
       await login({ email: loginForm.email.trim(), password: loginForm.password });
       setStatus((prev) => ({ ...prev, login: 'Вхід успішний.' }));
-      navigate('/profile');
     } catch {
       setStatus((prev) => ({ ...prev, login: 'Помилка входу. Перевірте облікові дані.' }));
     }
@@ -92,6 +90,10 @@ function AuthPage() {
 
   const showLoginErrors = submitted.login && !isLoginValid;
   const showRegisterErrors = submitted.register && !isRegisterValid;
+
+  if (isAuthenticated) {
+    return <Navigate to="/profile" replace />;
+  }
 
   return (
     <div className="auth-page">

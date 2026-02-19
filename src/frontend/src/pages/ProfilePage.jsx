@@ -1,6 +1,16 @@
 import './ProfilePage.css';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../services/useAuth';
 
 function ProfilePage() {
+  const { isAuthenticated, user } = useAuth();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/auth" replace />;
+  } else {
+    console.log("Current user:", user);
+  }
+
   const stats = [
     { label: 'Збережені флораріуми', value: 4 },
     { label: 'Створено ескізів', value: 12 },
@@ -33,7 +43,7 @@ function ProfilePage() {
       <section className="profile-hero">
         <div>
           <p className="profile-tag">Профіль</p>
-          <h1>Вітаємо, Маріє!</h1>
+          <h1>Вітаємо, {user?.name || user?.username || user?.email || 'користувачу'}!</h1>
           <p className="profile-subtitle">
             Тут зібрані ваші флораріуми, ескізи та персональні налаштування.
           </p>
@@ -85,15 +95,15 @@ function ProfilePage() {
         <div className="profile-settings">
           <div>
             <span className="setting-label">Email</span>
-            <strong>maria@example.com</strong>
+            <strong>{user?.email ?? '?'}</strong>
           </div>
           <div>
             <span className="setting-label">Телефон</span>
-            <strong>+38 (097) 123-45-67</strong>
+            <strong>{user?.phone ?? '?'}</strong>
           </div>
           <div>
             <span className="setting-label">План</span>
-            <strong>Free</strong>
+            <strong>{user?.plan ?? '?'}</strong>
           </div>
         </div>
       </section>
