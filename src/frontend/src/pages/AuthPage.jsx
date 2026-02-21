@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../services/useAuth';
 import './AuthPage.css';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -6,6 +8,7 @@ const initialLogin = { email: '', password: '' };
 const initialRegister = { name: '', email: '', password: '', confirmPassword: '' };
 
 function AuthPage() {
+  const { login, isLoading, error: authError, clearError, isAuthenticated } = useAuth();
   const [mode, setMode] = useState('login');
   const [loginForm, setLoginForm] = useState(initialLogin);
   const [registerForm, setRegisterForm] = useState(initialRegister);
@@ -51,16 +54,22 @@ function AuthPage() {
   const isLoginValid = Object.keys(loginErrors).length === 0;
   const isRegisterValid = Object.keys(registerErrors).length === 0;
 
-  const handleLoginSubmit = (event) => {
+  const handleLoginSubmit = async (event) => {
     event.preventDefault();
     setSubmitted((prev) => ({ ...prev, login: true }));
+    clearError();
 
     if (!isLoginValid) {
       setStatus((prev) => ({ ...prev, login: 'Перевірте помилки у формі.' }));
       return;
     }
 
-    setStatus((prev) => ({ ...prev, login: 'Форма валідна. Далі підключимо API.' }));
+    try {
+      await login({ email: loginForm.email.trim(), password: loginForm.password });
+      setStatus((prev) => ({ ...prev, login: 'Вхід успішний.' }));
+    } catch {
+      setStatus((prev) => ({ ...prev, login: 'Помилка входу. Перевірте облікові дані.' }));
+    }
   };
 
   const handleRegisterSubmit = (event) => {
@@ -72,11 +81,19 @@ function AuthPage() {
       return;
     }
 
-    setStatus((prev) => ({ ...prev, register: 'Реєстрацію підтверджено. Далі підключимо API.' }));
+    // TODO: Registration via Keycloak API is intentionally deferred by request.
+    setStatus((prev) => ({
+      ...prev,
+      register: 'Реєстрацію тимчасово не підключено. Скористайтеся входом.',
+    }));
   };
 
   const showLoginErrors = submitted.login && !isLoginValid;
   const showRegisterErrors = submitted.register && !isRegisterValid;
+
+  if (isAuthenticated) {
+    return <Navigate to="/profile" replace />;
+  }
 
   return (
     <div className="auth-page">
@@ -150,9 +167,12 @@ function AuthPage() {
             </label>
 
             {status.login ? <p className="auth-hint">{status.login}</p> : null}
+            {authError ? <p className="auth-hint">{authError}</p> : null}
 
             <div className="auth-actions">
-              <button type="submit">Увійти</button>
+              <button type="submit" disabled={isLoading}>
+                {isLoading ? 'Вхід...' : 'Увійти'}
+              </button>
               <button
                 type="button"
                 className="auth-link"

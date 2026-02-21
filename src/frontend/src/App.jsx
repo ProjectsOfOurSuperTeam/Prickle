@@ -7,6 +7,7 @@ import ConstructorPage from './pages/ConstructorPage';
 import ResultPage from './pages/ResultPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminDashboard from './pages/AdminDashboard';
+import LogoutPage from './pages/LogoutPage';
 import './App.css';
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
           <Route path="constructor" element={<ConstructorPage />} />
           <Route path="result" element={<ResultPage />} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="logout" element={<LogoutPage />} />
           <Route path="admin" element={<AdminDashboard />} />
         </Route>
       </Routes>
