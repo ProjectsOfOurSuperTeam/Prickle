@@ -3,6 +3,7 @@ export const authContextValue = {
   isLoading: false,
   user: null,
   error: '',
+  getAccessToken: () => null,
   login: async () => {},
   logout: async () => {},
   clearError: () => {},

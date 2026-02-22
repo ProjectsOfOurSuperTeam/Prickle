@@ -24,8 +24,6 @@ internal sealed class Get : IEndpoint
         .WithDescription("Retrieves a container by its ID.")
         .WithSummary("Get a container by ID")
         .Produces<ContainerResponse>(StatusCodes.Status200OK)
-        .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status401Unauthorized)
-        .HasPermission(AuthorizationPolicies.User);
+        .ProducesProblem(StatusCodes.Status400BadRequest);
     }
 }

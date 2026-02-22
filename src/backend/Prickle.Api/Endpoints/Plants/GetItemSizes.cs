@@ -24,8 +24,6 @@ internal sealed class GetItemSizes : IEndpoint
         .WithDescription("Retrieves a list of all plant item sizes.")
         .WithSummary("Get all plant item sizes")
         .Produces<PlantItemSizesResponse>(StatusCodes.Status200OK)
-        .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status401Unauthorized)
-        .HasPermission(AuthorizationPolicies.User);
+        .ProducesProblem(StatusCodes.Status400BadRequest);
     }
 }

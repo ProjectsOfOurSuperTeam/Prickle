@@ -27,8 +27,6 @@ internal sealed class Get : IEndpoint
         .WithDescription("Retrieves a project by its ID with all items.")
         .WithSummary("Get a project by ID")
         .Produces<ProjectResponse>(StatusCodes.Status200OK)
-        .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status401Unauthorized)
-        .HasPermission(AuthorizationPolicies.User);
+        .ProducesProblem(StatusCodes.Status400BadRequest);
     }
 }

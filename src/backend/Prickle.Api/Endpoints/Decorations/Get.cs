@@ -25,8 +25,6 @@ internal sealed class Get : IEndpoint
         .WithDescription("Retrieves a decoration by its ID.")
         .WithSummary("Get a decoration by ID")
         .Produces<DecorationResponse>(StatusCodes.Status200OK)
-        .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status401Unauthorized)
-        .HasPermission(AuthorizationPolicies.User);
+        .ProducesProblem(StatusCodes.Status400BadRequest);
     }
 }

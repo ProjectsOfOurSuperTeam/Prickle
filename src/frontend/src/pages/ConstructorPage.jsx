@@ -1,3 +1,6 @@
+import { useState } from 'react';
+import { useApi } from '../services/useApi';
+
 // Constructor Workspace: Main page with Canvas (Drag-and-Drop), tool panel and compatibility indicator
 function ConstructorPage() {
   return (
