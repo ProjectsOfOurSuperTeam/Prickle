@@ -82,17 +82,20 @@ export function AuthProvider({ children }) {
     setError('');
   }, []);
 
+  const getAccessToken = useCallback(() => session?.accessToken ?? null, [session]);
+
   const value = useMemo(
     () => ({
       isAuthenticated: Boolean(session?.accessToken),
       isLoading,
       user: session?.profile || null,
       error,
+      getAccessToken,
       login,
       logout,
       clearError,
     }),
-    [session, isLoading, error, login, logout, clearError],
+    [session, isLoading, error, getAccessToken, login, logout, clearError],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
