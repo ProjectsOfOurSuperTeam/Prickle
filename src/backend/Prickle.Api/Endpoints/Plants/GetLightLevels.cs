@@ -24,8 +24,6 @@ internal sealed class GetLightLevels : IEndpoint
         .WithDescription("Retrieves a list of all plant light levels.")
         .WithSummary("Get all plant light levels")
         .Produces<PlantLightLevelsResponse>(StatusCodes.Status200OK)
-        .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status401Unauthorized)
-        .HasPermission(AuthorizationPolicies.User);
+        .ProducesProblem(StatusCodes.Status400BadRequest);
     }
 }

@@ -24,8 +24,6 @@ internal sealed class GetHumidityLevels : IEndpoint
         .WithDescription("Retrieves a list of all plant humidity levels.")
         .WithSummary("Get all plant humidity levels")
         .Produces<PlantHumidityLevelsResponse>(StatusCodes.Status200OK)
-        .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status401Unauthorized)
-        .HasPermission(AuthorizationPolicies.User);
+        .ProducesProblem(StatusCodes.Status400BadRequest);
     }
 }

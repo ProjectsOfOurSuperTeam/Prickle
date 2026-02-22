@@ -44,8 +44,6 @@ internal sealed class GetAll : IEndpoint
                          "Example: '-name' for descending by name, 'volume' for ascending by volume.")
         .WithSummary("Get all containers")
         .Produces<ContainersResponse>(StatusCodes.Status200OK)
-        .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status401Unauthorized)
-        .HasPermission(AuthorizationPolicies.User);
+        .ProducesProblem(StatusCodes.Status400BadRequest);
     }
 }

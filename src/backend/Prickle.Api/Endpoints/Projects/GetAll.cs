@@ -47,8 +47,6 @@ internal sealed class GetAll : IEndpoint
                          "Example: '-createdat' for descending by creation date.")
         .WithSummary("Get all projects")
         .Produces<ProjectsResponse>(StatusCodes.Status200OK)
-        .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status401Unauthorized)
-        .HasPermission(AuthorizationPolicies.User);
+        .ProducesProblem(StatusCodes.Status400BadRequest);
     }
 }

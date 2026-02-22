@@ -24,8 +24,6 @@ internal sealed class Get : IEndpoint
         .WithDescription("Retrieves a plant by its ID.")
         .WithSummary("Get a plant by ID")
         .Produces<PlantResponse>(StatusCodes.Status200OK)
-        .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status401Unauthorized)
-        .HasPermission(AuthorizationPolicies.User);
+        .ProducesProblem(StatusCodes.Status400BadRequest);
     }
 }

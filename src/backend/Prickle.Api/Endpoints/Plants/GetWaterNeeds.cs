@@ -24,8 +24,6 @@ internal sealed class GetWaterNeeds : IEndpoint
         .WithDescription("Retrieves a list of all plant water needs.")
         .WithSummary("Get all plant water needs")
         .Produces<PlantWaterNeedsResponse>(StatusCodes.Status200OK)
-        .ProducesProblem(StatusCodes.Status400BadRequest)
-        .ProducesProblem(StatusCodes.Status401Unauthorized)
-        .HasPermission(AuthorizationPolicies.User);
+        .ProducesProblem(StatusCodes.Status400BadRequest);
     }
 }
