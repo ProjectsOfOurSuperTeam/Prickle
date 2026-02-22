@@ -1,4 +1,8 @@
 export function getApiBaseUrl() {
+  if (import.meta.env.DEV) {
+    return '';
+  }
+
   const httpsUrl = import.meta.env.services__api__https__0;
   const httpUrl = import.meta.env.services__api__http__0;
 

@@ -52,7 +52,7 @@ function ConstructorPage() {
 
   return (
       <div style={{ padding: '20px', maxWidth: '800px' }}>
-        <h1>Конструктор (Тест API)</h1>
+        <h1>Containers (Тест API)</h1>
 
         {/* Панель налаштувань */}
         <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
