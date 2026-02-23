@@ -4,14 +4,14 @@ import {
   HiClock, HiCurrencyDollar, HiCheckCircle, HiAcademicCap, HiSparkles, HiDeviceMobile,
   HiCube, HiShieldCheck, HiBeaker, HiColorSwatch, HiBookOpen, HiDocumentDownload
 } from 'react-icons/hi';
-import s1 from '../assets/images/decor/s1.png';
-import s5 from '../assets/images/decor/s5.png';
-import s8 from '../assets/images/decor/s8.png';
-import s12 from '../assets/images/decor/s12.png';
-import s15 from '../assets/images/decor/s15.png';
-import s20 from '../assets/images/decor/s20.png';
-import s25 from '../assets/images/decor/s25.png';
-import s30 from '../assets/images/decor/s30.png';
+const s1 = '/assets/images/decor/s1.png';
+const s5 = '/assets/images/decor/s5.png';
+const s8 = '/assets/images/decor/s8.png';
+const s12 = '/assets/images/decor/s12.png';
+const s15 = '/assets/images/decor/s15.png';
+const s20 = '/assets/images/decor/s20.png';
+const s25 = '/assets/images/decor/s25.png';
+const s30 = '/assets/images/decor/s30.png';
 import './LandingPage.css';
 
 // Landing Page: Presentation of Prickle capabilities and gallery of examples

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import { HiMenu, HiX } from 'react-icons/hi';
 import { useAuth } from '../services/useAuth';
-import logo from '../assets/images/logo/logo.png';
+const logo = '/assets/images/logo/logo.png';
 import './Layout.css';
 
 // Layout component with navigation
