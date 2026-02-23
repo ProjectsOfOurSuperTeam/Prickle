@@ -1,0 +1,25 @@
+.catalog-section {
+  margin-bottom: 3rem;
+}
+
+.catalog-section__title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 2.5rem;
+}
+
+.catalog-section__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.5rem 2.5rem;
+  justify-items: center;
+  align-items: stretch;
+  width: 100%;
+  padding-right: 2.5rem;
+}
+
+.catalog-section__empty {
+  grid-column: 1 / -1;
+  text-align: center;
+}
+
