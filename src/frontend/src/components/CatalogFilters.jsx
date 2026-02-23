@@ -59,6 +59,15 @@ const CONTAINER_FORMS = [
   'Пісочний годинник',
 ];
 
+const DECORATION_CATEGORIES = [
+  { value: 'Stones', label: 'Каміння' },
+  { value: 'Sand', label: 'Пісок' },
+  { value: 'Wood', label: 'Дерево' },
+  { value: 'Figurines', label: 'Фігурки' },
+  { value: 'Nature', label: 'Природа' },
+  { value: 'Minerals', label: 'Мінерали' },
+];
+
 function CatalogFilters({ filters, onChange }) {
   const handle = (key) => (e) => onChange({ ...filters, [key]: e.target.value });
 
@@ -78,6 +87,7 @@ function CatalogFilters({ filters, onChange }) {
             <option value=''>Всі</option>
             <option value='plant'>Рослини</option>
             <option value='container'>Контейнери</option>
+            <option value='decoration'>Декорації</option>
           </select>
         </label>
         {filters.category === 'plant' && (
@@ -144,6 +154,15 @@ function CatalogFilters({ filters, onChange }) {
               </select>
             </label>
           </>
+        )}
+        {filters.category === 'decoration' && (
+          <label className="catalog-filters__label">
+            Підкатегорія:
+            <select className="catalog-filters__select" value={filters.decorationCategory || ''} onChange={handle('decorationCategory')}>
+              <option value=''>Всі</option>
+              {DECORATION_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+            </select>
+          </label>
         )}
       </div>
     </aside>
