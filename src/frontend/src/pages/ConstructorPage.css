@@ -295,6 +295,10 @@
 }
 
 .placed-item-label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, calc(-50% + 2px));
   text-align: center;
   max-width: 90%;
   font-size: 0.78rem;
@@ -302,6 +306,17 @@
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.86);
   color: var(--color-dark-forest);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.16s ease, transform 0.16s ease, visibility 0s linear 0.16s;
+  pointer-events: none;
+}
+
+.placed-item-label-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.16s ease, transform 0.16s ease;
 }
 
 .placed-item-remove {
@@ -318,6 +333,19 @@
   background: #fff;
   color: var(--color-dark-forest);
   z-index: 3;
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.92);
+  transition: opacity 0.16s ease, transform 0.16s ease, visibility 0s linear 0.16s;
+  pointer-events: none;
+}
+
+.placed-item-remove-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1);
+  pointer-events: auto;
+  transition: opacity 0.16s ease, transform 0.16s ease;
 }
 
 .constructor-placed-list {

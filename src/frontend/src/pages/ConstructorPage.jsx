@@ -128,6 +128,7 @@ function ConstructorPage() {
   const boardWrapRef = useRef(null);
   const panRef = useRef({ active: false, startX: 0, startY: 0, scrollLeft: 0, scrollTop: 0 });
   const suppressBoardClickRef = useRef(false);
+  const hoverRevealTimerRef = useRef(null);
 
   const [gridSize, setGridSize] = useState(5);
   const [activeTab, setActiveTab] = useState('plants');
@@ -146,6 +147,15 @@ function ConstructorPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isPanning, setIsPanning] = useState(false);
+  const [revealedItemId, setRevealedItemId] = useState(null);
+
+  useEffect(() => {
+    return () => {
+      if (hoverRevealTimerRef.current) {
+        window.clearTimeout(hoverRevealTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -558,6 +568,25 @@ function ConstructorPage() {
     setPlacedItems((prev) => prev.filter((item) => item.instanceId !== instanceId));
   }
 
+  function handlePlacedItemMouseEnter(instanceId) {
+    if (hoverRevealTimerRef.current) {
+      window.clearTimeout(hoverRevealTimerRef.current);
+    }
+
+    hoverRevealTimerRef.current = window.setTimeout(() => {
+      setRevealedItemId(instanceId);
+    }, 550);
+  }
+
+  function handlePlacedItemMouseLeave(instanceId) {
+    if (hoverRevealTimerRef.current) {
+      window.clearTimeout(hoverRevealTimerRef.current);
+      hoverRevealTimerRef.current = null;
+    }
+
+    setRevealedItemId((prev) => (prev === instanceId ? null : prev));
+  }
+
   function resetWorkspace() {
     setPlacedItems([]);
     setNotice('');
@@ -697,6 +726,8 @@ function ConstructorPage() {
                 className={`placed-item placed-item-${item.type}`}
                 draggable
                 onDragStart={(event) => handlePlacedDragStart(event, item)}
+                onMouseEnter={() => handlePlacedItemMouseEnter(item.instanceId)}
+                onMouseLeave={() => handlePlacedItemMouseLeave(item.instanceId)}
                 style={{
                   left: `${item.left}px`,
                   top: `${item.top}px`,
@@ -706,12 +737,23 @@ function ConstructorPage() {
                 title={`${item.name} (${item.size}x${item.size})`}
               >
                 <div className="placed-item-footprint" />
-                {item.image ? (
-                  <img src={item.image} alt={item.name} className="placed-item-image" />
-                ) : (
-                  <span className="placed-item-label">{item.name}</span>
-                )}
-                <button type="button" className="placed-item-remove" onClick={() => removePlacedItem(item.instanceId)}>
+                {item.image && <img src={item.image} alt={item.name} className="placed-item-image" />}
+                <span
+                  className={`placed-item-label ${revealedItemId === item.instanceId && item.layer === 'soil' ? 'placed-item-label-visible' : ''}`}
+                >
+                  {item.name}
+                </span>
+                <button
+                  type="button"
+                  className={`placed-item-remove ${revealedItemId === item.instanceId ? 'placed-item-remove-visible' : ''}`}
+                  onMouseDown={(event) => {
+                    event.stopPropagation();
+                  }}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    removePlacedItem(item.instanceId);
+                  }}
+                >
                   x
                 </button>
               </div>
