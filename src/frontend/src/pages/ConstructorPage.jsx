@@ -51,6 +51,18 @@ function toGridCell(localX, localY, originX, originY) {
   return { row, col };
 }
 
+function toPlacementCandidate(localX, localY, footprint, originX, originY) {
+  const targetCell = toGridCell(localX, localY, originX, originY);
+  const offset = Math.floor(footprint / 2);
+  return {
+    row: targetCell.row - offset,
+    col: targetCell.col - offset,
+    size: footprint,
+    hoverRow: targetCell.row,
+    hoverCol: targetCell.col,
+  };
+}
+
 function rectanglesOverlap(first, second) {
   return (
     first.row < second.row + second.size
@@ -245,7 +257,9 @@ function ConstructorPage() {
         const anchor = toIsoPosition(item.row, item.col, originX, originY);
         return {
           ...item,
-          left: anchor.left + ((item.size - 1) * TILE_WIDTH) / 2,
+          // In isometric projection, expanding equally in row+col keeps X the same.
+          // Only Y shifts to keep the visual footprint centered on logical occupied cells.
+          left: anchor.left,
           top: anchor.top + ((item.size - 1) * TILE_HEIGHT) / 2,
         };
       });
@@ -280,9 +294,59 @@ function ConstructorPage() {
     setDragHoverCell(candidate);
   }
 
+  function handlePlacedDragStart(event, item) {
+    event.stopPropagation();
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('application/prickle-move', JSON.stringify({
+      instanceId: item.instanceId,
+      size: item.size,
+    }));
+    event.dataTransfer.setData('text/plain', item.name);
+  }
+
   function handleDrop(event) {
     event.preventDefault();
     setNotice('');
+
+    const rect = boardRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const localX = event.clientX - rect.left;
+    const localY = event.clientY - rect.top;
+
+    const moveRaw = event.dataTransfer.getData('application/prickle-move');
+    if (moveRaw) {
+      let movePayload;
+      try {
+        movePayload = JSON.parse(moveRaw);
+      } catch {
+        return;
+      }
+
+      const candidate = toPlacementCandidate(
+        localX,
+        localY,
+        movePayload.size,
+        (gridSize * TILE_WIDTH) / 2,
+        GRID_TOP_OFFSET,
+      );
+
+      if (!canPlaceItem(candidate, movePayload.instanceId)) {
+        setNotice('Не можна перемістити сюди: вихід за межі сітки або перетин з іншим елементом.');
+        return;
+      }
+
+      setPlacedItems((prev) => prev.map((item) => {
+        if (item.instanceId !== movePayload.instanceId) return item;
+        return {
+          ...item,
+          row: candidate.row,
+          col: candidate.col,
+        };
+      }));
+
+      setDragHoverCell(null);
+      return;
+    }
 
     const raw = event.dataTransfer.getData('application/prickle-item');
     if (!raw || !boardRef.current) return;
@@ -294,16 +358,13 @@ function ConstructorPage() {
       return;
     }
 
-    const rect = boardRef.current.getBoundingClientRect();
-    const localX = event.clientX - rect.left;
-    const localY = event.clientY - rect.top;
-    const targetCell = toGridCell(localX, localY, (gridSize * TILE_WIDTH) / 2, GRID_TOP_OFFSET);
-
-    const candidate = {
-      row: targetCell.row,
-      col: targetCell.col,
-      size: payload.footprint,
-    };
+    const candidate = toPlacementCandidate(
+      localX,
+      localY,
+      payload.footprint,
+      (gridSize * TILE_WIDTH) / 2,
+      GRID_TOP_OFFSET,
+    );
 
     if (!canPlaceItem(candidate)) {
       setNotice('Це місце зайняте або елемент виходить за межі сітки.');
@@ -318,8 +379,8 @@ function ConstructorPage() {
       subtitle: payload.subtitle,
       size: payload.footprint,
       image: payload.image,
-      row: targetCell.row,
-      col: targetCell.col,
+      row: candidate.row,
+      col: candidate.col,
     };
 
     setPlacedItems((prev) => [...prev, nextItem]);
@@ -336,6 +397,7 @@ function ConstructorPage() {
     if (!boardWrapRef.current) return;
     if (event.button !== 0) return;
     if (event.target.closest('.placed-item-remove')) return;
+    if (event.target.closest('.placed-item')) return;
 
     panRef.current = {
       active: true,
@@ -487,6 +549,8 @@ function ConstructorPage() {
               <div
                 key={item.instanceId}
                 className={`placed-item placed-item-${item.type}`}
+                draggable
+                onDragStart={(event) => handlePlacedDragStart(event, item)}
                 style={{
                   left: `${item.left}px`,
                   top: `${item.top}px`,

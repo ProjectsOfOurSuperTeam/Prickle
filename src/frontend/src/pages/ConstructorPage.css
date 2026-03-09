@@ -3,6 +3,7 @@
   grid-template-columns: 340px minmax(0, 1fr);
   gap: 1.25rem;
   min-height: calc(100vh - 96px);
+  height: calc(100vh - 96px);
   padding: 1rem;
   background:
     radial-gradient(circle at 5% 10%, rgba(var(--color-sage-rgb), 0.18), transparent 35%),
@@ -21,6 +22,7 @@
   box-shadow: 0 18px 45px rgba(var(--color-dark-forest-rgb), 0.1);
   padding: 1rem;
   min-height: 0;
+  height: 100%;
 }
 
 .constructor-title {
@@ -77,6 +79,8 @@
   flex-direction: column;
   gap: 0.7rem;
   padding-right: 0.2rem;
+  flex: 1;
+  min-height: 0;
 }
 
 .constructor-card {
@@ -139,6 +143,8 @@
   flex-direction: column;
   gap: 0.9rem;
   min-width: 0;
+  min-height: 0;
+  height: 100%;
 }
 
 .constructor-toolbar {
@@ -209,6 +215,7 @@
   padding: 1rem;
   min-height: 420px;
   cursor: grab;
+  flex: 1;
 }
 
 .constructor-board-wrap-panning {
@@ -312,6 +319,8 @@
   border: 1px solid rgba(var(--color-dark-forest-rgb), 0.1);
   background: rgba(255, 255, 255, 0.86);
   padding: 0.85rem 1rem;
+  max-height: 190px;
+  overflow: auto;
 }
 
 .constructor-placed-list h2 {
@@ -359,10 +368,16 @@
 @media (max-width: 1100px) {
   .constructor-page {
     grid-template-columns: 1fr;
+    height: auto;
   }
 
   .constructor-catalog {
     max-height: 45vh;
+    height: auto;
+  }
+
+  .constructor-workspace {
+    height: auto;
   }
 }
 
