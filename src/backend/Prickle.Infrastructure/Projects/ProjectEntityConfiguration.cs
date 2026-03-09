@@ -48,6 +48,8 @@ internal sealed class ProjectEntityConfiguration : IEntityTypeConfiguration<Proj
             .HasForeignKey(x => x.ProjectId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.Metadata.FindNavigation(nameof(Project.Items))?.SetField("_items");
+
         builder.Navigation(x => x.Items)
             .EnableLazyLoading(false);
     }

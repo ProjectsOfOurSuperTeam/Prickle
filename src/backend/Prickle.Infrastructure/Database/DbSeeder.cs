@@ -16,6 +16,114 @@ public static class DbSeeder
         SeedContainers(context);
         SeedDecorations(context);
         SeedPlants(context);
+        SeedProjects(context);
+    }
+
+    public static void SeedProjects(DbContext context)
+    {
+        if (context.Set<Project>().Any())
+        {
+            return;
+        }
+
+        var seedUserId = new Guid("7b9841d1-3f55-46a2-b636-32ba4aedc928");
+
+        var containers = context.Set<Container>().ToDictionary(c => c.Name, c => c.Id);
+        var plants = context.Set<Plant>().ToDictionary(p => p.NameLatin, p => p.Id);
+        var plantsByName = context.Set<Plant>().ToDictionary(p => p.Name, p => p.Id);
+        var decorations = context.Set<Decoration>().ToDictionary(d => d.Name, d => d.Id);
+        var soilFormulas = context.Set<SoilFormulas>().ToDictionary(f => f.Name, f => f.Id);
+
+        Guid Container(string name) => containers[name];
+        Guid Plant(string nameLatin) => plants.TryGetValue(nameLatin, out var id) ? id : plantsByName[nameLatin];
+        Guid Decoration(string name) => decorations[name];
+        Guid SoilFormula(string name) => soilFormulas[name];
+
+        // 1. Succulent Desktop — exact match for AI generation prompt (Ікосаедр, Echeveria, Haworthia, Lithops, white gravel, black lava, desert mix)
+        var proj1Result = Project.Create(seedUserId, Container("Ікосаедр (Геометрія)"));
+        if (proj1Result.IsSuccess)
+        {
+            var p1 = proj1Result.Value;
+            p1.AddItem(ProjectItemType.Plant, Plant("Echeveria elegans"), 2, 2, 1);
+            p1.AddItem(ProjectItemType.Plant, Plant("Haworthia fasciata"), 4, 2, 1);
+            p1.AddItem(ProjectItemType.Plant, Plant("Lithops spp."), 3, 4, 0);
+            p1.AddItem(ProjectItemType.Decoration, Decoration("Біла морська галька"), 1, 1, 0);
+            p1.AddItem(ProjectItemType.Decoration, Decoration("Чорна вулканічна лава"), 5, 4, 0);
+            p1.AddItem(ProjectItemType.Soil, SoilFormula("Пустельний мікс (Сукулент)"), 0, 0, 0);
+            p1.Publish();
+            context.Set<Project>().Add(p1);
+        }
+
+        // 2. Tropical Mini-Forest — Fittonia, Soleirolia, driftwood, tropical formula
+        var proj2Result = Project.Create(seedUserId, Container("Мінімалістичний Куб"));
+        if (proj2Result.IsSuccess)
+        {
+            var p2 = proj2Result.Value;
+            p2.AddItem(ProjectItemType.Plant, Plant("Fittonia albivenis"), 2, 2, 1);
+            p2.AddItem(ProjectItemType.Plant, Plant("Soleirolia soleirolii"), 1, 1, 0);
+            p2.AddItem(ProjectItemType.Plant, Plant("Soleirolia soleirolii"), 4, 4, 0);
+            p2.AddItem(ProjectItemType.Decoration, Decoration("Дубова коряга \"Дрифтвуд\""), 3, 3, 1);
+            p2.AddItem(ProjectItemType.Soil, SoilFormula("Тропічний вологий (Класика)"), 0, 0, 0);
+            p2.Publish();
+            context.Set<Project>().Add(p2);
+        }
+
+        // 3. Desert Cactus Garden — Pyramid, cacti, golden sand, red jasper
+        var proj3Result = Project.Create(seedUserId, Container("Велика Піраміда"));
+        if (proj3Result.IsSuccess)
+        {
+            var p3 = proj3Result.Value;
+            p3.AddItem(ProjectItemType.Plant, Plant("Mammillaria elongata"), 3, 2, 1);
+            p3.AddItem(ProjectItemType.Plant, Plant("Astrophytum asterias"), 2, 4, 0);
+            p3.AddItem(ProjectItemType.Plant, Plant("Rebutia minuscula"), 4, 4, 0);
+            p3.AddItem(ProjectItemType.Decoration, Decoration("Золотистий пустельний пісок"), 1, 1, 0);
+            p3.AddItem(ProjectItemType.Decoration, Decoration("Червона яшма"), 5, 3, 0);
+            p3.AddItem(ProjectItemType.Soil, SoilFormula("Аридний мінеральний"), 0, 0, 0);
+            p3.Publish();
+            context.Set<Project>().Add(p3);
+        }
+
+        // 4. Mossarium Zen — Lotus bowl, mosses, torii gate, forest formula
+        var proj4Result = Project.Create(seedUserId, Container("Чаша \"Лотос\""));
+        if (proj4Result.IsSuccess)
+        {
+            var p4 = proj4Result.Value;
+            p4.AddItem(ProjectItemType.Plant, Plant("Leucobryum glaucum"), 2, 2, 0);
+            p4.AddItem(ProjectItemType.Plant, Plant("Taxiphyllum barbieri"), 3, 3, 0);
+            p4.AddItem(ProjectItemType.Decoration, Decoration("Японська брама Торії"), 3, 2, 1);
+            p4.AddItem(ProjectItemType.Decoration, Decoration("Сланцева крихта"), 1, 4, 0);
+            p4.AddItem(ProjectItemType.Soil, SoilFormula("Лісовий мох (Мосаріум)"), 0, 0, 0);
+            p4.Publish();
+            context.Set<Project>().Add(p4);
+        }
+
+        // 5. Carnivorous Bog — Sphere, Venus flytrap, Drosera, carnivorous formula
+        var proj5Result = Project.Create(seedUserId, Container("Еко-Сфера (Закрита)"));
+        if (proj5Result.IsSuccess)
+        {
+            var p5 = proj5Result.Value;
+            p5.AddItem(ProjectItemType.Plant, Plant("Dionaea muscipula"), 3, 2, 1);
+            p5.AddItem(ProjectItemType.Plant, Plant("Drosera capensis"), 2, 4, 0);
+            p5.AddItem(ProjectItemType.Soil, SoilFormula("Хижий (Для венериної мухоловки)"), 0, 0, 0);
+            p5.Publish();
+            context.Set<Project>().Add(p5);
+        }
+
+        // 6. Geometric Succulent Trio — Teardrop, compact succulents
+        var proj6Result = Project.Create(seedUserId, Container("Флораріум \"Крапля\""));
+        if (proj6Result.IsSuccess)
+        {
+            var p6 = proj6Result.Value;
+            p6.AddItem(ProjectItemType.Plant, Plant("Echeveria elegans"), 2, 2, 1);
+            p6.AddItem(ProjectItemType.Plant, Plant("Pachyphytum oviferum"), 3, 3, 0);
+            p6.AddItem(ProjectItemType.Plant, Plant("Adromischus cooperi"), 4, 2, 0);
+            p6.AddItem(ProjectItemType.Decoration, Decoration("Біла морська галька"), 1, 1, 0);
+            p6.AddItem(ProjectItemType.Soil, SoilFormula("Пустельний мікс (Сукулент)"), 0, 0, 0);
+            p6.Publish();
+            context.Set<Project>().Add(p6);
+        }
+
+        context.SaveChanges();
     }
     public static void SeedPlants(DbContext context)
     {

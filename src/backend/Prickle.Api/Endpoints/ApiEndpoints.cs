@@ -1,4 +1,4 @@
-﻿namespace Prickle.Api.Endpoints;
+namespace Prickle.Api.Endpoints;
 
 public static class ApiEndpoints
 {
@@ -75,5 +75,6 @@ public static class ApiEndpoints
         public const string AddItem = $"{ProjectsBase}/{{id:guid}}/items";
         public const string UpdateItem = $"{ProjectsBase}/{{projectId:guid}}/items/{{itemId:guid}}";
         public const string RemoveItem = $"{ProjectsBase}/{{projectId:guid}}/items/{{itemId:guid}}";
+        public const string GenerateFlorariumImage = $"{ProjectsBase}/{{id:guid}}/generate-florarium-image";
     }
 }
