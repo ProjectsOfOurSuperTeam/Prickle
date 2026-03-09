@@ -148,6 +148,7 @@ function ConstructorPage() {
   const [error, setError] = useState('');
   const [isPanning, setIsPanning] = useState(false);
   const [revealedItemId, setRevealedItemId] = useState(null);
+  const [hideObjectsLayer, setHideObjectsLayer] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -336,6 +337,11 @@ function ConstructorPage() {
         };
       });
   }, [gridSize, placedItems]);
+
+  const visiblePlacedItemsView = useMemo(() => {
+    if (!hideObjectsLayer) return placedItemsView;
+    return placedItemsView.filter((item) => item.layer !== 'objects');
+  }, [hideObjectsLayer, placedItemsView]);
 
   const soilCellColors = useMemo(() => {
     const colors = new Map();
@@ -680,6 +686,12 @@ function ConstructorPage() {
           <div className="constructor-actions">
             <span>Елементів: {placedItems.length}</span>
             <span>Режим: {selectedCatalogItem ? `Клік-плейс (${selectedCatalogItem.name})` : 'Drag-and-drop'}</span>
+            <button
+              type="button"
+              onClick={() => setHideObjectsLayer((prev) => !prev)}
+            >
+              {hideObjectsLayer ? 'Показати об\'єкти' : 'Сховати об\'єкти'}
+            </button>
             <button type="button" onClick={resetWorkspace}>Очистити</button>
           </div>
         </header>
@@ -720,7 +732,7 @@ function ConstructorPage() {
               />
             ))}
 
-            {placedItemsView.map((item) => (
+            {visiblePlacedItemsView.map((item) => (
               <div
                 key={item.instanceId}
                 className={`placed-item placed-item-${item.type}`}
