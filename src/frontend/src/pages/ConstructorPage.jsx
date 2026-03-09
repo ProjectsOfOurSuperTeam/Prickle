@@ -7,6 +7,7 @@ const TILE_WIDTH = 94;
 const TILE_HEIGHT = 52;
 const GRID_TOP_OFFSET = TILE_HEIGHT * 1.4;
 const MAX_PAGE_SIZE = 25;
+const SOIL_KINDS = new Set(['soilType', 'soilFormula']);
 
 const CATALOG_TABS = [
   { key: 'plants', label: 'Рослини' },
@@ -15,6 +16,55 @@ const CATALOG_TABS = [
   { key: 'decorations', label: 'Декор' },
   { key: 'containers', label: 'Контейнери' },
 ];
+
+const SOIL_COLOR_GRAY = [126, 121, 110];
+const SOIL_COLOR_YELLOW = [182, 154, 88];
+const SOIL_COLOR_BROWN = [124, 88, 52];
+
+function resolveLayer(kind) {
+  return SOIL_KINDS.has(kind) ? 'soil' : 'objects';
+}
+
+function hashString(value) {
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function mixChannel(start, end, amount) {
+  return Math.round(start + (end - start) * amount);
+}
+
+function mixColor(first, second, amount) {
+  return [
+    mixChannel(first[0], second[0], amount),
+    mixChannel(first[1], second[1], amount),
+    mixChannel(first[2], second[2], amount),
+  ];
+}
+
+function colorToRgb(color) {
+  return `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+}
+
+function getSoilGradientByKey(key) {
+  const ratio = hashString(key) / 4294967295;
+  const base = ratio < 0.5
+    ? mixColor(SOIL_COLOR_GRAY, SOIL_COLOR_YELLOW, ratio / 0.5)
+    : mixColor(SOIL_COLOR_YELLOW, SOIL_COLOR_BROWN, (ratio - 0.5) / 0.5);
+
+  const light = mixColor(base, [230, 220, 195], 0.26);
+  const dark = mixColor(base, [82, 61, 35], 0.22);
+
+  return {
+    start: colorToRgb(light),
+    end: colorToRgb(dark),
+    border: colorToRgb(mixColor(base, [60, 44, 25], 0.28)),
+  };
+}
 
 function estimatePlantFootprint(plant) {
   if (plant.itemMaxSize <= 10) return 1;
@@ -77,10 +127,12 @@ function ConstructorPage() {
   const boardRef = useRef(null);
   const boardWrapRef = useRef(null);
   const panRef = useRef({ active: false, startX: 0, startY: 0, scrollLeft: 0, scrollTop: 0 });
+  const suppressBoardClickRef = useRef(false);
 
   const [gridSize, setGridSize] = useState(5);
   const [activeTab, setActiveTab] = useState('plants');
   const [search, setSearch] = useState('');
+  const [selectedCatalogItem, setSelectedCatalogItem] = useState(null);
 
   const [plants, setPlants] = useState([]);
   const [soilTypes, setSoilTypes] = useState([]);
@@ -164,6 +216,7 @@ function ConstructorPage() {
         details: `Світло ${item.lightLevel}/5 • Вода ${item.waterNeed}/5`,
         footprint: estimatePlantFootprint(item),
         image: resolveImageUrl(item.imageIsometricUrl || item.imageUrl),
+        layer: resolveLayer('plant'),
       })),
       soilTypes: soilTypes.map((item) => ({
         id: `soilType-${item.id}`,
@@ -174,6 +227,7 @@ function ConstructorPage() {
         details: 'Рекомендований нижній шар',
         footprint: 1,
         image: null,
+        layer: resolveLayer('soilType'),
       })),
       soilFormulas: soilFormulas.map((item) => ({
         id: `soilFormula-${item.id}`,
@@ -184,6 +238,7 @@ function ConstructorPage() {
         details: 'Готовий мікс для флораріуму',
         footprint: 2,
         image: null,
+        layer: resolveLayer('soilFormula'),
       })),
       decorations: decorations.map((item) => ({
         id: `decoration-${item.id}`,
@@ -194,6 +249,7 @@ function ConstructorPage() {
         details: item.description || 'Декоративний елемент',
         footprint: 1,
         image: resolveImageUrl(item.imageIsometricUrl || item.imageUrl),
+        layer: resolveLayer('decoration'),
       })),
       containers: containers.map((item) => ({
         id: `container-${item.id}`,
@@ -204,6 +260,7 @@ function ConstructorPage() {
         details: item.description || 'Основа композиції',
         footprint: estimateContainerFootprint(item),
         image: resolveImageUrl(item.imageIsometricUrl || item.imageUrl),
+        layer: resolveLayer('container'),
       })),
     };
   }, [containers, decorations, plants, soilFormulas, soilTypes]);
@@ -251,8 +308,13 @@ function ConstructorPage() {
   const placedItemsView = useMemo(() => {
     const originX = (gridSize * TILE_WIDTH) / 2;
     const originY = GRID_TOP_OFFSET;
+    const layerRank = { soil: 0, objects: 1 };
     return [...placedItems]
-      .sort((a, b) => (a.row + a.col) - (b.row + b.col))
+      .sort((a, b) => {
+        const rankDelta = (layerRank[a.layer] || 0) - (layerRank[b.layer] || 0);
+        if (rankDelta !== 0) return rankDelta;
+        return (a.row + a.col) - (b.row + b.col);
+      })
       .map((item) => {
         const anchor = toIsoPosition(item.row, item.col, originX, originY);
         return {
@@ -265,13 +327,31 @@ function ConstructorPage() {
       });
   }, [gridSize, placedItems]);
 
-  function canPlaceItem(candidate, excludingId = null) {
+  const soilCellColors = useMemo(() => {
+    const colors = new Map();
+
+    placedItems
+      .filter((item) => item.layer === 'soil')
+      .forEach((item) => {
+        const gradient = getSoilGradientByKey(`${item.type}:${item.entityId}:${item.name}`);
+        for (let row = item.row; row < item.row + item.size; row += 1) {
+          for (let col = item.col; col < item.col + item.size; col += 1) {
+            colors.set(`${row}-${col}`, gradient);
+          }
+        }
+      });
+
+    return colors;
+  }, [placedItems]);
+
+  function canPlaceItem(candidate, layer, excludingId = null) {
     if (candidate.row < 0 || candidate.col < 0) return false;
     if (candidate.row + candidate.size > gridSize) return false;
     if (candidate.col + candidate.size > gridSize) return false;
 
     return !placedItems.some((item) => {
       if (item.instanceId === excludingId) return false;
+      if (item.layer !== layer) return false;
       return rectanglesOverlap(candidate, item);
     });
   }
@@ -300,8 +380,71 @@ function ConstructorPage() {
     event.dataTransfer.setData('application/prickle-move', JSON.stringify({
       instanceId: item.instanceId,
       size: item.size,
+      layer: item.layer,
     }));
     event.dataTransfer.setData('text/plain', item.name);
+  }
+
+  function placeItem(payload, candidate, excludingId = null) {
+    if (!canPlaceItem(candidate, payload.layer, excludingId)) {
+      return false;
+    }
+
+    if (excludingId) {
+      setPlacedItems((prev) => prev.map((item) => {
+        if (item.instanceId !== excludingId) return item;
+        return {
+          ...item,
+          row: candidate.row,
+          col: candidate.col,
+        };
+      }));
+      return true;
+    }
+
+    const nextItem = {
+      instanceId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      type: payload.kind,
+      entityId: payload.entityId,
+      name: payload.name,
+      subtitle: payload.subtitle,
+      size: payload.footprint,
+      image: payload.image,
+      layer: payload.layer,
+      row: candidate.row,
+      col: candidate.col,
+    };
+
+    setPlacedItems((prev) => [...prev, nextItem]);
+    return true;
+  }
+
+  function handleBoardClick(event) {
+    if (!selectedCatalogItem) return;
+    if (!boardRef.current) return;
+    if (suppressBoardClickRef.current) {
+      suppressBoardClickRef.current = false;
+      return;
+    }
+
+    const rect = boardRef.current.getBoundingClientRect();
+    const localX = event.clientX - rect.left;
+    const localY = event.clientY - rect.top;
+    const candidate = toPlacementCandidate(
+      localX,
+      localY,
+      selectedCatalogItem.footprint,
+      (gridSize * TILE_WIDTH) / 2,
+      GRID_TOP_OFFSET,
+    );
+
+    const placed = placeItem(selectedCatalogItem, candidate);
+    if (!placed) {
+      setNotice(`Шар ${selectedCatalogItem.layer === 'soil' ? 'грунту' : "об'єктів"} зайнятий або вихід за межі.`);
+      return;
+    }
+
+    setNotice('');
   }
 
   function handleDrop(event) {
@@ -330,21 +473,14 @@ function ConstructorPage() {
         GRID_TOP_OFFSET,
       );
 
-      if (!canPlaceItem(candidate, movePayload.instanceId)) {
+      if (!canPlaceItem(candidate, movePayload.layer, movePayload.instanceId)) {
         setNotice('Не можна перемістити сюди: вихід за межі сітки або перетин з іншим елементом.');
         return;
       }
-
-      setPlacedItems((prev) => prev.map((item) => {
-        if (item.instanceId !== movePayload.instanceId) return item;
-        return {
-          ...item,
-          row: candidate.row,
-          col: candidate.col,
-        };
-      }));
+      placeItem({ layer: movePayload.layer }, candidate, movePayload.instanceId);
 
       setDragHoverCell(null);
+      suppressBoardClickRef.current = true;
       return;
     }
 
@@ -366,25 +502,14 @@ function ConstructorPage() {
       GRID_TOP_OFFSET,
     );
 
-    if (!canPlaceItem(candidate)) {
-      setNotice('Це місце зайняте або елемент виходить за межі сітки.');
+    if (!canPlaceItem(candidate, payload.layer)) {
+      setNotice(`Шар ${payload.layer === 'soil' ? 'грунту' : "об'єктів"} зайнятий або вихід за межі.`);
       return;
     }
 
-    const nextItem = {
-      instanceId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      type: payload.kind,
-      entityId: payload.entityId,
-      name: payload.name,
-      subtitle: payload.subtitle,
-      size: payload.footprint,
-      image: payload.image,
-      row: candidate.row,
-      col: candidate.col,
-    };
-
-    setPlacedItems((prev) => [...prev, nextItem]);
+    placeItem(payload, candidate);
     setDragHoverCell(null);
+    suppressBoardClickRef.current = true;
   }
 
   function handleDragLeaveBoard(event) {
@@ -417,6 +542,10 @@ function ConstructorPage() {
 
     boardWrapRef.current.scrollLeft = panRef.current.scrollLeft - deltaX;
     boardWrapRef.current.scrollTop = panRef.current.scrollTop - deltaY;
+
+    if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) {
+      suppressBoardClickRef.current = true;
+    }
   }
 
   function stopPan() {
@@ -457,7 +586,10 @@ function ConstructorPage() {
               key={tab.key}
               type="button"
               className={`constructor-tab ${tab.key === activeTab ? 'constructor-tab-active' : ''}`}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => {
+                setActiveTab(tab.key);
+                setSelectedCatalogItem(null);
+              }}
             >
               {tab.label}
             </button>
@@ -474,9 +606,12 @@ function ConstructorPage() {
           {!loading && !error && visibleCatalogItems.map((item) => (
             <article
               key={item.id}
-              className="constructor-card"
+              className={`constructor-card ${selectedCatalogItem?.id === item.id ? 'constructor-card-selected' : ''}`}
               draggable
               onDragStart={(event) => handleDragStart(event, item)}
+              onClick={() => {
+                setSelectedCatalogItem((prev) => (prev?.id === item.id ? null : item));
+              }}
             >
               <div className="constructor-card-head">
                 <h3>{item.name}</h3>
@@ -515,6 +650,7 @@ function ConstructorPage() {
 
           <div className="constructor-actions">
             <span>Елементів: {placedItems.length}</span>
+            <span>Режим: {selectedCatalogItem ? `Клік-плейс (${selectedCatalogItem.name})` : 'Drag-and-drop'}</span>
             <button type="button" onClick={resetWorkspace}>Очистити</button>
           </div>
         </header>
@@ -536,12 +672,22 @@ function ConstructorPage() {
             onDragOver={handleDragOver}
             onDrop={handleDrop}
             onDragLeave={handleDragLeaveBoard}
+            onClick={handleBoardClick}
           >
             {gridCells.map((cell) => (
               <div
                 key={`${cell.row}-${cell.col}`}
                 className={`iso-cell ${dragHoverCell?.row === cell.row && dragHoverCell?.col === cell.col ? 'iso-cell-hover' : ''}`}
-                style={{ left: `${cell.left}px`, top: `${cell.top}px` }}
+                style={{
+                  left: `${cell.left}px`,
+                  top: `${cell.top}px`,
+                  ...(soilCellColors.has(`${cell.row}-${cell.col}`)
+                    ? {
+                      background: `linear-gradient(160deg, ${soilCellColors.get(`${cell.row}-${cell.col}`).start} 0%, ${soilCellColors.get(`${cell.row}-${cell.col}`).end} 100%)`,
+                      borderColor: soilCellColors.get(`${cell.row}-${cell.col}`).border,
+                    }
+                    : {}),
+                }}
               />
             ))}
 
