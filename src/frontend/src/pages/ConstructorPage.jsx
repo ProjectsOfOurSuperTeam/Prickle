@@ -88,6 +88,54 @@ function resolveImageUrl(imagePath) {
   return `/assets/images/${imagePath}`;
 }
 
+function normalizeLevel(level) {
+  if (typeof level === 'number') {
+    return Math.max(0, Math.min(5, level));
+  }
+
+  if (typeof level === 'string') {
+    const trimmed = level.trim();
+    const asNumber = Number(trimmed);
+    if (Number.isFinite(asNumber)) {
+      return Math.max(0, Math.min(5, asNumber));
+    }
+
+    const normalized = trimmed.toLowerCase();
+    const levelMap = {
+      verylow: 1,
+      low: 2,
+      medium: 3,
+      high: 4,
+      veryhigh: 5,
+      very_high: 5,
+      'very-high': 5,
+    };
+
+    return levelMap[normalized] ?? 0;
+  }
+
+  return 0;
+}
+
+function renderLevelIcons(level, icon, label, tone = 'default') {
+  const safeLevel = normalizeLevel(level);
+  return (
+    <div className="constructor-level" aria-label={`${label}: ${safeLevel}/5`}>
+      <span className="constructor-level-icons">
+        {Array.from({ length: 5 }, (_, index) => (
+          <span
+            key={`${label}-${index}`}
+            className={`constructor-level-icon constructor-level-icon-${tone} ${index < safeLevel ? 'constructor-level-icon-active' : ''}`}
+            aria-hidden="true"
+          >
+            {icon}
+          </span>
+        ))}
+      </span>
+    </div>
+  );
+}
+
 function toIsoPosition(row, col, originX, originY) {
   return {
     left: (col - row) * (TILE_WIDTH / 2) + originX,
@@ -124,11 +172,23 @@ function rectanglesOverlap(first, second) {
   );
 }
 
+function isCellInsideCandidate(cell, candidate) {
+  if (!candidate) return false;
+  return (
+    cell.row >= candidate.row
+    && cell.row < candidate.row + candidate.size
+    && cell.col >= candidate.col
+    && cell.col < candidate.col + candidate.size
+  );
+}
+
 function ConstructorPage() {
   const api = useApi();
   const { isAuthenticated } = useAuth();
   const boardRef = useRef(null);
   const boardWrapRef = useRef(null);
+  const dragFootprintRef = useRef(1);
+  const dragLayerRef = useRef(null);
   const panRef = useRef({ active: false, startX: 0, startY: 0, scrollLeft: 0, scrollTop: 0 });
   const suppressBoardClickRef = useRef(false);
   const hoverRevealTimerRef = useRef(null);
@@ -136,6 +196,7 @@ function ConstructorPage() {
   const [gridSize, setGridSize] = useState(5);
   const [activeTab, setActiveTab] = useState('plants');
   const [search, setSearch] = useState('');
+  const [plantNameLanguage, setPlantNameLanguage] = useState('uk');
   const [selectedCatalogItem, setSelectedCatalogItem] = useState(null);
 
   const [plants, setPlants] = useState([]);
@@ -246,9 +307,14 @@ function ConstructorPage() {
         id: `plant-${item.id}`,
         entityId: String(item.id),
         kind: 'plant',
-        name: item.name,
-        subtitle: item.nameLatin,
-        details: `Світло ${item.lightLevel}/5 • Вода ${item.waterNeed}/5`,
+        name: plantNameLanguage === 'latin'
+          ? (item.nameLatin || item.name)
+          : item.name,
+        subtitle: '',
+        details: '',
+        lightLevel: item.lightLevel,
+        waterNeed: item.waterNeed,
+        searchText: `${item.name || ''} ${item.nameLatin || ''}`,
         footprint: estimatePlantFootprint(item),
         image: resolveImageUrl(item.imageIsometricUrl || item.imageUrl),
         layer: resolveLayer('plant'),
@@ -260,6 +326,7 @@ function ConstructorPage() {
         name: item.name,
         subtitle: 'Базовий тип грунту',
         details: 'Рекомендований нижній шар',
+        searchText: `${item.name || ''} Базовий тип грунту Рекомендований нижній шар`,
         footprint: 1,
         image: null,
         layer: resolveLayer('soilType'),
@@ -271,6 +338,7 @@ function ConstructorPage() {
         name: item.name,
         subtitle: `${item.items?.length || 0} компонентів`,
         details: 'Готовий мікс для флораріуму',
+        searchText: `${item.name || ''} ${item.items?.length || 0} Готовий мікс для флораріуму`,
         footprint: 2,
         image: null,
         layer: resolveLayer('soilFormula'),
@@ -282,6 +350,7 @@ function ConstructorPage() {
         name: item.name,
         subtitle: `Категорія #${item.category}`,
         details: item.description || 'Декоративний елемент',
+        searchText: `${item.name || ''} ${item.description || ''}`,
         footprint: 1,
         image: resolveImageUrl(item.imageIsometricUrl || item.imageUrl),
         layer: resolveLayer('decoration'),
@@ -293,12 +362,13 @@ function ConstructorPage() {
         name: item.name,
         subtitle: `${item.volume} л • ${item.isClosed ? 'Закритий' : 'Відкритий'}`,
         details: item.description || 'Основа композиції',
+        searchText: `${item.name || ''} ${item.description || ''}`,
         footprint: estimateContainerFootprint(item),
         image: resolveImageUrl(item.imageIsometricUrl || item.imageUrl),
         layer: resolveLayer('container'),
       })),
     };
-  }, [containers, decorations, plants, soilFormulas, soilTypes]);
+  }, [containers, decorations, plantNameLanguage, plants, soilFormulas, soilTypes]);
 
   const visibleCatalogItems = useMemo(() => {
     const items = catalogItemsByType[activeTab] || [];
@@ -311,6 +381,7 @@ function ConstructorPage() {
         item.name.toLowerCase().includes(query)
         || (item.subtitle || '').toLowerCase().includes(query)
         || (item.details || '').toLowerCase().includes(query)
+        || (item.searchText || '').toLowerCase().includes(query)
       );
     });
   }, [activeTab, catalogItemsByType, search]);
@@ -400,6 +471,10 @@ function ConstructorPage() {
     event.dataTransfer.effectAllowed = 'copy';
     event.dataTransfer.setData('application/prickle-item', JSON.stringify(item));
     event.dataTransfer.setData('text/plain', item.name);
+    dragFootprintRef.current = Math.max(1, Number(item.footprint) || 1);
+    dragLayerRef.current = item.layer || null;
+    setNotice('');
+    setDragHoverCell(null);
   }
 
   function handleDragOver(event) {
@@ -409,13 +484,51 @@ function ConstructorPage() {
     const rect = boardRef.current.getBoundingClientRect();
     const localX = event.clientX - rect.left;
     const localY = event.clientY - rect.top;
-    const candidate = toGridCell(localX, localY, (gridSize * TILE_WIDTH) / 2, GRID_TOP_OFFSET);
+    const moveRaw = event.dataTransfer.getData('application/prickle-move');
+    const itemRaw = event.dataTransfer.getData('application/prickle-item');
+    let footprint = Math.max(1, Number(dragFootprintRef.current) || 1);
 
-    setDragHoverCell(candidate);
+    let layer = dragLayerRef.current || selectedCatalogItem?.layer || null;
+    let excludingId = null;
+
+    if (moveRaw) {
+      try {
+        const movePayload = JSON.parse(moveRaw);
+        footprint = Math.max(1, Number(movePayload?.size) || 1);
+        layer = movePayload?.layer || layer;
+        excludingId = movePayload?.instanceId || null;
+      } catch {
+        footprint = 1;
+      }
+    } else if (itemRaw) {
+      try {
+        const itemPayload = JSON.parse(itemRaw);
+        footprint = Math.max(1, Number(itemPayload?.footprint) || 1);
+        layer = itemPayload?.layer || layer;
+      } catch {
+        footprint = 1;
+      }
+    }
+
+    const candidate = toPlacementCandidate(
+      localX,
+      localY,
+      footprint,
+      (gridSize * TILE_WIDTH) / 2,
+      GRID_TOP_OFFSET,
+    );
+
+    setDragHoverCell({
+      ...candidate,
+      layer,
+      excludingId,
+    });
   }
 
   function handlePlacedDragStart(event, item) {
     event.stopPropagation();
+    setNotice('');
+    setDragHoverCell(null);
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('application/prickle-move', JSON.stringify({
       instanceId: item.instanceId,
@@ -423,6 +536,8 @@ function ConstructorPage() {
       layer: item.layer,
     }));
     event.dataTransfer.setData('text/plain', item.name);
+    dragFootprintRef.current = Math.max(1, Number(item.size) || 1);
+    dragLayerRef.current = item.layer || null;
   }
 
   function placeItem(payload, candidate, excludingId = null) {
@@ -490,6 +605,9 @@ function ConstructorPage() {
   function handleDrop(event) {
     event.preventDefault();
     setNotice('');
+    setDragHoverCell(null);
+    dragFootprintRef.current = 1;
+    dragLayerRef.current = null;
 
     const rect = boardRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -555,6 +673,8 @@ function ConstructorPage() {
   function handleDragLeaveBoard(event) {
     if (!boardRef.current?.contains(event.relatedTarget)) {
       setDragHoverCell(null);
+      dragFootprintRef.current = 1;
+      dragLayerRef.current = null;
     }
   }
 
@@ -643,19 +763,32 @@ function ConstructorPage() {
   return (
     <section className="constructor-page">
       <aside className="constructor-catalog">
-        <h1 className="constructor-title">Конструктор флораріуму</h1>
-        <p className="constructor-subtitle">Перетягуйте рослини, грунт та декор на ізометричну сітку.</p>
+        <div className="constructor-catalog-head">
+          <h1 className="constructor-title">Конструктор флораріуму</h1>
+          <div className="constructor-language-switch">
+            <button
+              type="button"
+              className="constructor-language-icon-toggle"
+              onClick={() => setPlantNameLanguage((prev) => (prev === 'uk' ? 'latin' : 'uk'))}
+              aria-label={`Перемкнути мову назв рослин. Поточна: ${plantNameLanguage === 'uk' ? 'українська' : 'латина'}`}
+              title={`Мова назв: ${plantNameLanguage === 'uk' ? 'Українська' : 'Латина'}`}
+            >
+              <span aria-hidden="true">🌐</span>
+              <span>{plantNameLanguage === 'uk' ? 'УКР' : 'LAT'}</span>
+            </button>
+          </div>
+        </div>
 
-        <label className="constructor-search-wrap">
-          <span>Пошук</span>
+        <div className="constructor-search-wrap">
           <input
             className="constructor-search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Назва, латина або деталі"
             type="text"
+            aria-label="Пошук у каталозі"
           />
-        </label>
+        </div>
 
         <div className="constructor-tabs" role="tablist" aria-label="Категорії каталогу">
           {CATALOG_TABS.map((tab) => (
@@ -672,7 +805,6 @@ function ConstructorPage() {
             </button>
           ))}
         </div>
-
         <div className="constructor-catalog-list">
           {loading && <p className="constructor-muted">Завантаження елементів...</p>}
           {!loading && error && <p className="constructor-error">{error}</p>}
@@ -690,13 +822,28 @@ function ConstructorPage() {
                 setSelectedCatalogItem((prev) => (prev?.id === item.id ? null : item));
               }}
             >
-              <div className="constructor-card-head">
-                <h3>{item.name}</h3>
-                <span>{item.footprint}x{item.footprint}</span>
+              <div className="constructor-card-media">
+                {item.image && <img src={item.image} alt={item.name} className="constructor-card-image" />}
+                {!item.image && (
+                  <span className="constructor-card-media-placeholder">
+                    {item.footprint}x{item.footprint}
+                  </span>
+                )}
               </div>
-              {item.subtitle && <p className="constructor-card-subtitle">{item.subtitle}</p>}
-              {item.details && <p className="constructor-card-details">{item.details}</p>}
-              {item.image && <img src={item.image} alt={item.name} className="constructor-card-image" />}
+              <div className="constructor-card-content">
+                <div className="constructor-card-head">
+                  <h3>{item.name}</h3>
+                  <span>{item.footprint}x{item.footprint}</span>
+                </div>
+                {item.kind !== 'plant' && item.subtitle && <p className="constructor-card-subtitle">{item.subtitle}</p>}
+                {item.kind === 'plant' && (
+                  <div className="constructor-plant-levels">
+                    {renderLevelIcons(item.lightLevel, '☀', 'Світло', 'sun')}
+                    {renderLevelIcons(item.waterNeed, '💧', 'Вода', 'water')}
+                  </div>
+                )}
+                {item.kind !== 'plant' && item.details && <p className="constructor-card-details">{item.details}</p>}
+              </div>
             </article>
           ))}
         </div>
@@ -760,7 +907,30 @@ function ConstructorPage() {
             {gridCells.map((cell) => (
               <div
                 key={`${cell.row}-${cell.col}`}
-                className={`iso-cell ${dragHoverCell?.row === cell.row && dragHoverCell?.col === cell.col ? 'iso-cell-hover' : ''}`}
+                className={`iso-cell ${
+                  (() => {
+                    if (!isCellInsideCandidate(cell, dragHoverCell)) return '';
+
+                    const isOutOfBounds = !dragHoverCell
+                      || dragHoverCell.row < 0
+                      || dragHoverCell.col < 0
+                      || dragHoverCell.row + dragHoverCell.size > gridSize
+                      || dragHoverCell.col + dragHoverCell.size > gridSize;
+
+                    const isOccupied = placedItems.some((item) => {
+                      if (item.instanceId === dragHoverCell?.excludingId) return false;
+                      if (item.layer !== dragHoverCell?.layer) return false;
+                      return (
+                        cell.row >= item.row
+                        && cell.row < item.row + item.size
+                        && cell.col >= item.col
+                        && cell.col < item.col + item.size
+                      );
+                    });
+
+                    return isOutOfBounds || isOccupied ? 'iso-cell-hover-blocked' : 'iso-cell-hover';
+                  })()
+                }`}
                 style={{
                   left: `${cell.left}px`,
                   top: `${cell.top}px`,
