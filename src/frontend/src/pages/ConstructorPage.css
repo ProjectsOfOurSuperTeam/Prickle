@@ -152,6 +152,46 @@
   height: 100%;
 }
 
+.constructor-auth-guard {
+  grid-column: 1 / -1;
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.constructor-auth-card {
+  width: min(560px, 100%);
+  border-radius: 20px;
+  padding: 1.6rem 1.5rem;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.96) 0%, rgba(244, 248, 240, 0.96) 100%);
+  border: 1px solid rgba(var(--color-dark-forest-rgb), 0.1);
+  box-shadow: 0 20px 48px rgba(var(--color-dark-forest-rgb), 0.12);
+  text-align: center;
+}
+
+.constructor-auth-card-label {
+  margin: 0 0 0.45rem;
+  color: var(--color-dark-olive);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.constructor-auth-card h2 {
+  margin: 0;
+  color: var(--color-dark-forest);
+  font-size: clamp(1.15rem, 1.5vw, 1.5rem);
+  line-height: 1.35;
+}
+
+.constructor-auth-card p {
+  margin: 0.85rem 0 0;
+  color: rgba(var(--color-dark-forest-rgb), 0.8);
+}
+
 .constructor-toolbar {
   border-radius: 16px;
   padding: 0.85rem 1rem;

@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useApi } from '../services/useApi';
+import { useAuth } from '../services/useAuth';
 import './ConstructorPage.css';
 
 const GRID_PRESETS = [3, 5, 7, 9];
@@ -124,6 +126,7 @@ function rectanglesOverlap(first, second) {
 
 function ConstructorPage() {
   const api = useApi();
+  const { isAuthenticated } = useAuth();
   const boardRef = useRef(null);
   const boardWrapRef = useRef(null);
   const panRef = useRef({ active: false, startX: 0, startY: 0, scrollLeft: 0, scrollTop: 0 });
@@ -149,6 +152,22 @@ function ConstructorPage() {
   const [isPanning, setIsPanning] = useState(false);
   const [revealedItemId, setRevealedItemId] = useState(null);
   const [hideObjectsLayer, setHideObjectsLayer] = useState(false);
+  const [shouldRedirectToAuth, setShouldRedirectToAuth] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      setShouldRedirectToAuth(false);
+      return undefined;
+    }
+
+    const timerId = window.setTimeout(() => {
+      setShouldRedirectToAuth(true);
+    }, 5000);
+
+    return () => {
+      window.clearTimeout(timerId);
+    };
+  }, [isAuthenticated]);
 
   useEffect(() => {
     return () => {
@@ -159,6 +178,11 @@ function ConstructorPage() {
   }, []);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      return undefined;
+    }
+
     let active = true;
 
     async function fetchAllPages(getAll) {
@@ -214,7 +238,7 @@ function ConstructorPage() {
     return () => {
       active = false;
     };
-  }, [api]);
+  }, [api, isAuthenticated]);
 
   const catalogItemsByType = useMemo(() => {
     return {
@@ -596,6 +620,24 @@ function ConstructorPage() {
   function resetWorkspace() {
     setPlacedItems([]);
     setNotice('');
+  }
+
+  if (!isAuthenticated && shouldRedirectToAuth) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <section className="constructor-page">
+        <div className="constructor-auth-guard">
+          <div className="constructor-auth-card">
+            <p className="constructor-auth-card-label">Доступ обмежено</p>
+            <h2>Для перегляду конструктора, будь ласка, авторизуйтесь</h2>
+            <p>Перенаправляємо на сторінку входу через 5 секунд...</p>
+          </div>
+        </div>
+      </section>
+    );
   }
 
   return (
