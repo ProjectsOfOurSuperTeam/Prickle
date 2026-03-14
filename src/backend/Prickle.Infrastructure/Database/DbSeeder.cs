@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Prickle.Domain.Containers;
 using Prickle.Domain.Decorations;
 using Prickle.Domain.Plants;
@@ -509,38 +509,38 @@ public static class DbSeeder
 
         var soilTypes = new[]
         {
-            SoilType.Create("Кокосовий торф"),           // 1
-            SoilType.Create("Сфагнум"),                   // 2
-            SoilType.Create("Перліт"),                    // 3
-            SoilType.Create("Деревне вугілля"),           // 4
-            SoilType.Create("Дренаж"),                    // 5
-            SoilType.Create("Грунт для кактусів"),        // 6
-            SoilType.Create("Кварцовий пісок"),           // 7
-            SoilType.Create("Дрібний гравій"),            // 8
-            SoilType.Create("Лісова земля (кисла)"),      // 9
-            SoilType.Create("Подрібнений мох сфагнум"),   // 10
-            SoilType.Create("Вермикуліт"),                // 11
-            SoilType.Create("Вугілля"),                   // 12
-            SoilType.Create("Верховий кислий торф"),      // 13
-            SoilType.Create("Перліт або чистий кварцовий пісок"), // 14
-            SoilType.Create("Соснова кора (дрібна)"),    // 15
-            SoilType.Create("Кокосові чіпси"),            // 16
-            SoilType.Create("Цеоліт/Лечуза Пон"),         // 17
-            SoilType.Create("Лава"),                      // 18
-            SoilType.Create("Пісок"),                     // 19
-            SoilType.Create("Листова земля"),             // 20
-            SoilType.Create("Торф"),                      // 21
-            SoilType.Create("Хвойний опад"),              // 22
-            SoilType.Create("Кокосовий субстрат"),        // 23
-            SoilType.Create("Різаний сфагнум"),           // 24
-            SoilType.Create("Біогумус"),                  // 25
-            SoilType.Create("Академама (обпалена глина)"), // 26
-            SoilType.Create("Гумус"),                     // 27
-            SoilType.Create("Річковий пісок"),            // 28
-            SoilType.Create("Універсальний садовий ґрунт"), // 29
-            SoilType.Create("Дренажний шар (на дно)"),    // 30
-            SoilType.Create("Садова земля"),              // 31
-            SoilType.Create("Кора"),                      // 32
+            SoilType.Create("Кокосовий торф", "#5C4033"),           // 1
+            SoilType.Create("Сфагнум", "#8F9779"),                   // 2
+            SoilType.Create("Перліт", "#F0F0F0"),                    // 3
+            SoilType.Create("Деревне вугілля", "#353839"),           // 4
+            SoilType.Create("Дренаж", "#70543E"),                    // 5
+            SoilType.Create("Грунт для кактусів", "#8C7A6B"),        // 6
+            SoilType.Create("Кварцовий пісок", "#E2D2B0"),           // 7
+            SoilType.Create("Дрібний гравій", "#A0A0A0"),            // 8
+            SoilType.Create("Лісова земля (кисла)", "#3B2F2F"),      // 9
+            SoilType.Create("Подрібнений мох сфагнум", "#7A8B64"),   // 10
+            SoilType.Create("Вермикуліт", "#CDBA96"),                // 11
+            SoilType.Create("Вугілля", "#2F2F2F"),                   // 12
+            SoilType.Create("Верховий кислий торф", "#4A3C31"),      // 13
+            SoilType.Create("Перліт або чистий кварцовий пісок", "#E8E5DF"), // 14
+            SoilType.Create("Соснова кора (дрібна)", "#5C3A21"),    // 15
+            SoilType.Create("Кокосові чіпси", "#6B4E31"),            // 16
+            SoilType.Create("Цеоліт/Лечуза Пон", "#D1C7B7"),         // 17
+            SoilType.Create("Лава", "#4D2D2D"),                      // 18
+            SoilType.Create("Пісок", "#C2B280"),                     // 19
+            SoilType.Create("Листова земля", "#4F3824"),             // 20
+            SoilType.Create("Торф", "#3A2E28"),                      // 21
+            SoilType.Create("Хвойний опад", "#6E4F32"),              // 22
+            SoilType.Create("Кокосовий субстрат", "#5E412F"),        // 23
+            SoilType.Create("Різаний сфагнум", "#82916F"),           // 24
+            SoilType.Create("Біогумус", "#2A2118"),                  // 25
+            SoilType.Create("Академама (обпалена глина)", "#B06D4D"), // 26
+            SoilType.Create("Гумус", "#2E251E"),                     // 27
+            SoilType.Create("Річковий пісок", "#B5A68B"),            // 28
+            SoilType.Create("Універсальний садовий ґрунт", "#3F3024"), // 29
+            SoilType.Create("Дренажний шар (на дно)", "#8B7765"),    // 30
+            SoilType.Create("Садова земля", "#463629"),              // 31
+            SoilType.Create("Кора", "#523828"),                      // 32
         };
 
         foreach (var result in soilTypes)

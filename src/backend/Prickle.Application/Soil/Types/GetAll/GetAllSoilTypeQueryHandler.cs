@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Prickle.Application.Abstractions.Database;
 using Prickle.Domain.Soil;
 
@@ -44,7 +44,8 @@ internal sealed class GetAllSoilTypeQueryHandler
             .Take(pageSize)
             .Select(st => new SoilTypeResponse(
                 st.Id,
-                st.Name))
+                st.Name,
+                st.HexColor))
             .ToListAsync(cancellationToken);
 
         return Result.Success(new SoilTypesResponse

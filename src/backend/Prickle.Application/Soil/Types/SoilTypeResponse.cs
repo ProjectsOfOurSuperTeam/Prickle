@@ -1,3 +1,3 @@
-﻿namespace Prickle.Application.Soil.Types;
+namespace Prickle.Application.Soil.Types;
 
-public sealed record SoilTypeResponse(int Id, string Name);
+public sealed record SoilTypeResponse(int Id, string Name, string? HexColor);

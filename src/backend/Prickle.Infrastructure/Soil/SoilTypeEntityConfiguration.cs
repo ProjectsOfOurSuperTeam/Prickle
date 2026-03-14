@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Prickle.Domain.Soil;
 
@@ -16,5 +16,9 @@ internal sealed class SoilTypeEntityConfiguration : IEntityTypeConfiguration<Soi
         builder.Property(x => x.Name)
             .IsRequired()
             .HasMaxLength(255);
+
+        builder.Property(x => x.HexColor)
+            .IsRequired(false)
+            .HasMaxLength(7);
     }
 }

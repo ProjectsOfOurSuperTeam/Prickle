@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Prickle.Application.Abstractions.Database;
 using Prickle.Domain.Soil;
 
@@ -24,7 +24,7 @@ internal sealed class AddSoilTypeCommandHandler
             return Result.Failure<SoilTypeResponse>(SoilErrors.SoilType.AlreadyExists(command.Name));
         }
 
-        var soilTypeResult = SoilType.Create(command.Name);
+        var soilTypeResult = SoilType.Create(command.Name, command.HexColor);
         if (soilTypeResult.IsFailure)
         {
             return Result.Failure<SoilTypeResponse>(soilTypeResult.Error);
@@ -37,7 +37,7 @@ internal sealed class AddSoilTypeCommandHandler
             return Result.Failure<SoilTypeResponse>(SoilErrors.SoilType.FailedToCreate(command.Name));
         }
 
-        var response = new SoilTypeResponse(dbResult.Entity.Id, dbResult.Entity.Name);
+        var response = new SoilTypeResponse(dbResult.Entity.Id, dbResult.Entity.Name, dbResult.Entity.HexColor);
 
         return Result.Success(response);
     }

@@ -13,7 +13,6 @@ const SOIL_KINDS = new Set(['soilType', 'soilFormula']);
 
 const CATALOG_TABS = [
   { key: 'plants', label: 'Рослини' },
-  { key: 'soilTypes', label: 'Типи грунту' },
   { key: 'soilFormulas', label: 'Формули грунту' },
   { key: 'decorations', label: 'Декор' },
   { key: 'containers', label: 'Контейнери' },
@@ -24,7 +23,7 @@ const SOIL_COLOR_YELLOW = [182, 154, 88];
 const SOIL_COLOR_BROWN = [124, 88, 52];
 
 function resolveLayer(kind) {
-  return SOIL_KINDS.has(kind) ? 'soil' : 'objects';
+  return 'objects';
 }
 
 function hashString(value) {
@@ -213,6 +212,7 @@ function ConstructorPage() {
   const [isPanning, setIsPanning] = useState(false);
   const [revealedItemId, setRevealedItemId] = useState(null);
   const [hideObjectsLayer, setHideObjectsLayer] = useState(false);
+  const [selectedGlobalSoilFormula, setSelectedGlobalSoilFormula] = useState(null);
   const [shouldRedirectToAuth, setShouldRedirectToAuth] = useState(false);
 
   useEffect(() => {
@@ -342,6 +342,7 @@ function ConstructorPage() {
         footprint: 2,
         image: null,
         layer: resolveLayer('soilFormula'),
+        rawItem: item, // keep raw item for layers
       })),
       decorations: decorations.map((item) => ({
         id: `decoration-${item.id}`,
@@ -438,22 +439,30 @@ function ConstructorPage() {
     return placedItemsView.filter((item) => item.layer !== 'objects');
   }, [hideObjectsLayer, placedItemsView]);
 
-  const soilCellColors = useMemo(() => {
-    const colors = new Map();
+  const globalSoilColor = useMemo(() => {
+    if (!selectedGlobalSoilFormula) return null;
 
-    placedItems
-      .filter((item) => item.layer === 'soil')
-      .forEach((item) => {
-        const gradient = getSoilGradientByKey(`${item.type}:${item.entityId}:${item.name}`);
-        for (let row = item.row; row < item.row + item.size; row += 1) {
-          for (let col = item.col; col < item.col + item.size; col += 1) {
-            colors.set(`${row}-${col}`, gradient);
-          }
-        }
-      });
+    const items = selectedGlobalSoilFormula.rawItem?.items || [];
+    if (items.length === 0) return null;
 
-    return colors;
-  }, [placedItems]);
+    const topLayer = [...items].sort((a, b) => a.order - b.order)[0];
+    const hexColor = topLayer.soilType?.hexColor;
+
+    if (hexColor) {
+      return {
+         start: hexColor,
+         end: hexColor,
+         border: '#00000044',
+      };
+    }
+
+    return getSoilGradientByKey(`soilFormula:${selectedGlobalSoilFormula.entityId}:${selectedGlobalSoilFormula.name}`);
+  }, [selectedGlobalSoilFormula]);
+
+  const sortedSoilLayers = useMemo(() => {
+    if (!selectedGlobalSoilFormula) return [];
+    return [...(selectedGlobalSoilFormula.rawItem?.items || [])].sort((a, b) => a.order - b.order);
+  }, [selectedGlobalSoilFormula]);
 
   function canPlaceItem(candidate, layer, excludingId = null) {
     if (candidate.row < 0 || candidate.col < 0) return false;
@@ -495,7 +504,10 @@ function ConstructorPage() {
       try {
         const movePayload = JSON.parse(moveRaw);
         footprint = Math.max(1, Number(movePayload?.size) || 1);
-        layer = movePayload?.layer || layer;
+        // Ignore soil type dragging
+        if (movePayload.layer === 'soil') return;
+
+        layer = movePayload.layer || layer;
         excludingId = movePayload?.instanceId || null;
       } catch {
         footprint = 1;
@@ -582,6 +594,12 @@ function ConstructorPage() {
       return;
     }
 
+    if (selectedCatalogItem.kind === 'soilFormula') {
+      setSelectedGlobalSoilFormula(selectedCatalogItem);
+      setNotice(`Формулу ґрунту змінено на: ${selectedCatalogItem.name}`);
+      return;
+    }
+
     const rect = boardRef.current.getBoundingClientRect();
     const localX = event.clientX - rect.left;
     const localY = event.clientY - rect.top;
@@ -651,6 +669,8 @@ function ConstructorPage() {
     } catch {
       return;
     }
+
+    if (payload.layer === 'soil') return;
 
     const candidate = toPlacementCandidate(
       localX,
@@ -815,10 +835,18 @@ function ConstructorPage() {
           {!loading && !error && visibleCatalogItems.map((item) => (
             <article
               key={item.id}
-              className={`constructor-card ${selectedCatalogItem?.id === item.id ? 'constructor-card-selected' : ''}`}
-              draggable
-              onDragStart={(event) => handleDragStart(event, item)}
+              className={`constructor-card ${selectedCatalogItem?.id === item.id ? 'constructor-card-selected' : ''} ${item.kind === 'soilFormula' && selectedGlobalSoilFormula?.id === item.id ? 'constructor-card-applied' : ''}`}
+              draggable={item.kind !== 'soilFormula'}
+              onDragStart={(event) => {
+                if (item.kind === 'soilFormula') { event.preventDefault(); return; }
+                handleDragStart(event, item);
+              }}
               onClick={() => {
+                if (item.kind === 'soilFormula') {
+                  setSelectedGlobalSoilFormula((prev) => (prev?.id === item.id ? null : item));
+                  setNotice(selectedGlobalSoilFormula?.id === item.id ? 'Формулу ґрунту знято' : `Формулу ґрунту змінено на: ${item.name}`);
+                  return;
+                }
                 setSelectedCatalogItem((prev) => (prev?.id === item.id ? null : item));
               }}
             >
@@ -826,14 +854,15 @@ function ConstructorPage() {
                 {item.image && <img src={item.image} alt={item.name} className="constructor-card-image" />}
                 {!item.image && (
                   <span className="constructor-card-media-placeholder">
-                    {item.footprint}x{item.footprint}
+                    {item.kind === 'soilFormula' ? '🌱' : `${item.footprint}x${item.footprint}`}
                   </span>
                 )}
               </div>
               <div className="constructor-card-content">
                 <div className="constructor-card-head">
                   <h3>{item.name}</h3>
-                  <span>{item.footprint}x{item.footprint}</span>
+                  {item.kind !== 'soilFormula' && <span>{item.footprint}x{item.footprint}</span>}
+                  {item.kind === 'soilFormula' && selectedGlobalSoilFormula?.id === item.id && <span className="constructor-applied-badge">Обрано ✓</span>}
                 </div>
                 {item.kind !== 'plant' && item.subtitle && <p className="constructor-card-subtitle">{item.subtitle}</p>}
                 {item.kind === 'plant' && (
@@ -898,51 +927,55 @@ function ConstructorPage() {
           <div
             ref={boardRef}
             className="constructor-board"
-            style={{ width: `${boardWidth}px`, height: `${boardHeight}px` }}
+            style={{ width: `${boardWidth}px`, height: `${boardHeight + (sortedSoilLayers.length > 0 ? 80 : 0)}px` }}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
             onDragLeave={handleDragLeaveBoard}
             onClick={handleBoardClick}
           >
-            {gridCells.map((cell) => (
-              <div
-                key={`${cell.row}-${cell.col}`}
-                className={`iso-cell ${
-                  (() => {
-                    if (!isCellInsideCandidate(cell, dragHoverCell)) return '';
+            {gridCells.map((cell) => {
+              const hoverClass = (() => {
+                if (!isCellInsideCandidate(cell, dragHoverCell)) return '';
 
-                    const isOutOfBounds = !dragHoverCell
-                      || dragHoverCell.row < 0
-                      || dragHoverCell.col < 0
-                      || dragHoverCell.row + dragHoverCell.size > gridSize
-                      || dragHoverCell.col + dragHoverCell.size > gridSize;
+                const isOutOfBounds = !dragHoverCell
+                  || dragHoverCell.row < 0
+                  || dragHoverCell.col < 0
+                  || dragHoverCell.row + dragHoverCell.size > gridSize
+                  || dragHoverCell.col + dragHoverCell.size > gridSize;
 
-                    const isOccupied = placedItems.some((item) => {
-                      if (item.instanceId === dragHoverCell?.excludingId) return false;
-                      if (item.layer !== dragHoverCell?.layer) return false;
-                      return (
-                        cell.row >= item.row
-                        && cell.row < item.row + item.size
-                        && cell.col >= item.col
-                        && cell.col < item.col + item.size
-                      );
-                    });
+                const isOccupied = placedItems.some((item) => {
+                  if (item.instanceId === dragHoverCell?.excludingId) return false;
+                  if (item.layer !== dragHoverCell?.layer) return false;
+                  return (
+                    cell.row >= item.row
+                    && cell.row < item.row + item.size
+                    && cell.col >= item.col
+                    && cell.col < item.col + item.size
+                  );
+                });
 
-                    return isOutOfBounds || isOccupied ? 'iso-cell-hover-blocked' : 'iso-cell-hover';
-                  })()
-                }`}
-                style={{
-                  left: `${cell.left}px`,
-                  top: `${cell.top}px`,
-                  ...(soilCellColors.has(`${cell.row}-${cell.col}`)
-                    ? {
-                      background: `linear-gradient(160deg, ${soilCellColors.get(`${cell.row}-${cell.col}`).start} 0%, ${soilCellColors.get(`${cell.row}-${cell.col}`).end} 100%)`,
-                      borderColor: soilCellColors.get(`${cell.row}-${cell.col}`).border,
-                    }
-                    : {}),
-                }}
-              />
-            ))}
+                return isOutOfBounds || isOccupied ? 'iso-cell-hover-blocked' : 'iso-cell-hover';
+              })();
+
+              const isHovered = hoverClass !== '';
+
+              return (
+                <div
+                  key={`${cell.row}-${cell.col}`}
+                  className={`iso-cell ${hoverClass}`}
+                  style={{
+                    left: `${cell.left}px`,
+                    top: `${cell.top}px`,
+                    ...(globalSoilColor && !isHovered
+                      ? {
+                        background: `linear-gradient(160deg, ${globalSoilColor.start} 0%, ${globalSoilColor.end} 100%)`,
+                        borderColor: globalSoilColor.border,
+                      }
+                      : {}),
+                  }}
+                />
+              );
+            })}
 
             {visiblePlacedItemsView.map((item) => (
               <div
@@ -982,25 +1015,120 @@ function ConstructorPage() {
                 </button>
               </div>
             ))}
+
+            {/* 3D platform depth — two isometric side walls */}
+            {sortedSoilLayers.length > 0 && (() => {
+              const originX = (gridSize * TILE_WIDTH) / 2;
+              const originY = GRID_TOP_OFFSET;
+              const leftCorner = toIsoPosition(gridSize, 0, originX, originY);
+              const bottomTip = toIsoPosition(gridSize, gridSize, originX, originY);
+
+              const wallWidth = bottomTip.left - leftCorner.left;
+              const skewAngle = Math.atan(TILE_HEIGHT / TILE_WIDTH) * (180 / Math.PI);
+              const totalDepth = 80;
+
+              const buildStripes = (keyPrefix) => sortedSoilLayers.map((layer, i) => {
+                const h = Math.max(8, (layer.percentage / 100) * totalDepth);
+                const hex = layer.soilType?.hexColor || '#8c7b64';
+                return (
+                  <div
+                    key={`${keyPrefix}-${i}`}
+                    style={{
+                      width: '100%',
+                      height: `${h}px`,
+                      backgroundColor: hex,
+                      borderBottom: i < sortedSoilLayers.length - 1 ? '1px solid rgba(0,0,0,0.12)' : 'none',
+                    }}
+                  />
+                );
+              });
+
+              return (
+                <>
+                  {/* Left face */}
+                  <div
+                    className="constructor-soil-wall"
+                    style={{
+                      position: 'absolute',
+                      left: `${leftCorner.left}px`,
+                      top: `${leftCorner.top - TILE_HEIGHT / 2}px`,
+                      width: `${wallWidth}px`,
+                      transformOrigin: 'top left',
+                      transform: `skewY(${skewAngle}deg)`,
+                      overflow: 'hidden',
+                      zIndex: 0,
+                      filter: 'brightness(0.86)',
+                    }}
+                  >
+                    {buildStripes('left')}
+                  </div>
+                  {/* Right face */}
+                  <div
+                    className="constructor-soil-wall"
+                    style={{
+                      position: 'absolute',
+                      left: `${bottomTip.left}px`,
+                      top: `${bottomTip.top - TILE_HEIGHT / 2}px`,
+                      width: `${wallWidth}px`,
+                      transformOrigin: 'top left',
+                      transform: `skewY(-${skewAngle}deg)`,
+                      overflow: 'hidden',
+                      zIndex: 0,
+                      filter: 'brightness(0.74)',
+                    }}
+                  >
+                    {buildStripes('right')}
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </div>
 
-        <section className="constructor-placed-list">
-          <h2>Додані елементи</h2>
-          {placedItems.length === 0 && <p className="constructor-muted">Ще нічого не додано на сітку.</p>}
-          {placedItems.length > 0 && (
-            <ul>
-              {placedItems.map((item) => (
-                <li key={item.instanceId}>
-                  <span>{item.name}</span>
-                  <span>{item.row + 1}:{item.col + 1}</span>
-                  <span>{item.size}x{item.size}</span>
-                  <button type="button" onClick={() => removePlacedItem(item.instanceId)}>Видалити</button>
-                </li>
-              ))}
-            </ul>
+        <div className="constructor-bottom-panels">
+          {selectedGlobalSoilFormula && sortedSoilLayers.length > 0 && (
+            <section className="constructor-soil-layers-section">
+              <h2>Шари ґрунту: {selectedGlobalSoilFormula.name}</h2>
+              <div className="constructor-soil-layers-preview">
+                {sortedSoilLayers.map((layer, index) => {
+                  const hexColor = layer.soilType?.hexColor || '#8c7b64';
+                  return (
+                    <div
+                      key={`${layer.soilType?.id || layer.soilTypeId}-${index}`}
+                      className="constructor-soil-layer-slice"
+                      style={{
+                        backgroundColor: hexColor,
+                        height: `${Math.max(20, (layer.percentage / 100) * 150)}px`,
+                      }}
+                      title={`${layer.soilType?.name || 'Невідомий шар'} (${layer.percentage}%)`}
+                    >
+                      <span className="constructor-soil-layer-label">
+                        {layer.soilType?.name || 'Невідомий шар'} — {layer.percentage}%
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
           )}
-        </section>
+
+          <section className="constructor-placed-list">
+            <h2>Додані елементи</h2>
+            {placedItems.length === 0 && <p className="constructor-muted">Ще нічого не додано на сітку.</p>}
+            {placedItems.length > 0 && (
+              <ul>
+                {placedItems.map((item) => (
+                  <li key={item.instanceId}>
+                    <span>{item.name}</span>
+                    <span>{item.row + 1}:{item.col + 1}</span>
+                    <span>{item.size}x{item.size}</span>
+                    <button type="button" onClick={() => removePlacedItem(item.instanceId)}>Видалити</button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
       </div>
     </section>
   );

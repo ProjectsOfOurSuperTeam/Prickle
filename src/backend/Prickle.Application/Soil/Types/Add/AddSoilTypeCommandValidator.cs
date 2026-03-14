@@ -1,4 +1,4 @@
-﻿namespace Prickle.Application.Soil.Types.Add;
+namespace Prickle.Application.Soil.Types.Add;
 
 internal sealed class AddSoilTypeCommandValidator : AbstractValidator<AddSoilTypeCommand>
 {
@@ -7,5 +7,8 @@ internal sealed class AddSoilTypeCommandValidator : AbstractValidator<AddSoilTyp
         RuleFor(command => command.Name)
             .NotEmpty()
             .MaximumLength(255);
+
+        RuleFor(command => command.HexColor)
+            .MaximumLength(7);
     }
 }
