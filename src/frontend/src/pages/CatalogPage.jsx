@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { useApi } from '../services/useApi';
 import CatalogFilters from '../components/CatalogFilters';
 import CatalogItemsList from '../components/CatalogItemsList';
 import Pagination from '../components/Pagination';
 
 function CatalogPage() {
+  const api = useApi();
   const [filters, setFilters] = useState({});
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -21,28 +22,21 @@ function CatalogPage() {
       setLoading(true);
       setError(null);
       try {
-        const params = {};
-        if (filters.search) params.name = filters.search;
+        const params = filters.search ? { name: filters.search } : {};
 
         const shouldFetchPlants = !filters.category || filters.category === 'plant';
         const shouldFetchContainers = !filters.category || filters.category === 'container';
         const shouldFetchDecorations = !filters.category || filters.category === 'decoration';
 
         const [plantsRes, containersRes, decorationsRes] = await Promise.all([
-          shouldFetchPlants
-            ? axios.get('/api/plants', { params })
-            : Promise.resolve({ data: { items: [] } }),
-          shouldFetchContainers
-            ? axios.get('/api/containers', { params })
-            : Promise.resolve({ data: { items: [] } }),
-          shouldFetchDecorations
-            ? axios.get('/api/decorations', { params })
-            : Promise.resolve({ data: { items: [] } }),
+          shouldFetchPlants ? api.plants.getAll(params) : Promise.resolve({ items: [] }),
+          shouldFetchContainers ? api.containers.getAll(params) : Promise.resolve({ items: [] }),
+          shouldFetchDecorations ? api.decorations.getAll(params) : Promise.resolve({ items: [] }),
         ]);
 
-        const plants = (plantsRes.data.items || []).map(p => ({ ...p, _category: 'plant' }));
-        const containers = (containersRes.data.items || []).map(c => ({ ...c, _category: 'container' }));
-        const decorations = (decorationsRes.data.items || []).map(d => ({ ...d, _category: 'decoration' }));
+        const plants = (plantsRes.items || []).map(p => ({ ...p, _category: 'plant' }));
+        const containers = (containersRes.items || []).map(c => ({ ...c, _category: 'container' }));
+        const decorations = (decorationsRes.items || []).map(d => ({ ...d, _category: 'decoration' }));
         setItems([...plants, ...containers, ...decorations]);
       } catch {
         setError('Не вдалося завантажити каталог.');
@@ -52,7 +46,7 @@ function CatalogPage() {
       }
     };
     fetchData();
-  }, [filters.category, filters.search]);
+  }, [filters.category, filters.search, api.plants, api.containers, api.decorations]);
 
   const getContainerVolumeBucket = (volume) => {
     if (volume <= 2.5) return 'small';
