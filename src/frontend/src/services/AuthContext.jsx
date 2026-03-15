@@ -89,6 +89,7 @@ export function AuthProvider({ children }) {
       isAuthenticated: Boolean(session?.accessToken),
       isLoading,
       user: session?.profile || null,
+      isAdmin: Boolean(session?.profile?.roles?.includes('Admin')),
       error,
       getAccessToken,
       login,
