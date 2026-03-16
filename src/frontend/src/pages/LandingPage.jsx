@@ -70,6 +70,9 @@ function LandingPage() {
             <Link to="/catalog" className="btn btn-secondary">
               Переглянути каталог
             </Link>
+            <Link to="/gallery" className="btn btn-secondary">
+              Галерея робіт
+            </Link>
           </div>
         </div>
       </section>

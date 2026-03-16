@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useApi } from '../services/useApi';
 import { useAuth } from '../services/useAuth';
 import './ConstructorPage.css';
@@ -184,6 +184,8 @@ function isCellInsideCandidate(cell, candidate) {
 function ConstructorPage() {
   const api = useApi();
   const { isAuthenticated } = useAuth();
+  const location = useLocation();
+  const fromProject = location.state?.fromProject ?? null;
   const boardRef = useRef(null);
   const boardWrapRef = useRef(null);
   const dragFootprintRef = useRef(1);
@@ -300,6 +302,58 @@ function ConstructorPage() {
       active = false;
     };
   }, [api, isAuthenticated]);
+
+  // Restore project from gallery "Відтворити" click
+  useEffect(() => {
+    if (loading || !fromProject) return;
+
+    const projectItems = fromProject.items ?? [];
+    if (projectItems.length === 0) return;
+
+    // Derive grid size from max posX/posY in project items
+    const maxCoord = projectItems.reduce((acc, i) => Math.max(acc, i.posX ?? 0, i.posY ?? 0), 0);
+    const neededSize = GRID_PRESETS.find((s) => s > maxCoord) ?? GRID_PRESETS[GRID_PRESETS.length - 1];
+    setGridSize(neededSize);
+
+    const restored = projectItems.flatMap((pi) => {
+      const kind = pi.itemType === 'Plant' ? 'plant'
+        : pi.itemType === 'Decoration' ? 'decoration'
+        : null;
+      if (!kind) return [];
+
+      const catalogSource = kind === 'plant' ? plants : decorations;
+      const entity = catalogSource.find((e) => String(e.id) === String(pi.itemId))
+        ?? catalogSource.find((e) => {
+          // fallback: match by name for mock data (e.g. 'plant-echeveria' ~ 'Echeveria elegans')
+          const slug = String(pi.itemId).toLowerCase().replace(/^(plant|deco)-/, '');
+          const name = (e.name || '').toLowerCase();
+          const latin = (e.nameLatin || '').toLowerCase();
+          return name.includes(slug) || latin.includes(slug);
+        });
+      if (!entity) return [];
+
+      const footprint = kind === 'plant'
+        ? estimatePlantFootprint(entity)
+        : 1;
+
+      return [{
+        instanceId: `restored-${pi.id ?? pi.itemId}-${pi.posX}-${pi.posY}`,
+        type: kind,
+        entityId: String(entity.id),
+        name: entity.name,
+        subtitle: '',
+        size: footprint,
+        image: resolveImageUrl(entity.imageIsometricUrl || entity.imageUrl),
+        layer: 'objects',
+        row: pi.posX ?? 0,
+        col: pi.posY ?? 0,
+      }];
+    });
+
+    setPlacedItems(restored);
+    setNotice(`Відтворено ${restored.length} з ${projectItems.length} елементів проєкту.`);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading]);
 
   const catalogItemsByType = useMemo(() => {
     return {
