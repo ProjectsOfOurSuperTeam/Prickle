@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   HiClock, HiCurrencyDollar, HiCheckCircle, HiAcademicCap, HiSparkles, HiDeviceMobile,
   HiCube, HiShieldCheck, HiBeaker, HiColorSwatch, HiBookOpen, HiDocumentDownload
 } from 'react-icons/hi';
+import { useApi } from '../services/useApi';
+
 const s1 = '/assets/images/decor/s1.png';
 const s5 = '/assets/images/decor/s5.png';
 const s8 = '/assets/images/decor/s8.png';
@@ -16,7 +18,48 @@ import './LandingPage.css';
 
 // Landing Page: Presentation of Prickle capabilities and gallery of examples
 function LandingPage() {
+  const api = useApi();
   const [openFaq, setOpenFaq] = useState(null);
+  const [galleryProjects, setGalleryProjects] = useState([]);
+  const [containersMap, setContainersMap] = useState(new Map());
+  const [galleryLoading, setGalleryLoading] = useState(true);
+  const [galleryError, setGalleryError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchGallery() {
+      try {
+        setGalleryLoading(true);
+        setGalleryError(null);
+        const [projectsRes, containersRes] = await Promise.all([
+          api.projects.getAll({
+            isPublished: true,
+            page: 1,
+            pageSize: 12,
+            sortBy: '-createdat',
+          }),
+          api.containers.getAll({ pageSize: 25 }),
+        ]);
+
+        if (cancelled) return;
+
+        const map = new Map();
+        for (const c of containersRes.items ?? []) {
+          map.set(c.id, c.name);
+        }
+        setContainersMap(map);
+        setGalleryProjects(projectsRes.items ?? []);
+      } catch {
+        if (!cancelled) setGalleryError(true);
+      } finally {
+        if (!cancelled) setGalleryLoading(false);
+      }
+    }
+
+    fetchGallery();
+    return () => { cancelled = true; };
+  }, [api.projects, api.containers]);
 
   const toggleFaq = (index) => {
     setOpenFaq(openFaq === index ? null : index);
@@ -315,9 +358,51 @@ function LandingPage() {
             Надихайтесь створеними композиціями
           </p>
           <div className="gallery-grid">
-            <div className="gallery-placeholder">
-              <p>Галерея буде доступна після створення перших проєктів</p>
-            </div>
+            {galleryLoading && (
+              <div className="gallery-placeholder">
+                <p>Завантаження галереї...</p>
+              </div>
+            )}
+            {!galleryLoading && galleryError && (
+              <div className="gallery-placeholder">
+                <p>Не вдалося завантажити галерею.</p>
+              </div>
+            )}
+            {!galleryLoading && !galleryError && galleryProjects.length === 0 && (
+              <div className="gallery-placeholder">
+                <p>Галерея буде доступна після публікації перших проєктів</p>
+              </div>
+            )}
+            {!galleryLoading && !galleryError && galleryProjects.length > 0 && (
+              <>
+                {galleryProjects.map((project) => {
+                  const previewSrc = project.preview
+                    ? `data:image/png;base64,${project.preview}`
+                    : null;
+                  const name = containersMap.get(project.containerId) ?? 'Флораріум';
+                  return (
+                    <Link
+                      key={project.id}
+                      to={`/result?id=${project.id}`}
+                      className="gallery-card"
+                    >
+                      <div className="gallery-card-image">
+                        {previewSrc ? (
+                          <img src={previewSrc} alt={name} />
+                        ) : (
+                          <div className="gallery-card-placeholder" aria-hidden>
+                            <HiCube />
+                          </div>
+                        )}
+                      </div>
+                      <div className="gallery-card-info">
+                        <h3>{name}</h3>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </>
+            )}
           </div>
         </div>
       </section>
