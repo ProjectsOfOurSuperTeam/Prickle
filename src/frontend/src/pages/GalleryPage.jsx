@@ -57,7 +57,7 @@ function GalleryPage() {
       setLoading(true);
       setError(null);
       try {
-        const result = await api.projects.getAll({ isPublished: true, pageSize: 100 });
+        const result = await api.projects.getAll({ isPublished: true, pageSize: 25 });
         if (!cancelled) {
           setItems(result.items ?? []);
         }
