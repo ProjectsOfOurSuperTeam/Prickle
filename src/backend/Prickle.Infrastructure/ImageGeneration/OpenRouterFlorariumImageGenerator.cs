@@ -24,10 +24,25 @@ internal sealed class OpenRouterFlorariumImageGenerator : IFlorariumImageGenerat
         IHostEnvironment hostEnvironment,
         ILogger<OpenRouterFlorariumImageGenerator> logger)
     {
+        static string? FirstNonEmpty(params string?[] values)
+        {
+            foreach (var value in values)
+            {
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    return value.Trim();
+                }
+            }
+
+            return null;
+        }
+
         _logger = logger;
-        _apiKey = configuration["OpenRouter:ApiKey"] ?? System.Environment.GetEnvironmentVariable("OPENROUTER_API_KEY")
+        _apiKey = FirstNonEmpty(
+                configuration["GeminiApiKey"],
+                System.Environment.GetEnvironmentVariable("GEMINI_API_KEY"))
             ?? throw new InvalidOperationException(
-                "OpenRouter API key is not configured. Set OpenRouter:ApiKey in appsettings or OPENROUTER_API_KEY environment variable.");
+            "Gemini API key is not configured. Set GeminiApiKey in configuration or GEMINI_API_KEY environment variable.");
         _httpClient = httpClientFactory.CreateClient();
         _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
 
