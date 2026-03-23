@@ -865,7 +865,8 @@ function ConstructorPage() {
 
   async function renderConstructorSnapshotManually() {
     const width = boardWidth;
-    const height = boardHeight + (sortedSoilLayers.length > 0 ? 80 : 0);
+    const soilDepth = sortedSoilLayers.length > 0 ? 80 : 0;
+    const height = boardHeight + soilDepth;
     const scale = window.devicePixelRatio > 1 ? 2 : 1;
 
     const canvas = document.createElement('canvas');
@@ -881,20 +882,139 @@ function ConstructorPage() {
     context.fillStyle = '#edf4e5';
     context.fillRect(0, 0, width, height);
 
+    function normalizeHexColor(hexColor, fallback = '#8c7b64') {
+      if (typeof hexColor !== 'string') return fallback;
+      const normalized = hexColor.trim();
+      if (/^#[0-9a-fA-F]{6}$/.test(normalized)) return normalized;
+      if (/^#[0-9a-fA-F]{3}$/.test(normalized)) {
+        const short = normalized.slice(1);
+        return `#${short[0]}${short[0]}${short[1]}${short[1]}${short[2]}${short[2]}`;
+      }
+      return fallback;
+    }
+
+    function shadeColor(hexColor, factor) {
+      const hex = normalizeHexColor(hexColor).slice(1);
+      const r = Number.parseInt(hex.slice(0, 2), 16);
+      const g = Number.parseInt(hex.slice(2, 4), 16);
+      const b = Number.parseInt(hex.slice(4, 6), 16);
+      const nextR = Math.max(0, Math.min(255, Math.round(r * factor)));
+      const nextG = Math.max(0, Math.min(255, Math.round(g * factor)));
+      const nextB = Math.max(0, Math.min(255, Math.round(b * factor)));
+      return `rgb(${nextR}, ${nextG}, ${nextB})`;
+    }
+
+    function buildSoilLayerHeights(totalDepth) {
+      if (sortedSoilLayers.length === 0 || totalDepth <= 0) {
+        return [];
+      }
+
+      const rawHeights = sortedSoilLayers.map((layer) => Math.max(8, (layer.percentage / 100) * totalDepth));
+      const rawTotal = rawHeights.reduce((sum, value) => sum + value, 0);
+      const scaleFactor = rawTotal > 0 ? totalDepth / rawTotal : 1;
+      return rawHeights.map((value) => value * scaleFactor);
+    }
+
+    let minX = Number.POSITIVE_INFINITY;
+    let minY = Number.POSITIVE_INFINITY;
+    let maxX = Number.NEGATIVE_INFINITY;
+    let maxY = Number.NEGATIVE_INFINITY;
+
+    for (const cell of gridCells) {
+      minX = Math.min(minX, cell.left - TILE_WIDTH / 2);
+      maxX = Math.max(maxX, cell.left + TILE_WIDTH / 2);
+      minY = Math.min(minY, cell.top - TILE_HEIGHT / 2);
+      maxY = Math.max(maxY, cell.top + TILE_HEIGHT / 2);
+    }
+
+    for (const item of visiblePlacedItemsView) {
+      const itemWidth = item.size * TILE_WIDTH;
+      const itemHeight = item.size * TILE_HEIGHT;
+      const drawHeight = itemHeight * 1.5;
+      const drawTopShift = item.type === 'plant' ? itemHeight * 0.1 : 0;
+
+      minX = Math.min(minX, item.left - itemWidth / 2);
+      maxX = Math.max(maxX, item.left + itemWidth / 2);
+      minY = Math.min(minY, item.top - drawHeight / 2 - drawTopShift);
+      maxY = Math.max(maxY, item.top + drawHeight / 2);
+    }
+
+    if (soilDepth > 0) {
+      const originX = (gridSize * TILE_WIDTH) / 2;
+      const originY = GRID_TOP_OFFSET;
+      const leftCorner = toIsoPosition(gridSize, 0, originX, originY);
+      const rightCorner = toIsoPosition(0, gridSize, originX, originY);
+      const bottomTip = toIsoPosition(gridSize, gridSize, originX, originY);
+
+      minX = Math.min(minX, leftCorner.left, bottomTip.left, rightCorner.left);
+      maxX = Math.max(maxX, leftCorner.left, bottomTip.left, rightCorner.left);
+      minY = Math.min(minY, leftCorner.top - TILE_HEIGHT / 2, bottomTip.top - TILE_HEIGHT / 2, rightCorner.top - TILE_HEIGHT / 2);
+      maxY = Math.max(maxY, leftCorner.top - TILE_HEIGHT / 2 + soilDepth, bottomTip.top - TILE_HEIGHT / 2 + soilDepth, rightCorner.top - TILE_HEIGHT / 2 + soilDepth);
+    }
+
+    if (!Number.isFinite(minX) || !Number.isFinite(minY) || !Number.isFinite(maxX) || !Number.isFinite(maxY)) {
+      minX = 0;
+      minY = 0;
+      maxX = width;
+      maxY = height;
+    }
+
+    const offsetX = (width - (maxX - minX)) / 2 - minX;
+    const offsetY = (height - (maxY - minY)) / 2 - minY;
+
+    if (soilDepth > 0) {
+      const originX = (gridSize * TILE_WIDTH) / 2;
+      const originY = GRID_TOP_OFFSET;
+      const leftCorner = toIsoPosition(gridSize, 0, originX, originY);
+      const rightCorner = toIsoPosition(0, gridSize, originX, originY);
+      const bottomTip = toIsoPosition(gridSize, gridSize, originX, originY);
+      const topYLeft = leftCorner.top - TILE_HEIGHT / 2;
+      const topYBottom = bottomTip.top - TILE_HEIGHT / 2;
+      const topYRight = rightCorner.top - TILE_HEIGHT / 2;
+      const layerHeights = buildSoilLayerHeights(soilDepth);
+
+      let depthOffset = 0;
+      for (let index = 0; index < sortedSoilLayers.length; index += 1) {
+        const layer = sortedSoilLayers[index];
+        const layerHeight = layerHeights[index] ?? 0;
+        const baseColor = normalizeHexColor(layer.soilType?.hexColor);
+
+        context.fillStyle = shadeColor(baseColor, 0.86);
+        context.beginPath();
+        context.moveTo(leftCorner.left + offsetX, topYLeft + depthOffset + offsetY);
+        context.lineTo(bottomTip.left + offsetX, topYBottom + depthOffset + offsetY);
+        context.lineTo(bottomTip.left + offsetX, topYBottom + depthOffset + layerHeight + offsetY);
+        context.lineTo(leftCorner.left + offsetX, topYLeft + depthOffset + layerHeight + offsetY);
+        context.closePath();
+        context.fill();
+
+        context.fillStyle = shadeColor(baseColor, 0.74);
+        context.beginPath();
+        context.moveTo(bottomTip.left + offsetX, topYBottom + depthOffset + offsetY);
+        context.lineTo(rightCorner.left + offsetX, topYRight + depthOffset + offsetY);
+        context.lineTo(rightCorner.left + offsetX, topYRight + depthOffset + layerHeight + offsetY);
+        context.lineTo(bottomTip.left + offsetX, topYBottom + depthOffset + layerHeight + offsetY);
+        context.closePath();
+        context.fill();
+
+        depthOffset += layerHeight;
+      }
+    }
+
     for (const cell of gridCells) {
       context.beginPath();
-      context.moveTo(cell.left, cell.top - TILE_HEIGHT / 2);
-      context.lineTo(cell.left + TILE_WIDTH / 2, cell.top);
-      context.lineTo(cell.left, cell.top + TILE_HEIGHT / 2);
-      context.lineTo(cell.left - TILE_WIDTH / 2, cell.top);
+      context.moveTo(cell.left + offsetX, cell.top - TILE_HEIGHT / 2 + offsetY);
+      context.lineTo(cell.left + TILE_WIDTH / 2 + offsetX, cell.top + offsetY);
+      context.lineTo(cell.left + offsetX, cell.top + TILE_HEIGHT / 2 + offsetY);
+      context.lineTo(cell.left - TILE_WIDTH / 2 + offsetX, cell.top + offsetY);
       context.closePath();
 
       if (globalSoilColor) {
         const gradient = context.createLinearGradient(
-          cell.left - TILE_WIDTH / 2,
-          cell.top - TILE_HEIGHT / 2,
-          cell.left + TILE_WIDTH / 2,
-          cell.top + TILE_HEIGHT / 2,
+          cell.left - TILE_WIDTH / 2 + offsetX,
+          cell.top - TILE_HEIGHT / 2 + offsetY,
+          cell.left + TILE_WIDTH / 2 + offsetX,
+          cell.top + TILE_HEIGHT / 2 + offsetY,
         );
         gradient.addColorStop(0, globalSoilColor.start);
         gradient.addColorStop(1, globalSoilColor.end);
@@ -902,10 +1022,10 @@ function ConstructorPage() {
         context.strokeStyle = globalSoilColor.border;
       } else {
         const gradient = context.createLinearGradient(
-          cell.left - TILE_WIDTH / 2,
-          cell.top - TILE_HEIGHT / 2,
-          cell.left + TILE_WIDTH / 2,
-          cell.top + TILE_HEIGHT / 2,
+          cell.left - TILE_WIDTH / 2 + offsetX,
+          cell.top - TILE_HEIGHT / 2 + offsetY,
+          cell.left + TILE_WIDTH / 2 + offsetX,
+          cell.top + TILE_HEIGHT / 2 + offsetY,
         );
         gradient.addColorStop(0, '#dce8d4');
         gradient.addColorStop(1, '#c5d9b8');
@@ -957,7 +1077,7 @@ function ConstructorPage() {
         drawY -= itemHeight * 0.1;
       }
 
-      context.drawImage(image, drawX, drawY, drawWidth, drawHeight);
+      context.drawImage(image, drawX + offsetX, drawY + offsetY, drawWidth, drawHeight);
     }
 
     return await new Promise((resolve) => {
@@ -968,11 +1088,6 @@ function ConstructorPage() {
   async function captureConstructorCanvasBlob() {
     if (!boardRef.current) {
       return null;
-    }
-
-    const manualSnapshot = await renderConstructorSnapshotManually();
-    if (manualSnapshot) {
-      return manualSnapshot;
     }
 
     boardRef.current.classList.add('constructor-board-capture-mode');
@@ -997,14 +1112,79 @@ function ConstructorPage() {
         return true;
       }
 
-      const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
-      for (let i = 3; i < data.length; i += 4) {
-        if (data[i] !== 0) {
-          return true;
+      try {
+        const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
+        for (let i = 3; i < data.length; i += 4) {
+          if (data[i] !== 0) {
+            return true;
+          }
         }
+      } catch {
+        // If browser blocks pixel reads, treat it as visible and let blob conversion decide.
+        return true;
       }
 
       return false;
+    }
+
+    function looksLikeFlatBackground(canvas) {
+      const context = canvas.getContext('2d', { willReadFrequently: true });
+      if (!context) {
+        return false;
+      }
+
+      let imageData;
+      try {
+        imageData = context.getImageData(0, 0, canvas.width, canvas.height).data;
+      } catch {
+        return false;
+      }
+
+      const bgR = 237;
+      const bgG = 244;
+      const bgB = 229;
+      const width = canvas.width;
+      const height = canvas.height;
+      const stride = Math.max(1, Math.floor(Math.min(width, height) / 180));
+
+      let sampled = 0;
+      let different = 0;
+
+      for (let y = 0; y < height; y += stride) {
+        for (let x = 0; x < width; x += stride) {
+          const index = (y * width + x) * 4;
+          const alpha = imageData[index + 3];
+          if (alpha < 8) {
+            continue;
+          }
+
+          sampled += 1;
+
+          const r = imageData[index];
+          const g = imageData[index + 1];
+          const b = imageData[index + 2];
+          const delta = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
+          if (delta > 18) {
+            different += 1;
+          }
+        }
+      }
+
+      if (sampled === 0) {
+        return true;
+      }
+
+      return (different / sampled) < 0.006;
+    }
+
+    async function canvasToBlob(snapshotCanvas) {
+      try {
+        return await new Promise((resolve) => {
+          snapshotCanvas.toBlob((blob) => resolve(blob), 'image/png');
+        });
+      } catch {
+        return null;
+      }
     }
 
     let canvas = null;
@@ -1022,13 +1202,15 @@ function ConstructorPage() {
       boardRef.current.classList.remove('constructor-board-capture-mode');
     }
 
-    if (!canvas || !hasVisiblePixels(canvas)) {
-      return null;
+    if (canvas && hasVisiblePixels(canvas) && !looksLikeFlatBackground(canvas)) {
+      const domBlob = await canvasToBlob(canvas);
+      if (domBlob) {
+        return domBlob;
+      }
     }
 
-    return await new Promise((resolve) => {
-      canvas.toBlob((blob) => resolve(blob), 'image/png');
-    });
+    // Fallback to manual renderer when DOM capture is blank or blob conversion fails.
+    return await renderConstructorSnapshotManually();
   }
 
   const ITEM_TYPE_MAP = { plant: 0, decoration: 1, soil: 2 };

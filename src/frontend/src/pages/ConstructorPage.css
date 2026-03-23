@@ -515,23 +515,9 @@
   transition: opacity 0.16s ease, transform 0.16s ease;
 }
 
-/* Snapshot mode for html2canvas: remove editor-only helpers and unstable effects. */
-.constructor-board-capture-mode .placed-item-footprint,
-.constructor-board-capture-mode .placed-item-label,
+/* Snapshot mode for html2canvas: hide only destructive UI controls. */
 .constructor-board-capture-mode .placed-item-remove {
   display: none !important;
-}
-
-.constructor-board-capture-mode .placed-item-image {
-  filter: none !important;
-}
-
-.constructor-board-capture-mode .iso-cell {
-  z-index: 0;
-}
-
-.constructor-board-capture-mode .placed-item {
-  z-index: 2;
 }
 
 .constructor-placed-list,
