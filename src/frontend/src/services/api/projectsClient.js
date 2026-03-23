@@ -3,7 +3,7 @@ import './models.js';
 const API_BASE = '/api/projects';
 
 /**
- * @param {{ request: (path: string, init?: { method?: string; body?: string; params?: Record<string, unknown> }) => Promise<unknown> }} base
+ * @param {{ request: (path: string, init?: { method?: string; body?: string; params?: Record<string, unknown> }) => Promise<unknown>; requestBlob: (path: string, init?: RequestInit & { params?: Record<string, unknown> }) => Promise<{ blob: Blob; contentType: string }> }} base
  * @returns {{
  *   getAll: (params?: ProjectsListParams) => Promise<PagedResponse<ProjectResponse>>,
  *   get: (id: string) => Promise<ProjectResponse>,
@@ -15,6 +15,7 @@ const API_BASE = '/api/projects';
  *   addItem: (projectId: string, body: AddProjectItemRequest) => Promise<ProjectItemResponse>,
  *   updateItem: (projectId: string, itemId: string, body: UpdateProjectItemRequest) => Promise<ProjectItemResponse>,
  *   removeItem: (projectId: string, itemId: string) => Promise<void>,
+ *   generateFlorariumImage: (projectId: string, canvasImage: Blob) => Promise<{ blob: Blob; contentType: string }>,
  * }}
  */
 export function createProjectsClient(base) {
@@ -52,6 +53,14 @@ export function createProjectsClient(base) {
     },
     async removeItem(projectId, itemId) {
       return request(`${API_BASE}/${projectId}/items/${itemId}`, { method: 'DELETE' });
+    },
+    async generateFlorariumImage(projectId, canvasImage) {
+      const formData = new FormData();
+      formData.append('canvasImage', canvasImage, 'constructor-canvas.png');
+      return base.requestBlob(`${API_BASE}/${projectId}/generate-florarium-image`, {
+        method: 'POST',
+        body: formData,
+      });
     },
   };
 }

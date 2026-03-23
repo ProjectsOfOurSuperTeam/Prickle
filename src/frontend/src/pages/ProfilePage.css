@@ -143,6 +143,18 @@ a.ghost:hover {
   color: var(--color-dark-olive);
 }
 
+.profile-card-actions {
+  margin-top: 0.55rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.profile-card-actions .profile-action-btn {
+  padding: 0.45rem 0.8rem;
+  font-size: 0.82rem;
+}
+
 .profile-settings {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -171,5 +183,9 @@ a.ghost:hover {
 
   .card-meta {
     text-align: left;
+  }
+
+  .profile-card-actions {
+    justify-content: flex-start;
   }
 }

@@ -115,5 +115,50 @@ export function createBaseClient(options = {}) {
     return undefined;
   }
 
-  return { request };
+  /**
+   * Sends a request and returns the response as a Blob (for binary payloads like images).
+   * @param {string} path
+   * @param {RequestInit & { params?: Record<string, string | number | boolean | undefined | null | (string | number)[]> }} init
+   * @returns {Promise<{ blob: Blob; contentType: string }>}
+   */
+  async function requestBlob(path, init = {}) {
+    const { params, ...fetchInit } = init;
+    let url = buildUrl(path);
+    if (params && Object.keys(params).length > 0) {
+      url += buildSearchParams(params);
+    }
+
+    const headers = new Headers(fetchInit.headers);
+    headers.set('api-version', '1.0');
+
+    const token = getAccessToken?.();
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    const response = await fetchFn(url, { ...fetchInit, headers });
+
+    if (!response.ok) {
+      const ct = response.headers.get('Content-Type') ?? '';
+      const isJsonErr = ct.includes('application/json') || ct.includes('application/problem+json');
+      let body = null;
+      if (isJsonErr) {
+        try {
+          body = await response.json();
+        } catch {
+          // ignore
+        }
+      }
+      if (body && typeof body === 'object') {
+        throw parseProblemDetails(body, response.status);
+      }
+      throw new ApiError(response.status, undefined, `Request failed with status ${response.status}`, undefined);
+    }
+
+    const blob = await response.blob();
+    const contentType = response.headers.get('Content-Type') ?? 'application/octet-stream';
+    return { blob, contentType };
+  }
+
+  return { request, requestBlob };
 }

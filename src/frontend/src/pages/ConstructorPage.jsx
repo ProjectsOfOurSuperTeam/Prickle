@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import html2canvas from 'html2canvas';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useApi } from '../services/useApi';
 import { useAuth } from '../services/useAuth';
 import './ConstructorPage.css';
@@ -185,6 +186,7 @@ function ConstructorPage() {
   const api = useApi();
   const { isAuthenticated } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const fromProject = location.state?.fromProject ?? null;
   const boardRef = useRef(null);
   const boardWrapRef = useRef(null);
@@ -215,7 +217,11 @@ function ConstructorPage() {
   const [revealedItemId, setRevealedItemId] = useState(null);
   const [hideObjectsLayer, setHideObjectsLayer] = useState(false);
   const [selectedGlobalSoilFormula, setSelectedGlobalSoilFormula] = useState(null);
+  const [selectedContainer, setSelectedContainer] = useState(null);
   const [shouldRedirectToAuth, setShouldRedirectToAuth] = useState(false);
+  const [savedProjectId, setSavedProjectId] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [preparingResult, setPreparingResult] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -349,6 +355,24 @@ function ConstructorPage() {
         col: pi.posY ?? 0,
       }];
     });
+
+    if (fromProject.containerId) {
+      const restoredContainer = containers.find((c) => String(c.id) === String(fromProject.containerId));
+      if (restoredContainer) {
+        setSelectedContainer({
+          id: `container-${restoredContainer.id}`,
+          entityId: String(restoredContainer.id),
+          kind: 'container',
+          name: restoredContainer.name,
+          subtitle: `${restoredContainer.volume} л • ${restoredContainer.isClosed ? 'Закритий' : 'Відкритий'}`,
+          details: restoredContainer.description || 'Основа композиції',
+          searchText: `${restoredContainer.name || ''} ${restoredContainer.description || ''}`,
+          footprint: estimateContainerFootprint(restoredContainer),
+          image: resolveImageUrl(restoredContainer.imageIsometricUrl || restoredContainer.imageUrl),
+          layer: resolveLayer('container'),
+        });
+      }
+    }
 
     setPlacedItems(restored);
     setNotice(`Відтворено ${restored.length} з ${projectItems.length} елементів проєкту.`);
@@ -654,6 +678,12 @@ function ConstructorPage() {
       return;
     }
 
+    if (selectedCatalogItem.kind === 'container') {
+      setSelectedContainer(selectedCatalogItem);
+      setNotice(`Контейнер обрано: ${selectedCatalogItem.name}`);
+      return;
+    }
+
     const rect = boardRef.current.getBoundingClientRect();
     const localX = event.clientX - rect.left;
     const localY = event.clientY - rect.top;
@@ -725,6 +755,7 @@ function ConstructorPage() {
     }
 
     if (payload.layer === 'soil') return;
+    if (payload.kind === 'container') return;
 
     const candidate = toPlacementCandidate(
       localX,
@@ -814,6 +845,267 @@ function ConstructorPage() {
   function resetWorkspace() {
     setPlacedItems([]);
     setNotice('');
+    setSavedProjectId(null);
+  }
+
+  async function loadImageForSnapshot(src) {
+    return await new Promise((resolve) => {
+      if (!src) {
+        resolve(null);
+        return;
+      }
+
+      const image = new Image();
+      image.crossOrigin = 'anonymous';
+      image.onload = () => resolve(image);
+      image.onerror = () => resolve(null);
+      image.src = src;
+    });
+  }
+
+  async function renderConstructorSnapshotManually() {
+    const width = boardWidth;
+    const height = boardHeight + (sortedSoilLayers.length > 0 ? 80 : 0);
+    const scale = window.devicePixelRatio > 1 ? 2 : 1;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.floor(width * scale));
+    canvas.height = Math.max(1, Math.floor(height * scale));
+
+    const context = canvas.getContext('2d');
+    if (!context) {
+      return null;
+    }
+
+    context.scale(scale, scale);
+    context.fillStyle = '#edf4e5';
+    context.fillRect(0, 0, width, height);
+
+    for (const cell of gridCells) {
+      context.beginPath();
+      context.moveTo(cell.left, cell.top - TILE_HEIGHT / 2);
+      context.lineTo(cell.left + TILE_WIDTH / 2, cell.top);
+      context.lineTo(cell.left, cell.top + TILE_HEIGHT / 2);
+      context.lineTo(cell.left - TILE_WIDTH / 2, cell.top);
+      context.closePath();
+
+      if (globalSoilColor) {
+        const gradient = context.createLinearGradient(
+          cell.left - TILE_WIDTH / 2,
+          cell.top - TILE_HEIGHT / 2,
+          cell.left + TILE_WIDTH / 2,
+          cell.top + TILE_HEIGHT / 2,
+        );
+        gradient.addColorStop(0, globalSoilColor.start);
+        gradient.addColorStop(1, globalSoilColor.end);
+        context.fillStyle = gradient;
+        context.strokeStyle = globalSoilColor.border;
+      } else {
+        const gradient = context.createLinearGradient(
+          cell.left - TILE_WIDTH / 2,
+          cell.top - TILE_HEIGHT / 2,
+          cell.left + TILE_WIDTH / 2,
+          cell.top + TILE_HEIGHT / 2,
+        );
+        gradient.addColorStop(0, '#dce8d4');
+        gradient.addColorStop(1, '#c5d9b8');
+        context.fillStyle = gradient;
+        context.strokeStyle = 'rgba(31, 52, 32, 0.15)';
+      }
+
+      context.lineWidth = 1;
+      context.fill();
+      context.stroke();
+    }
+
+    const imagesCache = new Map();
+    const itemsToDraw = visiblePlacedItemsView;
+
+    for (const item of itemsToDraw) {
+      const itemWidth = item.size * TILE_WIDTH;
+      const itemHeight = item.size * TILE_HEIGHT;
+      const areaLeft = item.left - itemWidth / 2;
+      const areaTop = item.top - itemHeight / 2;
+
+      if (!item.image) {
+        continue;
+      }
+
+      if (!imagesCache.has(item.image)) {
+        imagesCache.set(item.image, await loadImageForSnapshot(item.image));
+      }
+
+      const image = imagesCache.get(item.image);
+      if (!image) {
+        continue;
+      }
+
+      const imageRatio = image.width / image.height;
+      let drawWidth = itemWidth * 0.82;
+      let drawHeight = drawWidth / imageRatio;
+
+      const maxHeight = itemHeight * 1.5;
+      if (drawHeight > maxHeight) {
+        drawHeight = maxHeight;
+        drawWidth = drawHeight * imageRatio;
+      }
+
+      let drawX = areaLeft + (itemWidth - drawWidth) / 2;
+      let drawY = areaTop + (itemHeight - drawHeight) / 2;
+
+      if (item.type === 'plant') {
+        drawY -= itemHeight * 0.1;
+      }
+
+      context.drawImage(image, drawX, drawY, drawWidth, drawHeight);
+    }
+
+    return await new Promise((resolve) => {
+      canvas.toBlob((blob) => resolve(blob), 'image/png');
+    });
+  }
+
+  async function captureConstructorCanvasBlob() {
+    if (!boardRef.current) {
+      return null;
+    }
+
+    const manualSnapshot = await renderConstructorSnapshotManually();
+    if (manualSnapshot) {
+      return manualSnapshot;
+    }
+
+    boardRef.current.classList.add('constructor-board-capture-mode');
+
+    const scale = window.devicePixelRatio > 1 ? 2 : 1;
+
+    async function renderSnapshotWithOptions(foreignObjectRendering) {
+      return html2canvas(boardRef.current, {
+        backgroundColor: '#edf4e5',
+        scale,
+        useCORS: true,
+        allowTaint: true,
+        foreignObjectRendering,
+        logging: false,
+        removeContainer: true,
+      });
+    }
+
+    function hasVisiblePixels(canvas) {
+      const context = canvas.getContext('2d', { willReadFrequently: true });
+      if (!context) {
+        return true;
+      }
+
+      const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
+      for (let i = 3; i < data.length; i += 4) {
+        if (data[i] !== 0) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    let canvas = null;
+    try {
+      // Prefer foreignObject mode first because it preserves clip-path diamonds for isometric cells.
+      canvas = await renderSnapshotWithOptions(true);
+      if (!hasVisiblePixels(canvas)) {
+        canvas = await renderSnapshotWithOptions(false);
+      }
+      if (!hasVisiblePixels(canvas)) {
+        // Last fallback: documented default call.
+        canvas = await html2canvas(boardRef.current);
+      }
+    } finally {
+      boardRef.current.classList.remove('constructor-board-capture-mode');
+    }
+
+    if (!canvas || !hasVisiblePixels(canvas)) {
+      return null;
+    }
+
+    return await new Promise((resolve) => {
+      canvas.toBlob((blob) => resolve(blob), 'image/png');
+    });
+  }
+
+  const ITEM_TYPE_MAP = { plant: 0, decoration: 1, soil: 2 };
+
+  async function handleSave() {
+    if (!selectedContainer) {
+      setNotice('Оберіть контейнер у каталозі перед збереженням проєкту.');
+      return;
+    }
+
+    const nonContainerItems = placedItems;
+    if (nonContainerItems.length === 0 && !selectedGlobalSoilFormula) {
+      setNotice('Додайте хоча б одну рослину, декорацію або формулу ґрунту.');
+      return;
+    }
+
+    setSaving(true);
+    setNotice('');
+
+    try {
+      const project = await api.projects.add({ containerId: selectedContainer.entityId });
+
+      const itemsToAdd = nonContainerItems
+        .filter((item) => ITEM_TYPE_MAP[item.type] !== undefined)
+        .map((item) => ({
+          itemType: ITEM_TYPE_MAP[item.type],
+          itemId: item.entityId,
+          posX: item.row,
+          posY: item.col,
+          posZ: 0,
+        }));
+
+      if (selectedGlobalSoilFormula) {
+        itemsToAdd.push({
+          itemType: 2,
+          itemId: selectedGlobalSoilFormula.entityId,
+          posX: 0,
+          posY: 0,
+          posZ: 0,
+        });
+      }
+
+      for (const body of itemsToAdd) {
+        await api.projects.addItem(project.id, body);
+      }
+
+      setSavedProjectId(project.id);
+      setNotice('Проєкт збережено успішно!');
+    } catch (err) {
+      setNotice(`Помилка збереження: ${err?.detail || err?.message || 'Невідома помилка'}`);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleGoToResult() {
+    if (!savedProjectId) {
+      setNotice('Спочатку збережіть проєкт.');
+      return;
+    }
+
+    setPreparingResult(true);
+    setNotice('');
+
+    try {
+      const canvasSnapshot = await captureConstructorCanvasBlob();
+      if (!canvasSnapshot) {
+        setNotice('Не вдалося зняти знімок полотна конструктора.');
+        return;
+      }
+
+      navigate('/result', { state: { projectId: savedProjectId, canvasSnapshot } });
+    } catch {
+      setNotice('Не вдалося підготувати зображення полотна для генерації.');
+    } finally {
+      setPreparingResult(false);
+    }
   }
 
   if (!isAuthenticated && shouldRedirectToAuth) {
@@ -889,10 +1181,10 @@ function ConstructorPage() {
           {!loading && !error && visibleCatalogItems.map((item) => (
             <article
               key={item.id}
-              className={`constructor-card ${selectedCatalogItem?.id === item.id ? 'constructor-card-selected' : ''} ${item.kind === 'soilFormula' && selectedGlobalSoilFormula?.id === item.id ? 'constructor-card-applied' : ''}`}
-              draggable={item.kind !== 'soilFormula'}
+              className={`constructor-card ${(selectedCatalogItem?.id === item.id || (item.kind === 'container' && selectedContainer?.id === item.id)) ? 'constructor-card-selected' : ''} ${item.kind === 'soilFormula' && selectedGlobalSoilFormula?.id === item.id ? 'constructor-card-applied' : ''}`}
+              draggable={item.kind !== 'soilFormula' && item.kind !== 'container'}
               onDragStart={(event) => {
-                if (item.kind === 'soilFormula') { event.preventDefault(); return; }
+                if (item.kind === 'soilFormula' || item.kind === 'container') { event.preventDefault(); return; }
                 handleDragStart(event, item);
               }}
               onClick={() => {
@@ -901,6 +1193,13 @@ function ConstructorPage() {
                   setNotice(selectedGlobalSoilFormula?.id === item.id ? 'Формулу ґрунту знято' : `Формулу ґрунту змінено на: ${item.name}`);
                   return;
                 }
+
+                if (item.kind === 'container') {
+                  setSelectedContainer(item);
+                  setNotice(`Контейнер обрано: ${item.name}`);
+                  return;
+                }
+
                 setSelectedCatalogItem((prev) => (prev?.id === item.id ? null : item));
               }}
             >
@@ -957,6 +1256,7 @@ function ConstructorPage() {
 
           <div className="constructor-actions">
             <span>Елементів: {placedItems.length}</span>
+            <span>Контейнер: {selectedContainer ? selectedContainer.name : 'не обрано'}</span>
             <span>Режим: {selectedCatalogItem ? `Клік-плейс (${selectedCatalogItem.name})` : 'Drag-and-drop'}</span>
             <button
               type="button"
@@ -965,6 +1265,14 @@ function ConstructorPage() {
               {hideObjectsLayer ? 'Показати об\'єкти' : 'Сховати об\'єкти'}
             </button>
             <button type="button" onClick={resetWorkspace}>Очистити</button>
+            <button type="button" onClick={handleSave} disabled={saving}>
+              {saving ? 'Збереження...' : 'Зберегти'}
+            </button>
+            {savedProjectId && (
+              <button type="button" onClick={handleGoToResult} disabled={preparingResult}>
+                {preparingResult ? 'Підготовка...' : 'Згенерувати зображення'}
+              </button>
+            )}
           </div>
         </header>
 
