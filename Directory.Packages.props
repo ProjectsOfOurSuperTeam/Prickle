@@ -1,4 +1,4 @@
-﻿<Project>
+<Project>
 	<PropertyGroup>
 		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
 	</PropertyGroup>
@@ -8,7 +8,6 @@
 		<PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
 		<PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.103" />
 		<!--Application-->
-		<PackageVersion Include="Google.GenAI" Version="1.0.0" />
 		<PackageVersion Include="Scrutor" Version="7.0.0" />
 		<PackageVersion Include="Mediator.Abstractions" Version="3.0.1" />
 		<PackageVersion Include="Mediator.SourceGenerator" Version="3.0.1" />
