@@ -36,6 +36,7 @@ function Layout() {
           <ul className={`nav-links ${isMenuOpen ? 'nav-links-open' : ''}`}>
             <li><Link to="/" onClick={closeMenu}>Головна</Link></li>
             <li><Link to="/catalog" onClick={closeMenu}>Каталог</Link></li>
+            <li><Link to="/gallery" onClick={closeMenu}>Галерея</Link></li>
             <li><Link to="/constructor" onClick={closeMenu}>Конструктор</Link></li>
             {isAuthenticated && <li><Link to="/profile" onClick={closeMenu}>Профіль</Link></li>}
             {isAuthenticated && <li><Link to="/logout" className="nav-btn-login" onClick={closeMenu}>Вийти</Link></li>}

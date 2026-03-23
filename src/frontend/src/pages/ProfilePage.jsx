@@ -1,42 +1,151 @@
-import './ProfilePage.css';
-import { Navigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../services/useAuth';
+import { useApi } from '../services/useApi';
+import { ApiError } from '../services/api/apiError';
+import './ProfilePage.css';
+
+function volumeToSize(volume) {
+  if (volume <= 2.5) return 'Small';
+  if (volume <= 4) return 'Medium';
+  return 'Large';
+}
+
+function formatCreatedAt(isoDate) {
+  try {
+    const d = new Date(isoDate);
+    return new Intl.DateTimeFormat('uk-UA', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    }).format(d);
+  } catch {
+    return isoDate;
+  }
+}
 
 function ProfilePage() {
   const { isAuthenticated, user } = useAuth();
+  const api = useApi();
+  const navigate = useNavigate();
+
+  const [projects, setProjects] = useState(null);
+  const [containersMap, setContainersMap] = useState(new Map());
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function fetchData() {
+      try {
+        setLoading(true);
+        setError(null);
+
+        async function fetchAllUserProjects() {
+          const pageSize = 25;
+          let page = 1;
+          let total = Number.POSITIVE_INFINITY;
+          const items = [];
+
+          while (items.length < total) {
+            const response = await api.projects.getAll({
+              userId: user.id,
+              page,
+              pageSize,
+              sortBy: '-createdat',
+            });
+
+            const batch = response?.items ?? [];
+            const responseTotal = Number.isFinite(response?.total) ? response.total : batch.length;
+
+            items.push(...batch);
+            total = responseTotal;
+
+            if (batch.length < pageSize) {
+              break;
+            }
+
+            page += 1;
+          }
+
+          return {
+            items,
+            page: 1,
+            pageSize,
+            total: items.length,
+          };
+        }
+
+        const [projectsRes, containersRes] = await Promise.all([
+          fetchAllUserProjects(),
+          api.containers.getAll({ pageSize: 25 }),
+        ]);
+
+        if (cancelled) return;
+
+        const map = new Map();
+        for (const c of containersRes.items ?? []) {
+          map.set(c.id, { name: c.name, volume: c.volume });
+        }
+        setContainersMap(map);
+        setProjects(projectsRes);
+      } catch (e) {
+        if (cancelled) return;
+        setError(e instanceof ApiError ? (e.detail ?? 'Не вдалося завантажити дані.') : 'Не вдалося завантажити дані.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    fetchData();
+    return () => { cancelled = true; };
+  }, [user?.id, api.projects, api.containers]);
 
   if (!isAuthenticated) {
     return <Navigate to="/auth" replace />;
-  } else {
-    console.log("Current user:", user);
   }
 
-  const stats = [
-    { label: 'Збережені флораріуми', value: 4 },
-    { label: 'Створено ескізів', value: 12 },
-    { label: 'Останнє оновлення', value: '2 дні тому' },
-  ];
+  const stats = (() => {
+    if (loading || error || !projects) {
+      return [
+        { label: 'Збережені флораріуми', value: loading ? '...' : error ? '—' : '0' },
+        { label: 'Опубліковано', value: loading ? '...' : error ? '—' : '0' },
+        { label: 'Останнє створення', value: loading ? '...' : error ? '—' : '—' },
+      ];
+    }
+    const total = projects.total ?? 0;
+    const published = (projects.items ?? []).filter((p) => p.isPublished).length;
+    const latest = projects.items?.[0]?.createdAt
+      ? formatCreatedAt(projects.items[0].createdAt)
+      : '—';
+    return [
+      { label: 'Збережені флораріуми', value: total },
+      { label: 'Опубліковано', value: published },
+      { label: 'Останнє створення', value: latest },
+    ];
+  })();
 
-  const terrariums = [
-    {
-      id: 't-001',
-      name: 'Лісова тераса',
-      size: 'Small',
-      updatedAt: '24 січня 2026',
-    },
-    {
-      id: 't-002',
-      name: 'Скляний сад',
-      size: 'Medium',
-      updatedAt: '20 січня 2026',
-    },
-    {
-      id: 't-003',
-      name: 'Тропічний міні',
-      size: 'Large',
-      updatedAt: '16 січня 2026',
-    },
-  ];
+  const terrariums = (() => {
+    if (loading || error || !projects) return [];
+    const items = projects.items ?? [];
+    return items.map((p) => {
+      const c = containersMap.get(p.containerId);
+      return {
+        id: p.id,
+        name: c?.name ?? 'Проєкт',
+        size: c != null ? volumeToSize(c.volume) : 'Medium',
+        updatedAt: formatCreatedAt(p.createdAt),
+        isPublished: p.isPublished,
+        sourceProject: p,
+      };
+    });
+  })();
 
   return (
     <div className="profile-page">
@@ -49,12 +158,20 @@ function ProfilePage() {
           </p>
         </div>
         <div className="profile-actions">
-          <button type="button">Створити новий</button>
-          <button type="button" className="ghost">
+          <Link to="/constructor" className="profile-action-btn">
+            Створити новий
+          </Link>
+          <Link to="/profile/edit" className="ghost">
             Редагувати профіль
-          </button>
+          </Link>
         </div>
       </section>
+
+      {error && (
+        <section className="profile-error">
+          <p>{error}</p>
+        </section>
+      )}
 
       <section className="profile-grid">
         {stats.map((stat) => (
@@ -68,23 +185,39 @@ function ProfilePage() {
       <section className="profile-section">
         <div className="section-header">
           <h2>Збережені флораріуми</h2>
-          <button type="button" className="ghost">
+          <Link to="/catalog" className="ghost">
             Перейти в каталог
-          </button>
+          </Link>
         </div>
         <div className="profile-list">
-          {terrariums.map((item) => (
-            <article className="profile-card" key={item.id}>
-              <div>
-                <h3>{item.name}</h3>
-                <p>Розмір: {item.size}</p>
-              </div>
-              <div className="card-meta">
-                <span>Оновлено</span>
-                <strong>{item.updatedAt}</strong>
-              </div>
-            </article>
-          ))}
+          {loading ? (
+            <p className="profile-loading">Завантаження...</p>
+          ) : terrariums.length === 0 ? (
+            <p className="profile-empty">Немає збережених флораріумів.</p>
+          ) : (
+            terrariums.map((item) => (
+              <article className="profile-card" key={item.id}>
+                <div>
+                  <h3>{item.name}</h3>
+                  <p>Розмір: {item.size}</p>
+                  <p>Статус: {item.isPublished ? 'Опубліковано' : 'Чернетка'}</p>
+                </div>
+                <div className="card-meta">
+                  <span>Оновлено</span>
+                  <strong>{item.updatedAt}</strong>
+                  <div className="profile-card-actions">
+                    <button
+                      type="button"
+                      className="profile-action-btn"
+                      onClick={() => navigate('/constructor', { state: { fromProject: item.sourceProject } })}
+                    >
+                      Відкрити в конструкторі
+                    </button>
+                  </div>
+                </div>
+              </article>
+            ))
+          )}
         </div>
       </section>
 

@@ -515,6 +515,11 @@
   transition: opacity 0.16s ease, transform 0.16s ease;
 }
 
+/* Snapshot mode for html2canvas: hide only destructive UI controls. */
+.constructor-board-capture-mode .placed-item-remove {
+  display: none !important;
+}
+
 .constructor-placed-list,
 .constructor-soil-layers-section {
   border-radius: 14px;

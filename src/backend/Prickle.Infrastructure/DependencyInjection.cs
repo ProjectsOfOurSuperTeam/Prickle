@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
@@ -26,6 +26,9 @@ public static class DependencyInjection
     private static IServiceCollection AddServices(this IServiceCollection services)
     {
         services.AddTransient<IDomainEventsDispatcher, DomainEventsDispatcher>();
+        services.AddHttpClient();
+        services.AddScoped<Prickle.Application.Abstractions.ImageGeneration.IFlorariumImageGenerator,
+            Prickle.Infrastructure.ImageGeneration.OpenRouterFlorariumImageGenerator>();
 
         return services;
     }
