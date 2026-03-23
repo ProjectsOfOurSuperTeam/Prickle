@@ -1,4 +1,4 @@
-﻿namespace Prickle.Application.Soil.Types.Update;
+namespace Prickle.Application.Soil.Types.Update;
 
 internal sealed class UpdateSoilTypeCommandValidator : AbstractValidator<UpdateSoilTypeCommand>
 {
@@ -11,5 +11,8 @@ internal sealed class UpdateSoilTypeCommandValidator : AbstractValidator<UpdateS
         RuleFor(command => command.NewName)
             .NotEmpty()
             .MaximumLength(255);
+
+        RuleFor(command => command.NewHexColor)
+            .MaximumLength(7);
     }
 }

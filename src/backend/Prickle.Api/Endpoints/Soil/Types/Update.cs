@@ -1,4 +1,4 @@
-﻿using Prickle.Application.Soil.Types;
+using Prickle.Application.Soil.Types;
 using Prickle.Application.Soil.Types.Update;
 using Prickle.Infrastructure.Authentication;
 
@@ -6,7 +6,7 @@ namespace Prickle.Api.Endpoints.Soil.Types;
 
 internal sealed class Update : IEndpoint
 {
-    public sealed record UpdateSoilTypeRequest(string NewName);
+    public sealed record UpdateSoilTypeRequest(string NewName, string? NewHexColor);
     public const string EndpointName = "UpdateSoilType";
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
@@ -17,7 +17,7 @@ internal sealed class Update : IEndpoint
                 IMediator mediator,
                 CancellationToken cancellationToken) =>
             {
-                var command = new UpdateSoilTypeCommand(id, request.NewName);
+                var command = new UpdateSoilTypeCommand(id, request.NewName, request.NewHexColor);
                 var result = await mediator.Send(command, cancellationToken);
                 return result.Match(
                     soilTypeResponse => Results.Ok(soilTypeResponse),

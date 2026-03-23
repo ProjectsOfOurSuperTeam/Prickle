@@ -707,9 +707,13 @@
 
 .gallery-grid {
   margin-top: 3rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
 }
 
 .gallery-placeholder {
+  grid-column: 1 / -1;
   background: linear-gradient(135deg, var(--color-cream) 0%, var(--color-light-sage) 100%);
   padding: 4rem 2rem;
   border-radius: 12px;
@@ -721,6 +725,62 @@
   color: var(--color-dark-olive);
   font-size: 1.1rem;
   opacity: 0.7;
+}
+
+.gallery-card {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  background: linear-gradient(135deg, var(--color-cream) 0%, white 100%);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--color-light-sage);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.gallery-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px var(--shadow-dark-olive-light);
+  color: inherit;
+}
+
+.gallery-card-image {
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--color-cream);
+}
+
+.gallery-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gallery-card-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-sage);
+  opacity: 0.5;
+}
+
+.gallery-card-placeholder svg {
+  width: 64px;
+  height: 64px;
+}
+
+.gallery-card-info {
+  padding: 1rem 1.25rem;
+}
+
+.gallery-card-info h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--color-dark-olive);
+  font-weight: 600;
 }
 
 /* CTA Section */

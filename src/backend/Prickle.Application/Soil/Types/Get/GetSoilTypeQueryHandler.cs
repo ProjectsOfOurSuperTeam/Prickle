@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Prickle.Application.Abstractions.Database;
 using Prickle.Domain.Soil;
 
@@ -15,7 +15,8 @@ internal sealed class GetSoilTypeQueryHandler
             .Where(st => st.Id == query.Id)
             .Select(st => new SoilTypeResponse(
                 st.Id,
-                st.Name))
+                st.Name,
+                st.HexColor))
             .FirstOrDefaultAsync(cancellationToken);
         return soilType is not null
             ? Result.Success(soilType)

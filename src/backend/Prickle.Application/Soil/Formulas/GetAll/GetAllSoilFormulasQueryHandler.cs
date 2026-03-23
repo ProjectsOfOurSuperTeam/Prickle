@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Prickle.Application.Abstractions.Database;
 using Prickle.Domain.Soil;
 
@@ -73,7 +73,7 @@ internal sealed class GetAllSoilFormulasQueryHandler
         {
             var formulaItems = sf.Formula
                 .Select(f => new SoilFormulaItemResponse(
-                    new Types.SoilTypeResponse(f.SoilTypeId, soilTypes.First(st => st.Id == f.SoilTypeId).Name),
+                    new Types.SoilTypeResponse(f.SoilTypeId, soilTypes.First(st => st.Id == f.SoilTypeId).Name, soilTypes.First(st => st.Id == f.SoilTypeId).HexColor),
                     f.Percentage,
                     f.Order))
                 .ToList();

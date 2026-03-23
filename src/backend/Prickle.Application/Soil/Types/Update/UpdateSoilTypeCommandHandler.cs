@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Prickle.Application.Abstractions.Database;
 using Prickle.Domain.Soil;
 
@@ -27,13 +27,13 @@ internal sealed class UpdateSoilTypeCommandHandler
             return Result.Failure<SoilTypeResponse>(SoilErrors.SoilType.AlreadyExists(command.NewName));
         }
 
-        var updateResult = soilType.Update(command.NewName);
+        var updateResult = soilType.Update(command.NewName, command.NewHexColor);
         if (updateResult.IsFailure)
         {
             return Result.Failure<SoilTypeResponse>(updateResult.Error);
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
-        return Result.Success(new SoilTypeResponse(updateResult.Value.Id, updateResult.Value.Name));
+        return Result.Success(new SoilTypeResponse(updateResult.Value.Id, updateResult.Value.Name, updateResult.Value.HexColor));
     }
 }

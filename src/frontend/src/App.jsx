@@ -9,6 +9,7 @@ import ProfilePage from './pages/ProfilePage';
 import AdminDashboard from './pages/AdminDashboard';
 import LogoutPage from './pages/LogoutPage';
 import './App.css';
+import GalleryPage from "./pages/GalleryPage.jsx";
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
           <Route path="profile" element={<ProfilePage />} />
           <Route path="logout" element={<LogoutPage />} />
           <Route path="admin" element={<AdminDashboard />} />
+          <Route path="gallery" element={<GalleryPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
