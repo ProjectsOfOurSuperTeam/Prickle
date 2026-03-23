@@ -36,6 +36,8 @@ internal sealed class AddProjectItemCommandHandler
             return Result.Failure<ProjectItemResponse>(itemResult.Error);
         }
 
+        dbContext.ProjectItems.Add(itemResult.Value);
+
         await dbContext.SaveChangesAsync(cancellationToken);
 
         var item = itemResult.Value;

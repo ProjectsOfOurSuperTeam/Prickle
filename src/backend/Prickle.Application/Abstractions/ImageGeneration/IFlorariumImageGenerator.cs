@@ -4,8 +4,8 @@ public interface IFlorariumImageGenerator
 {
     Task<Result<byte[]>> GenerateFlorariumImageAsync(
         string prompt,
-        byte[] atlasImage,
-        byte[] layoutImage,
+    string containerImageReference,
+    byte[] canvasImage,
         string imageMimeType,
         CancellationToken cancellationToken = default);
 }

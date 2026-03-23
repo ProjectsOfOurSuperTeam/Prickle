@@ -82,10 +82,18 @@ internal sealed class GenerateFlorariumImageCommandHandler(
 
         var prompt = BuildPrompt(container, plantItems, plants, decorationItems, decorations, soilFormula, soilTypes);
 
+        var containerReferenceImage = container.ImageIsometricUrl ?? container.ImageUrl;
+        if (string.IsNullOrWhiteSpace(containerReferenceImage))
+        {
+            return Result.Failure<GenerateFlorariumImageResponse>(Error.Problem(
+                "GenerateFlorarium.ContainerImageMissing",
+                $"Container '{container.Name}' does not have a reference image configured."));
+        }
+
         var generateResult = await imageGenerator.GenerateFlorariumImageAsync(
             prompt,
-            command.AtlasImage,
-            command.LayoutImage,
+            containerReferenceImage,
+            command.CanvasImage,
             command.ImageMimeType,
             cancellationToken);
 
@@ -134,7 +142,8 @@ internal sealed class GenerateFlorariumImageCommandHandler(
             Style: Cozy warm studio lighting, 8k resolution, highly detailed, photorealistic, cinematic lighting, soft shadows.
             Camera parameters: Frontal view angled 30 degrees downwards, aspect ratio 16:9.
 
-            The spatial arrangement of the objects MUST strictly follow the provided 2.5D layout image. Use the provided atlas image as a visual reference for the exact textures, colors, and appearance of the specific items.
+            The spatial arrangement of objects MUST strictly follow the provided constructor-canvas snapshot image.
+            Use the provided container reference image as the visual source for vessel material, shape, reflections, and proportions.
 
             Container details:
             Shape: {container.Name}
