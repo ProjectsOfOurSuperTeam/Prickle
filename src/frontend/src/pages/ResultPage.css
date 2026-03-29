@@ -100,9 +100,11 @@
   border: 1px solid #ccc;
   border-radius: 8px;
   background: #fff;
+  /* Override global button { color: white } — white-on-white made labels invisible */
+  color: var(--color-dark-olive);
   font-size: 0.95rem;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .result-btn:hover:not(:disabled) {

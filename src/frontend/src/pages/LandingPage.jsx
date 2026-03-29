@@ -6,6 +6,8 @@ import {
   HiChevronLeft, HiChevronRight,
 } from 'react-icons/hi';
 import { useApi } from '../services/useApi';
+import { useAuth } from '../services/useAuth';
+import { ApiError } from '../services/api/apiError';
 
 const s1 = '/assets/images/decor/s1.png';
 const s5 = '/assets/images/decor/s5.png';
@@ -20,10 +22,12 @@ import './LandingPage.css';
 // Landing Page: Presentation of Prickle capabilities and gallery of examples
 function LandingPage() {
   const api = useApi();
+  const { isAuthenticated } = useAuth();
   const [openFaq, setOpenFaq] = useState(null);
   const [galleryProjects, setGalleryProjects] = useState([]);
   const [containersMap, setContainersMap] = useState(new Map());
   const [galleryLoading, setGalleryLoading] = useState(true);
+  /** @type {null | 'unauthorized' | 'generic'} */
   const [galleryError, setGalleryError] = useState(null);
   const galleryCarouselRef = useRef(null);
   const [galleryScrollEdges, setGalleryScrollEdges] = useState({ left: true, right: true });
@@ -61,12 +65,21 @@ function LandingPage() {
         // Names are optional; cards still show "Флораріум"
       }
       setContainersMap(map);
-    } catch {
-      setGalleryError(true);
+    } catch (err) {
+      // Backend requires IUserContext for GET /projects; without a token it often returns 500, not 401.
+      const apiErr = err instanceof ApiError ? err : null;
+      const needsLogin =
+        !isAuthenticated
+        || (apiErr != null && (apiErr.status === 401 || apiErr.status === 403));
+      if (needsLogin) {
+        setGalleryError('unauthorized');
+      } else {
+        setGalleryError('generic');
+      }
     } finally {
       setGalleryLoading(false);
     }
-  }, [api]);
+  }, [api, isAuthenticated]);
 
   useEffect(() => {
     loadGallery();
@@ -430,7 +443,15 @@ function LandingPage() {
                   <p>Завантаження галереї...</p>
                 </div>
               )}
-              {!galleryLoading && galleryError && (
+              {!galleryLoading && galleryError === 'unauthorized' && (
+                <div className="gallery-placeholder gallery-placeholder--in-carousel">
+                  <p>Увійдіть у свій акаунт, щоб переглянути галерею опублікованих робіт.</p>
+                  <Link to="/auth" className="btn btn-primary gallery-retry-btn">
+                    Увійти
+                  </Link>
+                </div>
+              )}
+              {!galleryLoading && galleryError === 'generic' && (
                 <div className="gallery-placeholder gallery-placeholder--in-carousel">
                   <p>Не вдалося завантажити галерею.</p>
                   <button type="button" className="btn btn-secondary gallery-retry-btn" onClick={loadGallery}>
