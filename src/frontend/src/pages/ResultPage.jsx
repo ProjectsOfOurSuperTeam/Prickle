@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useApi } from '../services/useApi';
 import { useAuth } from '../services/useAuth';
+import { ExportPdfButton } from '../components/ExportPdfButton';
 import './ResultPage.css';
 
 function ResultPage() {
@@ -9,7 +10,11 @@ function ResultPage() {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const projectId = location.state?.projectId ?? null;
+  const [searchParams] = useSearchParams();
+
+  const projectId =
+    location.state?.projectId ?? searchParams.get('projectId') ?? null;
+
   const canvasSnapshot = location.state?.canvasSnapshot ?? null;
   const generatedUrlRef = useRef(null);
 
@@ -100,12 +105,20 @@ function ResultPage() {
     );
   }
 
-  if (!canvasSnapshot) {
+  const canGenerateAi = Boolean(canvasSnapshot);
+
+  if (!canGenerateAi) {
     return (
       <section className="result-page">
-        <div className="result-empty">
-          <h1>Результат</h1>
-          <p>Не знайдено знімок полотна конструктора. Перейдіть із конструктора через кнопку генерації.</p>
+        <header className="result-header">
+          <h1>Експорт проєкту</h1>
+          <p className="result-subtitle">
+            Знімок полотна для ШІ недоступний (наприклад, після оновлення сторінки). Ви все одно можете завантажити PDF зі
+            списком покупок і інструкцією за збереженим проєктом.
+          </p>
+        </header>
+        <div className="result-actions">
+          <ExportPdfButton projectId={projectId} variant="primary" />
           <button type="button" className="result-btn" onClick={() => navigate('/constructor')}>
             Повернутися до конструктора
           </button>
@@ -131,6 +144,15 @@ function ResultPage() {
           </div>
         </div>
       )}
+
+      <div className="result-export-pdf-block">
+        <h2 className="result-section-title">Список покупок і інструкція</h2>
+        <p className="result-subtitle result-export-hint">
+          Завантажте PDF з розрахунком компонентів субстрату (за об&apos;ємом контейнера), переліком рослин і декору та
+          короткою покроковою інструкцією.
+        </p>
+        <ExportPdfButton projectId={projectId} variant="primary" />
+      </div>
 
       {error && <p className="result-error">{error}</p>}
 

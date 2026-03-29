@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../services/useAuth';
 import { useApi } from '../services/useApi';
 import { ApiError } from '../services/api/apiError';
+import { ExportPdfButton } from '../components/ExportPdfButton';
 import './ProfilePage.css';
 
 function volumeToSize(volume) {
@@ -213,6 +214,11 @@ function ProfilePage() {
                     >
                       Відкрити в конструкторі
                     </button>
+                    <ExportPdfButton
+                      projectId={item.id}
+                      variant="secondary"
+                      className="profile-export-pdf"
+                    />
                   </div>
                 </div>
               </article>

@@ -3,6 +3,8 @@ import html2canvas from 'html2canvas';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useApi } from '../services/useApi';
 import { useAuth } from '../services/useAuth';
+import { ExportPdfButton } from '../components/ExportPdfButton';
+import { normalizeProjectItemType } from '../utils/florariumPdf/normalizeProjectItemType';
 import './ConstructorPage.css';
 
 const GRID_PRESETS = [3, 5, 7, 9];
@@ -172,6 +174,25 @@ function rectanglesOverlap(first, second) {
   );
 }
 
+/**
+ * Resolve plant/decoration entity when restoring a saved project (API id or mock slug).
+ * @returns {{ kind: 'plant'|'decoration'; entity: object } | null}
+ */
+function resolveProjectItemEntity(pi, plants, decorations) {
+  const kind = normalizeProjectItemType(pi.itemType);
+  if (kind !== 'plant' && kind !== 'decoration') return null;
+  const catalogSource = kind === 'plant' ? plants : decorations;
+  const entity = catalogSource.find((e) => String(e.id) === String(pi.itemId))
+    ?? catalogSource.find((e) => {
+      const slug = String(pi.itemId).toLowerCase().replace(/^(plant|deco)-/, '');
+      const name = (e.name || '').toLowerCase();
+      const latin = (e.nameLatin || '').toLowerCase();
+      return name.includes(slug) || latin.includes(slug);
+    });
+  if (!entity) return null;
+  return { kind, entity };
+}
+
 function isCellInsideCandidate(cell, candidate) {
   if (!candidate) return false;
   return (
@@ -316,31 +337,26 @@ function ConstructorPage() {
     const projectItems = fromProject.items ?? [];
     if (projectItems.length === 0) return;
 
-    // Derive grid size from max posX/posY in project items
-    const maxCoord = projectItems.reduce((acc, i) => Math.max(acc, i.posX ?? 0, i.posY ?? 0), 0);
-    const neededSize = GRID_PRESETS.find((s) => s > maxCoord) ?? GRID_PRESETS[GRID_PRESETS.length - 1];
-    setGridSize(neededSize);
+    const hasPlantItems = projectItems.some((pi) => normalizeProjectItemType(pi.itemType) === 'plant');
+    const hasDecoItems = projectItems.some((pi) => normalizeProjectItemType(pi.itemType) === 'decoration');
+    if ((hasPlantItems && plants.length === 0) || (hasDecoItems && decorations.length === 0)) {
+      return;
+    }
+    if (fromProject.containerId && containers.length === 0) {
+      return;
+    }
 
+    let maxExtent = 0;
     const restored = projectItems.flatMap((pi) => {
-      const kind = pi.itemType === 'Plant' ? 'plant'
-        : pi.itemType === 'Decoration' ? 'decoration'
-        : null;
-      if (!kind) return [];
+      const resolved = resolveProjectItemEntity(pi, plants, decorations);
+      if (!resolved) return [];
 
-      const catalogSource = kind === 'plant' ? plants : decorations;
-      const entity = catalogSource.find((e) => String(e.id) === String(pi.itemId))
-        ?? catalogSource.find((e) => {
-          // fallback: match by name for mock data (e.g. 'plant-echeveria' ~ 'Echeveria elegans')
-          const slug = String(pi.itemId).toLowerCase().replace(/^(plant|deco)-/, '');
-          const name = (e.name || '').toLowerCase();
-          const latin = (e.nameLatin || '').toLowerCase();
-          return name.includes(slug) || latin.includes(slug);
-        });
-      if (!entity) return [];
-
-      const footprint = kind === 'plant'
-        ? estimatePlantFootprint(entity)
-        : 1;
+      const { kind, entity } = resolved;
+      const footprint = kind === 'plant' ? estimatePlantFootprint(entity) : 1;
+      const r = Number(pi.posX) || 0;
+      const c = Number(pi.posY) || 0;
+      // Occupied indices include multi-cell footprints; grid must fit max(row,col)+size-1
+      maxExtent = Math.max(maxExtent, r + footprint - 1, c + footprint - 1);
 
       return [{
         instanceId: `restored-${pi.id ?? pi.itemId}-${pi.posX}-${pi.posY}`,
@@ -351,10 +367,13 @@ function ConstructorPage() {
         size: footprint,
         image: resolveImageUrl(entity.imageIsometricUrl || entity.imageUrl),
         layer: 'objects',
-        row: pi.posX ?? 0,
-        col: pi.posY ?? 0,
+        row: r,
+        col: c,
       }];
     });
+
+    const neededSize = GRID_PRESETS.find((s) => s > maxExtent) ?? GRID_PRESETS[GRID_PRESETS.length - 1];
+    setGridSize(neededSize);
 
     if (fromProject.containerId) {
       const restoredContainer = containers.find((c) => String(c.id) === String(fromProject.containerId));
@@ -376,8 +395,13 @@ function ConstructorPage() {
 
     setPlacedItems(restored);
     setNotice(`Відтворено ${restored.length} з ${projectItems.length} елементів проєкту.`);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading]);
+  }, [
+    loading,
+    fromProject,
+    plants,
+    decorations,
+    containers,
+  ]);
 
   const catalogItemsByType = useMemo(() => {
     return {
@@ -1282,7 +1306,9 @@ function ConstructorPage() {
         return;
       }
 
-      navigate('/result', { state: { projectId: savedProjectId, canvasSnapshot } });
+      navigate(`/result?projectId=${encodeURIComponent(savedProjectId)}`, {
+        state: { projectId: savedProjectId, canvasSnapshot },
+      });
     } catch {
       setNotice('Не вдалося підготувати зображення полотна для генерації.');
     } finally {
@@ -1454,6 +1480,13 @@ function ConstructorPage() {
               <button type="button" onClick={handleGoToResult} disabled={preparingResult}>
                 {preparingResult ? 'Підготовка...' : 'Згенерувати зображення'}
               </button>
+            )}
+            {savedProjectId && (
+              <ExportPdfButton
+                projectId={savedProjectId}
+                variant="secondary"
+                className="constructor-export-pdf"
+              />
             )}
           </div>
         </header>

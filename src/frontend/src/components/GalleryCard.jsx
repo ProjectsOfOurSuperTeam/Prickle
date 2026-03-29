@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { HiColorSwatch } from 'react-icons/hi';
 
 // GalleryCard: картка опублікованого флораріуму (ProjectResponse)
 function GalleryCard({ item }) {
@@ -30,7 +31,21 @@ function GalleryCard({ item }) {
         {allItems.length > 0 ? (
           <>
             {plantsCount > 0 && <p style={{ color: '#555', fontSize: '0.9rem', margin: 0 }}>🌿 Рослин: {plantsCount}</p>}
-            {decoCount > 0  && <p style={{ color: '#555', fontSize: '0.9rem', margin: 0 }}>🪨 Декору: {decoCount}</p>}
+            {decoCount > 0 && (
+              <p
+                style={{
+                  color: '#555',
+                  fontSize: '0.9rem',
+                  margin: 0,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                }}
+              >
+                <HiColorSwatch aria-hidden style={{ flexShrink: 0, fontSize: '1.05rem', color: '#5c6bc0' }} />
+                <span>Декору: {decoCount}</span>
+              </p>
+            )}
           </>
         ) : (
           <p style={{ color: '#aaa', fontSize: '0.9rem', margin: 0 }}>Елементів: 0</p>
