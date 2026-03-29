@@ -58,12 +58,9 @@ export async function generateFlorariumPdf(payload, options = {}) {
   const plantRows = plants.map((p) => {
     const latin = (p.nameLatin || '').trim();
     const title = latin ? `${p.name} (${latin})` : p.name;
-    return [
-      title,
-      String(p.count),
-      `рівень ${p.lightLevel}: ${p.lightHint || '—'}`,
-      `рівень ${p.waterNeed}: ${p.waterHint || '—'}`,
-    ];
+    const lightText = typeof p.lightHint === 'string' && p.lightHint.trim() ? p.lightHint.trim() : '—';
+    const waterText = typeof p.waterHint === 'string' && p.waterHint.trim() ? p.waterHint.trim() : '—';
+    return [title, String(p.count), lightText, waterText];
   });
 
   const decoRows = decorations.map((d) => [d.name, String(d.count)]);
@@ -138,7 +135,7 @@ export async function generateFlorariumPdf(payload, options = {}) {
             {
               table: {
                 headerRows: 1,
-                widths: ['*', 40, 120, 130],
+                widths: ['*', 40, '*', '*'],
                 body: [
                   [
                     { text: 'Назва', style: 'tableHeader' },

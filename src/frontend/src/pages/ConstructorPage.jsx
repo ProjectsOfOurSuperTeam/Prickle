@@ -4,12 +4,15 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useApi } from '../services/useApi';
 import { useAuth } from '../services/useAuth';
 import { ExportPdfButton } from '../components/ExportPdfButton';
+import { analyzeFloraCompatibility } from '../utils/florariumCompatibility/analyzeFloraCompatibility';
 import { normalizeProjectItemType } from '../utils/florariumPdf/normalizeProjectItemType';
 import './ConstructorPage.css';
 
 const GRID_PRESETS = [3, 5, 7, 9];
 const TILE_WIDTH = 94;
 const TILE_HEIGHT = 52;
+/** Padding around footprint — delete control sits slightly outside the tile rect. */
+const PLACED_ITEM_HOVER_PAD = 12;
 const GRID_TOP_OFFSET = TILE_HEIGHT * 1.4;
 const MAX_PAGE_SIZE = 25;
 const SOIL_KINDS = new Set(['soilType', 'soilFormula']);
@@ -215,7 +218,6 @@ function ConstructorPage() {
   const dragLayerRef = useRef(null);
   const panRef = useRef({ active: false, startX: 0, startY: 0, scrollLeft: 0, scrollTop: 0 });
   const suppressBoardClickRef = useRef(false);
-  const hoverRevealTimerRef = useRef(null);
 
   const [gridSize, setGridSize] = useState(5);
   const [activeTab, setActiveTab] = useState('plants');
@@ -235,9 +237,11 @@ function ConstructorPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isPanning, setIsPanning] = useState(false);
-  const [revealedItemId, setRevealedItemId] = useState(null);
+  /** Placed item selected by click — delete button shows only for this instance. */
+  const [selectedPlacedItemId, setSelectedPlacedItemId] = useState(null);
   const [hideObjectsLayer, setHideObjectsLayer] = useState(false);
-  const [selectedGlobalSoilFormula, setSelectedGlobalSoilFormula] = useState(null);
+  /** Soil visual on grid / save only after user clicks «Застосувати» (recommended formula). */
+  const [appliedSoilFormula, setAppliedSoilFormula] = useState(null);
   const [selectedContainer, setSelectedContainer] = useState(null);
   const [shouldRedirectToAuth, setShouldRedirectToAuth] = useState(false);
   const [savedProjectId, setSavedProjectId] = useState(null);
@@ -260,11 +264,11 @@ function ConstructorPage() {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    return () => {
-      if (hoverRevealTimerRef.current) {
-        window.clearTimeout(hoverRevealTimerRef.current);
-      }
-    };
+    function onEscape(event) {
+      if (event.key === 'Escape') setSelectedPlacedItemId(null);
+    }
+    window.addEventListener('keydown', onEscape);
+    return () => window.removeEventListener('keydown', onEscape);
   }, []);
 
   useEffect(() => {
@@ -541,10 +545,70 @@ function ConstructorPage() {
     return placedItemsView.filter((item) => item.layer !== 'objects');
   }, [hideObjectsLayer, placedItemsView]);
 
-  const globalSoilColor = useMemo(() => {
-    if (!selectedGlobalSoilFormula) return null;
+  const floraCompatibility = useMemo(() => {
+    const plantPlaced = placedItems.filter((i) => i.type === 'plant');
+    if (plantPlaced.length === 0) return null;
+    const plantPayloads = [];
+    for (const inst of plantPlaced) {
+      const p = plants.find((pl) => String(pl.id) === String(inst.entityId));
+      if (!p) continue;
+      plantPayloads.push({
+        name: inst.name,
+        entityId: String(p.id),
+        lightLevel: p.lightLevel,
+        waterNeed: p.waterNeed,
+        humidityLevel: p.humidityLevel,
+        soilFormulaId: p.soilFormulaId != null ? String(p.soilFormulaId) : null,
+        category: p.category ?? null,
+      });
+    }
+    if (plantPayloads.length === 0) return null;
+    return analyzeFloraCompatibility({
+      plants: plantPayloads,
+      selectedSoilFormulaId: appliedSoilFormula?.entityId != null ? String(appliedSoilFormula.entityId) : null,
+    });
+  }, [placedItems, plants, appliedSoilFormula]);
 
-    const items = selectedGlobalSoilFormula.rawItem?.items || [];
+  const placedPlantItems = useMemo(() => placedItems.filter((i) => i.type === 'plant'), [placedItems]);
+
+  const soilMixStepBlocked = Boolean(floraCompatibility?.soilMixStepBlocked);
+
+  // Plants require a compatible mix and an applied soil formula before save.
+  const saveBlockedByPlantsAndSoil =
+    placedPlantItems.length > 0 && (soilMixStepBlocked || !appliedSoilFormula);
+
+  const proposedSoilFormula = useMemo(() => {
+    if (placedPlantItems.length === 0) return null;
+    const ids = [];
+    for (const inst of placedPlantItems) {
+      const p = plants.find((pl) => String(pl.id) === String(inst.entityId));
+      if (p?.soilFormulaId) ids.push(String(p.soilFormulaId));
+    }
+    if (ids.length === 0) return null;
+    const counts = new Map();
+    for (const id of ids) counts.set(id, (counts.get(id) ?? 0) + 1);
+    let bestId = ids[0];
+    let bestC = 0;
+    for (const [id, c] of counts) {
+      if (c > bestC) {
+        bestId = id;
+        bestC = c;
+      }
+    }
+    const formulas = catalogItemsByType.soilFormulas || [];
+    return formulas.find((f) => String(f.entityId) === String(bestId)) ?? null;
+  }, [placedPlantItems, plants, catalogItemsByType.soilFormulas]);
+
+  function handleApplyRecommendedSoil() {
+    if (!proposedSoilFormula) return;
+    setAppliedSoilFormula(proposedSoilFormula);
+    setNotice('Формулу ґрунту розраховано та застосовано — шари на сітці оновлено.');
+  }
+
+  const globalSoilColor = useMemo(() => {
+    if (!appliedSoilFormula) return null;
+
+    const items = appliedSoilFormula.rawItem?.items || [];
     if (items.length === 0) return null;
 
     const topLayer = [...items].sort((a, b) => a.order - b.order)[0];
@@ -558,13 +622,13 @@ function ConstructorPage() {
       };
     }
 
-    return getSoilGradientByKey(`soilFormula:${selectedGlobalSoilFormula.entityId}:${selectedGlobalSoilFormula.name}`);
-  }, [selectedGlobalSoilFormula]);
+    return getSoilGradientByKey(`soilFormula:${appliedSoilFormula.entityId}:${appliedSoilFormula.name}`);
+  }, [appliedSoilFormula]);
 
   const sortedSoilLayers = useMemo(() => {
-    if (!selectedGlobalSoilFormula) return [];
-    return [...(selectedGlobalSoilFormula.rawItem?.items || [])].sort((a, b) => a.order - b.order);
-  }, [selectedGlobalSoilFormula]);
+    if (!appliedSoilFormula) return [];
+    return [...(appliedSoilFormula.rawItem?.items || [])].sort((a, b) => a.order - b.order);
+  }, [appliedSoilFormula]);
 
   function canPlaceItem(candidate, layer, excludingId = null) {
     if (candidate.row < 0 || candidate.col < 0) return false;
@@ -689,16 +753,24 @@ function ConstructorPage() {
   }
 
   function handleBoardClick(event) {
-    if (!selectedCatalogItem) return;
     if (!boardRef.current) return;
     if (suppressBoardClickRef.current) {
       suppressBoardClickRef.current = false;
       return;
     }
 
+    if (!event.target.closest('.placed-item-hover-wrap')) {
+      setSelectedPlacedItemId(null);
+    }
+
+    if (!selectedCatalogItem) return;
+
+    if (event.target.closest('.placed-item-hover-wrap') || event.target.closest('.placed-item')) {
+      return;
+    }
+
     if (selectedCatalogItem.kind === 'soilFormula') {
-      setSelectedGlobalSoilFormula(selectedCatalogItem);
-      setNotice(`Формулу ґрунту змінено на: ${selectedCatalogItem.name}`);
+      setNotice('Ґрунт на сітці задається кнопкою «Застосувати» після узгодження рослин, або з каталогу після першого застосування.');
       return;
     }
 
@@ -811,7 +883,7 @@ function ConstructorPage() {
     if (!boardWrapRef.current) return;
     if (event.button !== 0) return;
     if (event.target.closest('.placed-item-remove')) return;
-    if (event.target.closest('.placed-item')) return;
+    if (event.target.closest('.placed-item-hover-wrap') || event.target.closest('.placed-item')) return;
 
     panRef.current = {
       active: true,
@@ -845,31 +917,15 @@ function ConstructorPage() {
 
   function removePlacedItem(instanceId) {
     setPlacedItems((prev) => prev.filter((item) => item.instanceId !== instanceId));
-  }
-
-  function handlePlacedItemMouseEnter(instanceId) {
-    if (hoverRevealTimerRef.current) {
-      window.clearTimeout(hoverRevealTimerRef.current);
-    }
-
-    hoverRevealTimerRef.current = window.setTimeout(() => {
-      setRevealedItemId(instanceId);
-    }, 550);
-  }
-
-  function handlePlacedItemMouseLeave(instanceId) {
-    if (hoverRevealTimerRef.current) {
-      window.clearTimeout(hoverRevealTimerRef.current);
-      hoverRevealTimerRef.current = null;
-    }
-
-    setRevealedItemId((prev) => (prev === instanceId ? null : prev));
+    setSelectedPlacedItemId((prev) => (prev === instanceId ? null : prev));
   }
 
   function resetWorkspace() {
     setPlacedItems([]);
+    setAppliedSoilFormula(null);
     setNotice('');
     setSavedProjectId(null);
+    setSelectedPlacedItemId(null);
   }
 
   async function loadImageForSnapshot(src) {
@@ -1246,7 +1302,25 @@ function ConstructorPage() {
     }
 
     const nonContainerItems = placedItems;
-    if (nonContainerItems.length === 0 && !selectedGlobalSoilFormula) {
+    const plantOnly = placedItems.filter((i) => i.type === 'plant');
+
+    if (plantOnly.length > 0 && soilMixStepBlocked) {
+      setNotice(
+        'Збереження недоступне: набір рослин несумісний за даними каталогу. Змініть склад або умови.',
+      );
+      return;
+    }
+
+    if (plantOnly.length > 0 && !appliedSoilFormula) {
+      setNotice(
+        proposedSoilFormula
+          ? 'Спочатку натисніть «Розрахувати формулу ґрунту», щоб застосувати її на сітці.'
+          : 'Оберіть і застосуйте формулу ґрунту в каталозі (клік на картці) перед збереженням.',
+      );
+      return;
+    }
+
+    if (nonContainerItems.length === 0 && !appliedSoilFormula) {
       setNotice('Додайте хоча б одну рослину, декорацію або формулу ґрунту.');
       return;
     }
@@ -1267,10 +1341,10 @@ function ConstructorPage() {
           posZ: 0,
         }));
 
-      if (selectedGlobalSoilFormula) {
+      if (appliedSoilFormula) {
         itemsToAdd.push({
           itemType: 2,
-          itemId: selectedGlobalSoilFormula.entityId,
+          itemId: appliedSoilFormula.entityId,
           posX: 0,
           posY: 0,
           posZ: 0,
@@ -1389,7 +1463,7 @@ function ConstructorPage() {
           {!loading && !error && visibleCatalogItems.map((item) => (
             <article
               key={item.id}
-              className={`constructor-card ${(selectedCatalogItem?.id === item.id || (item.kind === 'container' && selectedContainer?.id === item.id)) ? 'constructor-card-selected' : ''} ${item.kind === 'soilFormula' && selectedGlobalSoilFormula?.id === item.id ? 'constructor-card-applied' : ''}`}
+              className={`constructor-card ${(selectedCatalogItem?.id === item.id || (item.kind === 'container' && selectedContainer?.id === item.id)) ? 'constructor-card-selected' : ''} ${item.kind === 'soilFormula' && appliedSoilFormula?.id === item.id ? 'constructor-card-applied' : ''} ${item.kind === 'soilFormula' && proposedSoilFormula?.id === item.id && !appliedSoilFormula ? 'constructor-card-soil-proposed' : ''}`}
               draggable={item.kind !== 'soilFormula' && item.kind !== 'container'}
               onDragStart={(event) => {
                 if (item.kind === 'soilFormula' || item.kind === 'container') { event.preventDefault(); return; }
@@ -1397,8 +1471,25 @@ function ConstructorPage() {
               }}
               onClick={() => {
                 if (item.kind === 'soilFormula') {
-                  setSelectedGlobalSoilFormula((prev) => (prev?.id === item.id ? null : item));
-                  setNotice(selectedGlobalSoilFormula?.id === item.id ? 'Формулу ґрунту знято' : `Формулу ґрунту змінено на: ${item.name}`);
+                  if (soilMixStepBlocked) {
+                    setNotice('Спочатку змініть склад рослин — за каталогом цей мікс занадто конфліктний для спільної посудини.');
+                    return;
+                  }
+                  if (appliedSoilFormula) {
+                    setAppliedSoilFormula(item);
+                    setNotice(`Формулу ґрунту змінено на: ${item.name}`);
+                    return;
+                  }
+                  if (proposedSoilFormula && item.id === proposedSoilFormula.id) {
+                    setNotice('Натисніть «Розрахувати формулу ґрунту» у блоці над сіткою.');
+                    return;
+                  }
+                  if (proposedSoilFormula) {
+                    setNotice('Спочатку розрахуйте рекомендовану формулу кнопкою над сіткою; потім можна обрати іншу в каталозі.');
+                    return;
+                  }
+                  setAppliedSoilFormula(item);
+                  setNotice(`Формулу ґрунту застосовано: ${item.name}`);
                   return;
                 }
 
@@ -1423,7 +1514,12 @@ function ConstructorPage() {
                 <div className="constructor-card-head">
                   <h3>{item.name}</h3>
                   {item.kind !== 'soilFormula' && <span>{item.footprint}x{item.footprint}</span>}
-                  {item.kind === 'soilFormula' && selectedGlobalSoilFormula?.id === item.id && <span className="constructor-applied-badge">Обрано ✓</span>}
+                  {item.kind === 'soilFormula' && appliedSoilFormula?.id === item.id && (
+                    <span className="constructor-applied-badge">На сітці</span>
+                  )}
+                  {item.kind === 'soilFormula' && proposedSoilFormula?.id === item.id && !appliedSoilFormula && (
+                    <span className="constructor-proposed-badge">Рекомендовано</span>
+                  )}
                 </div>
                 {item.kind !== 'plant' && item.subtitle && <p className="constructor-card-subtitle">{item.subtitle}</p>}
                 {item.kind === 'plant' && (
@@ -1473,7 +1569,18 @@ function ConstructorPage() {
               {hideObjectsLayer ? 'Показати об\'єкти' : 'Сховати об\'єкти'}
             </button>
             <button type="button" onClick={resetWorkspace}>Очистити</button>
-            <button type="button" onClick={handleSave} disabled={saving}>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving || saveBlockedByPlantsAndSoil}
+              title={
+                saveBlockedByPlantsAndSoil
+                  ? (soilMixStepBlocked
+                    ? 'Несумісний набір рослин — збереження недоступне'
+                    : 'Спочатку розрахуйте або застосуйте формулу ґрунту')
+                  : undefined
+              }
+            >
               {saving ? 'Збереження...' : 'Зберегти'}
             </button>
             {savedProjectId && (
@@ -1492,6 +1599,60 @@ function ConstructorPage() {
         </header>
 
         {notice && <p className="constructor-notice">{notice}</p>}
+
+        {soilMixStepBlocked && placedPlantItems.length >= 2 && (
+          <div className="constructor-plant-mix-warning" role="alert">
+            <strong>Увага:</strong> за даними каталогу цей набір рослин не варто тримати разом у одній посудині без зонування або поділу середовища. Замініть види або розділіть умови — після узгодження з’явиться рекомендація ґрунту.
+          </div>
+        )}
+
+        {!soilMixStepBlocked && placedPlantItems.length >= 1 && proposedSoilFormula && !appliedSoilFormula && (
+          <div className="constructor-soil-proposal">
+            <p className="constructor-soil-proposal-text">
+              Рекомендована формула ґрунту для поточного міксу:{' '}
+              <strong>{proposedSoilFormula.name}</strong>
+            </p>
+            <button type="button" className="constructor-soil-proposal-apply" onClick={handleApplyRecommendedSoil}>
+              Розрахувати формулу ґрунту
+            </button>
+          </div>
+        )}
+
+        {!soilMixStepBlocked && placedPlantItems.length >= 1 && !proposedSoilFormula && !appliedSoilFormula && (
+          <p className="constructor-soil-manual-hint">
+            Для рослин у каталозі не знайдено прив’язки до формули ґрунту — після узгодження видів оберіть формулу вручну в каталозі (клік застосує її на сітці).
+          </p>
+        )}
+
+        {floraCompatibility
+          && (floraCompatibility.shouldPrompt || floraCompatibility.pairingVerdictLevel === 'ok')
+          && floraCompatibility.userSummary?.title && (
+          <div className="constructor-compat-banner" role="status">
+            <strong className="constructor-compat-banner-title">Сумісність рослин і ґрунту</strong>
+            <p
+              className={`constructor-compat-verdict constructor-compat-verdict--${floraCompatibility.userSummary.level}`}
+            >
+              {floraCompatibility.userSummary.title}
+            </p>
+            {floraCompatibility.userSummary.problems?.length ? (
+              <ul className="constructor-compat-user-problems" aria-label="У чому справа">
+                {floraCompatibility.userSummary.problems.map((line, idx) => (
+                  <li key={`compat-p-${idx}-${line.slice(0, 24)}`}>{line}</li>
+                ))}
+              </ul>
+            ) : null}
+            {floraCompatibility.userSummary.whatToDo?.length ? (
+              <div className="constructor-compat-user-do">
+                <strong className="constructor-compat-user-do-label">Що зробити</strong>
+                <ul className="constructor-compat-user-do-list" aria-label="Рекомендовані дії">
+                  {floraCompatibility.userSummary.whatToDo.map((line, idx) => (
+                    <li key={`compat-w-${idx}-${line.slice(0, 24)}`}>{line}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+        )}
 
         <div
           ref={boardWrapRef}
@@ -1557,39 +1718,50 @@ function ConstructorPage() {
             {visiblePlacedItemsView.map((item) => (
               <div
                 key={item.instanceId}
-                className={`placed-item placed-item-${item.type}`}
+                className={`placed-item-hover-wrap ${selectedPlacedItemId === item.instanceId ? 'placed-item-hover-wrap--selected' : ''}`}
                 draggable
                 onDragStart={(event) => handlePlacedDragStart(event, item)}
-                onMouseEnter={() => handlePlacedItemMouseEnter(item.instanceId)}
-                onMouseLeave={() => handlePlacedItemMouseLeave(item.instanceId)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setSelectedPlacedItemId((prev) => (prev === item.instanceId ? null : item.instanceId));
+                }}
                 style={{
                   left: `${item.left}px`,
                   top: `${item.top}px`,
-                  width: `${item.size * TILE_WIDTH}px`,
-                  height: `${item.size * TILE_HEIGHT}px`,
+                  padding: `${PLACED_ITEM_HOVER_PAD}px`,
+                  boxSizing: 'content-box',
                 }}
                 title={`${item.name} (${item.size}x${item.size})`}
               >
-                <div className="placed-item-footprint" />
-                {item.image && <img src={item.image} alt={item.name} className="placed-item-image" />}
-                <span
-                  className={`placed-item-label ${revealedItemId === item.instanceId && item.layer === 'soil' ? 'placed-item-label-visible' : ''}`}
-                >
-                  {item.name}
-                </span>
-                <button
-                  type="button"
-                  className={`placed-item-remove ${revealedItemId === item.instanceId ? 'placed-item-remove-visible' : ''}`}
-                  onMouseDown={(event) => {
-                    event.stopPropagation();
-                  }}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    removePlacedItem(item.instanceId);
+                <div
+                  className={`placed-item placed-item-${item.type}`}
+                  style={{
+                    width: `${item.size * TILE_WIDTH}px`,
+                    height: `${item.size * TILE_HEIGHT}px`,
                   }}
                 >
-                  x
-                </button>
+                  <div className="placed-item-footprint" />
+                  {item.image && <img src={item.image} alt={item.name} className="placed-item-image" />}
+                  <span
+                    className={`placed-item-label ${selectedPlacedItemId === item.instanceId && item.layer === 'soil' ? 'placed-item-label-visible' : ''}`}
+                  >
+                    {item.name}
+                  </span>
+                  <button
+                    type="button"
+                    className={`placed-item-remove ${selectedPlacedItemId === item.instanceId ? 'placed-item-remove-visible' : ''}`}
+                    aria-label={`Видалити ${item.name} з полотна`}
+                    onMouseDown={(event) => {
+                      event.stopPropagation();
+                    }}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      removePlacedItem(item.instanceId);
+                    }}
+                  >
+                    x
+                  </button>
+                </div>
               </div>
             ))}
 
@@ -1663,9 +1835,9 @@ function ConstructorPage() {
         </div>
 
         <div className="constructor-bottom-panels">
-          {selectedGlobalSoilFormula && sortedSoilLayers.length > 0 && (
+          {appliedSoilFormula && sortedSoilLayers.length > 0 && (
             <section className="constructor-soil-layers-section">
-              <h2>Шари ґрунту: {selectedGlobalSoilFormula.name}</h2>
+              <h2>Шари ґрунту: {appliedSoilFormula.name}</h2>
               <div className="constructor-soil-layers-preview">
                 {sortedSoilLayers.map((layer, index) => {
                   const hexColor = layer.soilType?.hexColor || '#8c7b64';

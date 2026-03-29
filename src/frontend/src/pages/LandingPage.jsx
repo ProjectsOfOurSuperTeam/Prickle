@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   HiClock, HiCurrencyDollar, HiCheckCircle, HiAcademicCap, HiSparkles, HiDeviceMobile,
-  HiCube, HiShieldCheck, HiBeaker, HiColorSwatch, HiBookOpen, HiDocumentDownload
+  HiCube, HiShieldCheck, HiBeaker, HiColorSwatch, HiBookOpen, HiDocumentDownload,
+  HiChevronLeft, HiChevronRight,
 } from 'react-icons/hi';
 import { useApi } from '../services/useApi';
 
@@ -24,42 +25,77 @@ function LandingPage() {
   const [containersMap, setContainersMap] = useState(new Map());
   const [galleryLoading, setGalleryLoading] = useState(true);
   const [galleryError, setGalleryError] = useState(null);
+  const galleryCarouselRef = useRef(null);
+  const [galleryScrollEdges, setGalleryScrollEdges] = useState({ left: true, right: true });
 
-  useEffect(() => {
-    let cancelled = false;
+  const updateGalleryScrollEdges = useCallback(() => {
+    const el = galleryCarouselRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    const eps = 6;
+    setGalleryScrollEdges({
+      left: scrollLeft <= eps,
+      right: scrollLeft + clientWidth >= scrollWidth - eps,
+    });
+  }, []);
 
-    async function fetchGallery() {
+  const loadGallery = useCallback(async () => {
+    try {
+      setGalleryLoading(true);
+      setGalleryError(null);
+      const projectsRes = await api.projects.getAll({
+        isPublished: true,
+        page: 1,
+        pageSize: 12,
+        sortBy: '-createdat',
+      });
+      setGalleryProjects(projectsRes.items ?? []);
+
+      const map = new Map();
       try {
-        setGalleryLoading(true);
-        setGalleryError(null);
-        const [projectsRes, containersRes] = await Promise.all([
-          api.projects.getAll({
-            isPublished: true,
-            page: 1,
-            pageSize: 12,
-            sortBy: '-createdat',
-          }),
-          api.containers.getAll({ pageSize: 25 }),
-        ]);
-
-        if (cancelled) return;
-
-        const map = new Map();
+        const containersRes = await api.containers.getAll({ pageSize: 25 });
         for (const c of containersRes.items ?? []) {
           map.set(c.id, c.name);
         }
-        setContainersMap(map);
-        setGalleryProjects(projectsRes.items ?? []);
       } catch {
-        if (!cancelled) setGalleryError(true);
-      } finally {
-        if (!cancelled) setGalleryLoading(false);
+        // Names are optional; cards still show "Флораріум"
       }
+      setContainersMap(map);
+    } catch {
+      setGalleryError(true);
+    } finally {
+      setGalleryLoading(false);
     }
+  }, [api]);
 
-    fetchGallery();
-    return () => { cancelled = true; };
-  }, [api.projects, api.containers]);
+  useEffect(() => {
+    loadGallery();
+  }, [loadGallery]);
+
+  useLayoutEffect(() => {
+    updateGalleryScrollEdges();
+  }, [galleryProjects, galleryLoading, galleryError, updateGalleryScrollEdges]);
+
+  useEffect(() => {
+    const el = galleryCarouselRef.current;
+    if (!el) return undefined;
+    updateGalleryScrollEdges();
+    el.addEventListener('scroll', updateGalleryScrollEdges, { passive: true });
+    window.addEventListener('resize', updateGalleryScrollEdges);
+    return () => {
+      el.removeEventListener('scroll', updateGalleryScrollEdges);
+      window.removeEventListener('resize', updateGalleryScrollEdges);
+    };
+  }, [galleryProjects, galleryLoading, galleryError, updateGalleryScrollEdges]);
+
+  function scrollGalleryCarousel(direction) {
+    const el = galleryCarouselRef.current;
+    if (!el) return;
+    const card = el.querySelector('.gallery-card');
+    const gap = 24;
+    const step = card ? card.getBoundingClientRect().width + gap : 320;
+    el.scrollBy({ left: direction * step, behavior: 'smooth' });
+  }
 
   const toggleFaq = (index) => {
     setOpenFaq(openFaq === index ? null : index);
@@ -360,52 +396,97 @@ function LandingPage() {
           <p className="section-subtitle">
             Надихайтесь створеними композиціями
           </p>
-          <div className="gallery-grid">
-            {galleryLoading && (
-              <div className="gallery-placeholder">
-                <p>Завантаження галереї...</p>
-              </div>
-            )}
-            {!galleryLoading && galleryError && (
-              <div className="gallery-placeholder">
-                <p>Не вдалося завантажити галерею.</p>
-              </div>
-            )}
-            {!galleryLoading && !galleryError && galleryProjects.length === 0 && (
-              <div className="gallery-placeholder">
-                <p>Галерея буде доступна після публікації перших проєктів</p>
-              </div>
-            )}
-            {!galleryLoading && !galleryError && galleryProjects.length > 0 && (
-              <>
-                {galleryProjects.map((project) => {
-                  const previewSrc = project.preview
-                    ? `data:image/png;base64,${project.preview}`
-                    : null;
-                  const name = containersMap.get(project.containerId) ?? 'Флораріум';
-                  return (
-                    <Link
-                      key={project.id}
-                      to={`/result?id=${project.id}`}
-                      className="gallery-card"
-                    >
-                      <div className="gallery-card-image">
-                        {previewSrc ? (
-                          <img src={previewSrc} alt={name} />
-                        ) : (
-                          <div className="gallery-card-placeholder" aria-hidden>
-                            <HiCube />
-                          </div>
-                        )}
-                      </div>
-                      <div className="gallery-card-info">
-                        <h3>{name}</h3>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </>
-            )}
+          <div className="gallery-carousel" aria-label="Галерея прикладів">
+            <button
+              type="button"
+              className="gallery-carousel-btn gallery-carousel-btn--prev"
+              aria-label="Попередні роботи"
+              disabled={
+                galleryLoading
+                || galleryScrollEdges.left
+                || (!galleryError && galleryProjects.length === 0)
+              }
+              onClick={() => scrollGalleryCarousel(-1)}
+            >
+              <HiChevronLeft aria-hidden />
+            </button>
+            <div
+              ref={galleryCarouselRef}
+              className="gallery-carousel-viewport"
+              tabIndex={0}
+              onKeyDown={(event) => {
+                if (event.key === 'ArrowLeft') {
+                  event.preventDefault();
+                  scrollGalleryCarousel(-1);
+                }
+                if (event.key === 'ArrowRight') {
+                  event.preventDefault();
+                  scrollGalleryCarousel(1);
+                }
+              }}
+            >
+              {galleryLoading && (
+                <div className="gallery-placeholder gallery-placeholder--in-carousel">
+                  <p>Завантаження галереї...</p>
+                </div>
+              )}
+              {!galleryLoading && galleryError && (
+                <div className="gallery-placeholder gallery-placeholder--in-carousel">
+                  <p>Не вдалося завантажити галерею.</p>
+                  <button type="button" className="btn btn-secondary gallery-retry-btn" onClick={loadGallery}>
+                    Спробувати знову
+                  </button>
+                </div>
+              )}
+              {!galleryLoading && !galleryError && galleryProjects.length === 0 && (
+                <div className="gallery-placeholder gallery-placeholder--in-carousel">
+                  <p>Галерея буде доступна після публікації перших проєктів</p>
+                </div>
+              )}
+              {!galleryLoading && !galleryError && galleryProjects.length > 0 && (
+                <div className="gallery-carousel-track">
+                  {galleryProjects.map((project) => {
+                    const previewSrc = project.preview
+                      ? `data:image/png;base64,${project.preview}`
+                      : null;
+                    const name = containersMap.get(project.containerId) ?? 'Флораріум';
+                    return (
+                      <Link
+                        key={project.id}
+                        to={`/result?id=${project.id}`}
+                        className="gallery-card"
+                      >
+                        <div className="gallery-card-image">
+                          {previewSrc ? (
+                            <img src={previewSrc} alt={name} />
+                          ) : (
+                            <div className="gallery-card-placeholder" aria-hidden>
+                              <HiCube />
+                            </div>
+                          )}
+                        </div>
+                        <div className="gallery-card-info">
+                          <h3>{name}</h3>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            <button
+              type="button"
+              className="gallery-carousel-btn gallery-carousel-btn--next"
+              aria-label="Наступні роботи"
+              disabled={
+                galleryLoading
+                || galleryScrollEdges.right
+                || (!galleryError && galleryProjects.length === 0)
+              }
+              onClick={() => scrollGalleryCarousel(1)}
+            >
+              <HiChevronRight aria-hidden />
+            </button>
           </div>
         </div>
       </section>

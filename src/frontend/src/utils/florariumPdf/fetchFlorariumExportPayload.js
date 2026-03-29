@@ -1,12 +1,23 @@
 import { normalizeProjectItemType } from './normalizeProjectItemType';
 
+/**
+ * @param {unknown} raw
+ * @param {number} [fallback]
+ * @returns {number} integer 1–5
+ */
+function normalizeLevel1to5(raw, fallback = 3) {
+  const n = Math.round(Number(raw));
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(5, Math.max(1, n));
+}
+
 /** Short Ukrainian hints for care (levels 1–5). */
 const WATER_HINT = {
-  1: 'полив після повного просихання субстрату (рідко)',
-  2: 'полив при просиханні нижніх шарів',
-  3: 'полив при просиханні верхнього шару (типово 7–10 днів)',
-  4: 'підтримувати вологість субстрату без перезволоження',
-  5: 'постійна волога / піддон з водою (для гідрофітів)',
+  1: 'полив рідко — після повного просихання субстрату (часто раз на кілька тижнів)',
+  2: 'полив помірний — коли підсохне нижній шар',
+  3: 'полив коли підсохне верхній шар (часто кожні 7–10 днів у кімнаті)',
+  4: 'полив частіше; підтримуйте вологість без застою води',
+  5: 'постійна волога субстрату або піддон; для вологолюбних видів',
 };
 
 const HUMIDITY_HINT = {
@@ -18,11 +29,11 @@ const HUMIDITY_HINT = {
 };
 
 const LIGHT_HINT = {
-  1: 'тінь / мало світла',
-  2: 'півтінь',
-  3: 'розсіяне світло',
-  4: 'яскраве світло',
-  5: 'пряме сонце / максимум світла',
+  1: 'тінь або далеко від вікна; прямого сонця уникати',
+  2: 'півтінь, розсіяне світло (зручно східне чи північне вікно)',
+  3: 'яскраве розсіяне світло; типове місце в кімнаті біля вікна',
+  4: 'дуже світле місце; ближче до вікна або додаткове досвітлення',
+  5: 'максимум світла: південне вікно або вихід на сонячну сторону (обережно з опіками)',
 };
 
 /**
@@ -53,19 +64,21 @@ export async function fetchFlorariumExportPayload(api, projectId) {
   const plantEntries = await Promise.all(
     [...plantCounts.entries()].map(async ([id, count]) => {
       const p = await api.plants.get(id);
-      const wn = Number(p.waterNeed);
-      const hl = Number(p.humidityLevel);
-      const ll = Number(p.lightLevel);
+      const wn = normalizeLevel1to5(p.waterNeed);
+      const hl = normalizeLevel1to5(p.humidityLevel);
+      const ll = normalizeLevel1to5(p.lightLevel);
       return {
         name: p.name,
         nameLatin: p.nameLatin ?? '',
         count,
+        category: p.category ?? null,
         waterNeed: wn,
         humidityLevel: hl,
         lightLevel: ll,
-        waterHint: WATER_HINT[wn] ?? '',
-        humidityHint: HUMIDITY_HINT[hl] ?? '',
-        lightHint: LIGHT_HINT[ll] ?? '',
+        soilFormulaId: p.soilFormulaId != null ? String(p.soilFormulaId) : null,
+        waterHint: WATER_HINT[wn] ?? WATER_HINT[3],
+        humidityHint: HUMIDITY_HINT[hl] ?? HUMIDITY_HINT[3],
+        lightHint: LIGHT_HINT[ll] ?? LIGHT_HINT[3],
         description: p.description ?? '',
       };
     }),
@@ -113,6 +126,7 @@ export async function fetchFlorariumExportPayload(api, projectId) {
   return {
     projectId: project.id,
     createdAt: project.createdAt,
+    selectedSoilFormulaId: soilFormulaId != null ? String(soilFormulaId) : null,
     container: {
       name: container.name,
       volume: container.volume,
