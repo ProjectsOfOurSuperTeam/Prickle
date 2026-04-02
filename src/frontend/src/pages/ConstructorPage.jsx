@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import html2canvas from 'html2canvas';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useApi } from '../services/useApi';
 import { useAuth } from '../services/useAuth';
 import { ExportPdfButton } from '../components/ExportPdfButton';
@@ -15,11 +15,15 @@ const TILE_HEIGHT = 52;
 const PLACED_ITEM_HOVER_PAD = 12;
 const GRID_TOP_OFFSET = TILE_HEIGHT * 1.4;
 const MAX_PAGE_SIZE = 25;
+const MAX_UNDO_HISTORY = 50;
+const BOARD_ZOOM_MIN = 0.5;
+const BOARD_ZOOM_MAX = 2;
+const BOARD_ZOOM_STEP = 0.1;
 const SOIL_KINDS = new Set(['soilType', 'soilFormula']);
 
 const CATALOG_TABS = [
   { key: 'plants', label: 'Рослини' },
-  { key: 'soilFormulas', label: 'Формули грунту' },
+  { key: 'soilFormulas', label: 'Формули ґрунту' },
   { key: 'decorations', label: 'Декор' },
   { key: 'containers', label: 'Контейнери' },
 ];
@@ -182,18 +186,31 @@ function rectanglesOverlap(first, second) {
  * @returns {{ kind: 'plant'|'decoration'; entity: object } | null}
  */
 function resolveProjectItemEntity(pi, plants, decorations) {
-  const kind = normalizeProjectItemType(pi.itemType);
+  const kind = normalizeProjectItemType(pi.itemType ?? pi.ItemType);
   if (kind !== 'plant' && kind !== 'decoration') return null;
+  const itemId = pi.itemId ?? pi.ItemId;
   const catalogSource = kind === 'plant' ? plants : decorations;
-  const entity = catalogSource.find((e) => String(e.id) === String(pi.itemId))
+  const entity = catalogSource.find((e) => String(e.id) === String(itemId))
     ?? catalogSource.find((e) => {
-      const slug = String(pi.itemId).toLowerCase().replace(/^(plant|deco)-/, '');
+      const slug = String(itemId).toLowerCase().replace(/^(plant|deco)-/, '');
       const name = (e.name || '').toLowerCase();
       const latin = (e.nameLatin || '').toLowerCase();
       return name.includes(slug) || latin.includes(slug);
     });
   if (!entity) return null;
   return { kind, entity };
+}
+
+/**
+ * Read grid coords from API (camelCase or PascalCase). Preserves 0 — do not use `|| 0`.
+ */
+function readProjectItemCoord(pi, axis) {
+  const camel = axis === 'x' ? 'posX' : 'posY';
+  const pascal = axis === 'x' ? 'PosX' : 'PosY';
+  const raw = pi[camel] ?? pi[pascal];
+  if (raw === undefined || raw === null || raw === '') return 0;
+  const n = Number(raw);
+  return Number.isFinite(n) ? Math.trunc(n) : 0;
 }
 
 function isCellInsideCandidate(cell, candidate) {
@@ -212,6 +229,10 @@ function ConstructorPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const fromProject = location.state?.fromProject ?? null;
+  /** false = landing (new sketch vs gallery); true = full editor. Skip when restoring from gallery. */
+  const [editorOpen, setEditorOpen] = useState(() => Boolean(fromProject));
+  /** Avoid re-running gallery restore when catalog arrays get new references after user edits. */
+  const restoredFromProjectIdRef = useRef(null);
   const boardRef = useRef(null);
   const boardWrapRef = useRef(null);
   const dragFootprintRef = useRef(1);
@@ -234,7 +255,7 @@ function ConstructorPage() {
   const [placedItems, setPlacedItems] = useState([]);
   const [dragHoverCell, setDragHoverCell] = useState(null);
   const [notice, setNotice] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => (isAuthenticated ? Boolean(fromProject) : false));
   const [error, setError] = useState('');
   const [isPanning, setIsPanning] = useState(false);
   /** Placed item selected by click — delete button shows only for this instance. */
@@ -245,8 +266,14 @@ function ConstructorPage() {
   const [selectedContainer, setSelectedContainer] = useState(null);
   const [shouldRedirectToAuth, setShouldRedirectToAuth] = useState(false);
   const [savedProjectId, setSavedProjectId] = useState(null);
+  /** Mirrors server: gallery lists only published; drafts live in profile. */
+  const [savedProjectPublished, setSavedProjectPublished] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [preparingResult, setPreparingResult] = useState(false);
+  const [boardZoom, setBoardZoom] = useState(1);
+  const historyRef = useRef({ past: [], future: [] });
+  const [, setHistoryTick] = useState(0);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -263,6 +290,11 @@ function ConstructorPage() {
     };
   }, [isAuthenticated]);
 
+  // Open editor when navigating here with a project (e.g. «Відтворити» from gallery).
+  useEffect(() => {
+    if (fromProject) setEditorOpen(true);
+  }, [fromProject]);
+
   useEffect(() => {
     function onEscape(event) {
       if (event.key === 'Escape') setSelectedPlacedItemId(null);
@@ -273,6 +305,10 @@ function ConstructorPage() {
 
   useEffect(() => {
     if (!isAuthenticated) {
+      setLoading(false);
+      return undefined;
+    }
+    if (!editorOpen) {
       setLoading(false);
       return undefined;
     }
@@ -332,18 +368,29 @@ function ConstructorPage() {
     return () => {
       active = false;
     };
-  }, [api, isAuthenticated]);
+  }, [api, isAuthenticated, editorOpen]);
 
   // Restore project from gallery "Відтворити" click
   useEffect(() => {
-    if (loading || !fromProject) return;
+    if (loading || !fromProject?.id) {
+      if (!fromProject) restoredFromProjectIdRef.current = null;
+      return;
+    }
+
+    const projectKey = String(fromProject.id);
+    if (restoredFromProjectIdRef.current === projectKey) return;
 
     const projectItems = fromProject.items ?? [];
     if (projectItems.length === 0) return;
 
-    const hasPlantItems = projectItems.some((pi) => normalizeProjectItemType(pi.itemType) === 'plant');
-    const hasDecoItems = projectItems.some((pi) => normalizeProjectItemType(pi.itemType) === 'decoration');
+    const itemTypeOf = (pi) => pi.itemType ?? pi.ItemType;
+    const hasPlantItems = projectItems.some((pi) => normalizeProjectItemType(itemTypeOf(pi)) === 'plant');
+    const hasDecoItems = projectItems.some((pi) => normalizeProjectItemType(itemTypeOf(pi)) === 'decoration');
+    const hasSoilItem = projectItems.some((pi) => normalizeProjectItemType(itemTypeOf(pi)) === 'soil');
     if ((hasPlantItems && plants.length === 0) || (hasDecoItems && decorations.length === 0)) {
+      return;
+    }
+    if (hasSoilItem && soilFormulas.length === 0) {
       return;
     }
     if (fromProject.containerId && containers.length === 0) {
@@ -357,13 +404,13 @@ function ConstructorPage() {
 
       const { kind, entity } = resolved;
       const footprint = kind === 'plant' ? estimatePlantFootprint(entity) : 1;
-      const r = Number(pi.posX) || 0;
-      const c = Number(pi.posY) || 0;
-      // Occupied indices include multi-cell footprints; grid must fit max(row,col)+size-1
+      const r = readProjectItemCoord(pi, 'x');
+      const c = readProjectItemCoord(pi, 'y');
+      const itemId = pi.itemId ?? pi.ItemId;
       maxExtent = Math.max(maxExtent, r + footprint - 1, c + footprint - 1);
 
       return [{
-        instanceId: `restored-${pi.id ?? pi.itemId}-${pi.posX}-${pi.posY}`,
+        instanceId: `restored-${pi.id ?? pi.Id ?? itemId}-${r}-${c}`,
         type: kind,
         entityId: String(entity.id),
         name: entity.name,
@@ -397,14 +444,48 @@ function ConstructorPage() {
       }
     }
 
+    const soilPi = projectItems.find((pi) => normalizeProjectItemType(itemTypeOf(pi)) === 'soil');
+    let soilResolved = false;
+    if (soilPi) {
+      const soilId = soilPi.itemId ?? soilPi.ItemId;
+      const rawFormula = soilFormulas.find((sf) => String(sf.id) === String(soilId));
+      if (rawFormula) {
+        soilResolved = true;
+        setAppliedSoilFormula({
+          id: `soilFormula-${rawFormula.id}`,
+          entityId: String(rawFormula.id),
+          kind: 'soilFormula',
+          name: rawFormula.name,
+          subtitle: `${rawFormula.items?.length || 0} компонентів`,
+          details: 'Готовий мікс для флораріуму',
+          searchText: `${rawFormula.name || ''} ${rawFormula.items?.length || 0} Готовий мікс для флораріуму`,
+          footprint: 2,
+          image: null,
+          layer: resolveLayer('soilFormula'),
+          rawItem: rawFormula,
+        });
+      }
+    }
+
     setPlacedItems(restored);
-    setNotice(`Відтворено ${restored.length} з ${projectItems.length} елементів проєкту.`);
+    restoredFromProjectIdRef.current = projectKey;
+    setSavedProjectId(String(fromProject.id));
+    setSavedProjectPublished(Boolean(fromProject.isPublished));
+
+    const accounted = restored.length + (soilResolved ? 1 : 0);
+    const skipped = projectItems.length - accounted;
+    setNotice(
+      skipped > 0
+        ? `Відтворено ${accounted} з ${projectItems.length} елементів. ${skipped} не знайдено в каталозі або без формули ґрунту. Позиції збережено з проєкту.`
+        : `Проєкт відтворено (${projectItems.length} елементів, позиції як при збереженні).`,
+    );
   }, [
     loading,
     fromProject,
     plants,
     decorations,
     containers,
+    soilFormulas,
   ]);
 
   const catalogItemsByType = useMemo(() => {
@@ -430,9 +511,9 @@ function ConstructorPage() {
         entityId: String(item.id),
         kind: 'soilType',
         name: item.name,
-        subtitle: 'Базовий тип грунту',
+        subtitle: 'Базовий тип ґрунту',
         details: 'Рекомендований нижній шар',
-        searchText: `${item.name || ''} Базовий тип грунту Рекомендований нижній шар`,
+        searchText: `${item.name || ''} Базовий тип ґрунту Рекомендований нижній шар`,
         footprint: 1,
         image: null,
         layer: resolveLayer('soilType'),
@@ -566,8 +647,12 @@ function ConstructorPage() {
     return analyzeFloraCompatibility({
       plants: plantPayloads,
       selectedSoilFormulaId: appliedSoilFormula?.entityId != null ? String(appliedSoilFormula.entityId) : null,
+      resolveSoilFormulaName: (id) => {
+        const f = soilFormulas.find((sf) => String(sf.id) === String(id));
+        return f?.name ?? null;
+      },
     });
-  }, [placedItems, plants, appliedSoilFormula]);
+  }, [placedItems, plants, appliedSoilFormula, soilFormulas]);
 
   const placedPlantItems = useMemo(() => placedItems.filter((i) => i.type === 'plant'), [placedItems]);
 
@@ -599,8 +684,96 @@ function ConstructorPage() {
     return formulas.find((f) => String(f.entityId) === String(bestId)) ?? null;
   }, [placedPlantItems, plants, catalogItemsByType.soilFormulas]);
 
+  function captureWorkspaceSnapshot() {
+    return {
+      placedItems: JSON.parse(JSON.stringify(placedItems)),
+      appliedSoilEntityId: appliedSoilFormula?.entityId ?? null,
+      selectedContainerEntityId: selectedContainer?.entityId ?? null,
+      gridSize,
+    };
+  }
+
+  function resolveWorkspaceSnapshot(snapshot) {
+    const soil = snapshot.appliedSoilEntityId
+      ? catalogItemsByType.soilFormulas.find((f) => String(f.entityId) === String(snapshot.appliedSoilEntityId))
+      : null;
+    const cont = snapshot.selectedContainerEntityId
+      ? catalogItemsByType.containers.find((c) => String(c.entityId) === String(snapshot.selectedContainerEntityId))
+      : null;
+    return {
+      placedItems: snapshot.placedItems,
+      appliedSoilFormula: soil ?? null,
+      selectedContainer: cont ?? null,
+      gridSize: snapshot.gridSize,
+    };
+  }
+
+  function commitHistoryBeforeMutation() {
+    const snap = captureWorkspaceSnapshot();
+    historyRef.current.past.push(snap);
+    if (historyRef.current.past.length > MAX_UNDO_HISTORY) {
+      historyRef.current.past.shift();
+    }
+    historyRef.current.future = [];
+    setHistoryTick((t) => t + 1);
+  }
+
+  function applyWorkspaceSnapshot(snapshot) {
+    const resolved = resolveWorkspaceSnapshot(snapshot);
+    setPlacedItems(resolved.placedItems);
+    setAppliedSoilFormula(resolved.appliedSoilFormula);
+    setSelectedContainer(resolved.selectedContainer);
+    setGridSize(resolved.gridSize);
+    setSelectedPlacedItemId(null);
+    setNotice('');
+  }
+
+  function undoWorkspace() {
+    const { past, future } = historyRef.current;
+    if (past.length === 0) return;
+    const current = captureWorkspaceSnapshot();
+    const previous = past.pop();
+    future.unshift(current);
+    applyWorkspaceSnapshot(previous);
+    setHistoryTick((t) => t + 1);
+  }
+
+  function redoWorkspace() {
+    const { past, future } = historyRef.current;
+    if (future.length === 0) return;
+    const current = captureWorkspaceSnapshot();
+    const next = future.shift();
+    past.push(current);
+    applyWorkspaceSnapshot(next);
+    setHistoryTick((t) => t + 1);
+  }
+
+  function focusCatalogSoilFormula(entityId, label) {
+    setActiveTab('soilFormulas');
+    setSelectedCatalogItem(null);
+    setSearch('');
+    const id = String(entityId);
+    window.requestAnimationFrame(() => {
+      const el = document.querySelector(`[data-catalog-entity-id="${id}"]`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        return;
+      }
+      if (label) {
+        setSearch(label);
+        window.requestAnimationFrame(() => {
+          document.querySelector(`[data-catalog-entity-id="${id}"]`)?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+          });
+        });
+      }
+    });
+  }
+
   function handleApplyRecommendedSoil() {
     if (!proposedSoilFormula) return;
+    commitHistoryBeforeMutation();
     setAppliedSoilFormula(proposedSoilFormula);
     setNotice('Формулу ґрунту розраховано та застосовано — шари на сітці оновлено.');
   }
@@ -640,6 +813,26 @@ function ConstructorPage() {
       if (item.layer !== layer) return false;
       return rectanglesOverlap(candidate, item);
     });
+  }
+
+  function tryMoveSelectedPlacedItem(deltaRow, deltaCol) {
+    if (!selectedPlacedItemId) return;
+    const item = placedItems.find((i) => i.instanceId === selectedPlacedItemId);
+    if (!item) return;
+    const candidate = {
+      row: item.row + deltaRow,
+      col: item.col + deltaCol,
+      size: item.size,
+    };
+    if (!canPlaceItem(candidate, item.layer, item.instanceId)) {
+      setNotice('Не можна перемістити: межі сітки або клітинка зайнята.');
+      return;
+    }
+    commitHistoryBeforeMutation();
+    setPlacedItems((prev) => prev.map((it) => (
+      it.instanceId === item.instanceId ? { ...it, row: candidate.row, col: candidate.col } : it
+    )));
+    setNotice('');
   }
 
   function handleDragStart(event, item) {
@@ -723,6 +916,8 @@ function ConstructorPage() {
       return false;
     }
 
+    commitHistoryBeforeMutation();
+
     if (excludingId) {
       setPlacedItems((prev) => prev.map((item) => {
         if (item.instanceId !== excludingId) return item;
@@ -793,7 +988,7 @@ function ConstructorPage() {
 
     const placed = placeItem(selectedCatalogItem, candidate);
     if (!placed) {
-      setNotice(`Шар ${selectedCatalogItem.layer === 'soil' ? 'грунту' : "об'єктів"} зайнятий або вихід за межі.`);
+      setNotice(`Шар ${selectedCatalogItem.layer === 'soil' ? 'ґрунту' : "об'єктів"} зайнятий або вихід за межі.`);
       return;
     }
 
@@ -862,7 +1057,7 @@ function ConstructorPage() {
     );
 
     if (!canPlaceItem(candidate, payload.layer)) {
-      setNotice(`Шар ${payload.layer === 'soil' ? 'грунту' : "об'єктів"} зайнятий або вихід за межі.`);
+      setNotice(`Шар ${payload.layer === 'soil' ? 'ґрунту' : "об'єктів"} зайнятий або вихід за межі.`);
       return;
     }
 
@@ -916,15 +1111,18 @@ function ConstructorPage() {
   }
 
   function removePlacedItem(instanceId) {
+    commitHistoryBeforeMutation();
     setPlacedItems((prev) => prev.filter((item) => item.instanceId !== instanceId));
     setSelectedPlacedItemId((prev) => (prev === instanceId ? null : prev));
   }
 
   function resetWorkspace() {
+    commitHistoryBeforeMutation();
     setPlacedItems([]);
     setAppliedSoilFormula(null);
     setNotice('');
     setSavedProjectId(null);
+    setSavedProjectPublished(false);
     setSelectedPlacedItemId(null);
   }
 
@@ -1356,11 +1554,44 @@ function ConstructorPage() {
       }
 
       setSavedProjectId(project.id);
-      setNotice('Проєкт збережено успішно!');
+      setSavedProjectPublished(Boolean(project.isPublished));
+      setNotice(
+        'Чернетку збережено. Список проєктів — у профілі. У спільній галереї робота з’явиться лише після публікації.',
+      );
     } catch (err) {
       setNotice(`Помилка збереження: ${err?.detail || err?.message || 'Невідома помилка'}`);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handlePublishToGallery() {
+    if (!savedProjectId) return;
+    setPublishing(true);
+    setNotice('');
+    try {
+      const res = await api.projects.publish(savedProjectId);
+      setSavedProjectPublished(Boolean(res.isPublished));
+      setNotice('Проєкт опубліковано — він з’явиться в галереї.');
+    } catch (err) {
+      setNotice(`Не вдалося опублікувати: ${err?.detail || err?.message || 'Невідома помилка'}`);
+    } finally {
+      setPublishing(false);
+    }
+  }
+
+  async function handleUnpublishFromGallery() {
+    if (!savedProjectId) return;
+    setPublishing(true);
+    setNotice('');
+    try {
+      const res = await api.projects.unpublish(savedProjectId);
+      setSavedProjectPublished(Boolean(res.isPublished));
+      setNotice('Проєкт знято з галереї. Чернетка залишається в профілі.');
+    } catch (err) {
+      setNotice(`Не вдалося зняти з публікації: ${err?.detail || err?.message || 'Невідома помилка'}`);
+    } finally {
+      setPublishing(false);
     }
   }
 
@@ -1390,6 +1621,61 @@ function ConstructorPage() {
     }
   }
 
+  useEffect(() => {
+    if (!editorOpen) return;
+    function onKeyDown(e) {
+      if (e.defaultPrevented) return;
+      const t = e.target;
+      if (t instanceof HTMLElement && t.closest('input, textarea, select, [contenteditable="true"]')) return;
+
+      if (e.key === 'Escape') {
+        setSelectedPlacedItemId(null);
+        return;
+      }
+
+      if (e.key === 'Delete' && selectedPlacedItemId) {
+        e.preventDefault();
+        removePlacedItem(selectedPlacedItemId);
+        return;
+      }
+
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        if (!selectedPlacedItemId) return;
+        const deltas = {
+          ArrowUp: { row: -1, col: 0 },
+          ArrowDown: { row: 1, col: 0 },
+          ArrowLeft: { row: 0, col: -1 },
+          ArrowRight: { row: 0, col: 1 },
+        };
+        const d = deltas[e.key];
+        if (!d) return;
+        e.preventDefault();
+        tryMoveSelectedPlacedItem(d.row, d.col);
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) redoWorkspace();
+        else undoWorkspace();
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+        e.preventDefault();
+        redoWorkspace();
+      }
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [
+    editorOpen,
+    selectedPlacedItemId,
+    placedItems,
+    gridSize,
+    appliedSoilFormula,
+    selectedContainer,
+  ]);
+
   if (!isAuthenticated && shouldRedirectToAuth) {
     return <Navigate to="/auth" replace />;
   }
@@ -1402,6 +1688,41 @@ function ConstructorPage() {
             <p className="constructor-auth-card-label">Доступ обмежено</p>
             <h2>Для перегляду конструктора, будь ласка, авторизуйтесь</h2>
             <p>Перенаправляємо на сторінку входу через 5 секунд...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!editorOpen) {
+    return (
+      <section className="constructor-page constructor-entry-page">
+        <div className="constructor-entry-inner">
+          <div className="constructor-entry-card">
+            <p className="constructor-entry-label">Конструктор</p>
+            <h2 className="constructor-entry-title">Що робимо далі?</h2>
+            <p className="constructor-entry-text">
+              Створіть новий ескіз на сітці або відкрийте галерею збережених і опублікованих флораріумів.
+            </p>
+            <div className="constructor-entry-actions">
+              <button
+                type="button"
+                className="constructor-entry-btn constructor-entry-btn-primary"
+                onClick={() => {
+                  setNotice('');
+                  setEditorOpen(true);
+                }}
+              >
+                Створити новий ескіз
+              </button>
+              <button
+                type="button"
+                className="constructor-entry-btn constructor-entry-btn-secondary"
+                onClick={() => navigate('/gallery')}
+              >
+                Переглянути вже створені
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -1463,6 +1784,7 @@ function ConstructorPage() {
           {!loading && !error && visibleCatalogItems.map((item) => (
             <article
               key={item.id}
+              data-catalog-entity-id={item.entityId}
               className={`constructor-card ${(selectedCatalogItem?.id === item.id || (item.kind === 'container' && selectedContainer?.id === item.id)) ? 'constructor-card-selected' : ''} ${item.kind === 'soilFormula' && appliedSoilFormula?.id === item.id ? 'constructor-card-applied' : ''} ${item.kind === 'soilFormula' && proposedSoilFormula?.id === item.id && !appliedSoilFormula ? 'constructor-card-soil-proposed' : ''}`}
               draggable={item.kind !== 'soilFormula' && item.kind !== 'container'}
               onDragStart={(event) => {
@@ -1476,6 +1798,7 @@ function ConstructorPage() {
                     return;
                   }
                   if (appliedSoilFormula) {
+                    commitHistoryBeforeMutation();
                     setAppliedSoilFormula(item);
                     setNotice(`Формулу ґрунту змінено на: ${item.name}`);
                     return;
@@ -1488,12 +1811,14 @@ function ConstructorPage() {
                     setNotice('Спочатку розрахуйте рекомендовану формулу кнопкою над сіткою; потім можна обрати іншу в каталозі.');
                     return;
                   }
+                  commitHistoryBeforeMutation();
                   setAppliedSoilFormula(item);
                   setNotice(`Формулу ґрунту застосовано: ${item.name}`);
                   return;
                 }
 
                 if (item.kind === 'container') {
+                  commitHistoryBeforeMutation();
                   setSelectedContainer(item);
                   setNotice(`Контейнер обрано: ${item.name}`);
                   return;
@@ -1546,6 +1871,7 @@ function ConstructorPage() {
                   type="button"
                   className={size === gridSize ? 'constructor-size-active' : ''}
                   onClick={() => {
+                    commitHistoryBeforeMutation();
                     setGridSize(size);
                     setPlacedItems((prev) => prev.filter(
                       (item) => item.row + item.size <= size && item.col + item.size <= size,
@@ -1556,6 +1882,59 @@ function ConstructorPage() {
                 </button>
               ))}
             </div>
+          </div>
+
+          <div className="constructor-toolbar-undo" role="group" aria-label="Історія змін">
+            <button
+              type="button"
+              className="constructor-toolbar-icon-btn"
+              onClick={undoWorkspace}
+              disabled={historyRef.current.past.length === 0}
+              title="Назад (Ctrl+Z)"
+              aria-label="Скасувати дію"
+            >
+              Назад
+            </button>
+            <button
+              type="button"
+              className="constructor-toolbar-icon-btn"
+              onClick={redoWorkspace}
+              disabled={historyRef.current.future.length === 0}
+              title="Вперед (Ctrl+Y або Ctrl+Shift+Z)"
+              aria-label="Повторити дію"
+            >
+              Вперед
+            </button>
+          </div>
+
+          <div className="constructor-toolbar-zoom" role="group" aria-label="Масштаб полотна">
+            <button
+              type="button"
+              className="constructor-toolbar-icon-btn"
+              onClick={() => setBoardZoom((z) => Math.max(BOARD_ZOOM_MIN, Math.round((z - BOARD_ZOOM_STEP) * 10) / 10))}
+              disabled={boardZoom <= BOARD_ZOOM_MIN}
+              aria-label="Зменшити масштаб"
+            >
+              −
+            </button>
+            <span className="constructor-toolbar-zoom-value">{Math.round(boardZoom * 100)}%</span>
+            <button
+              type="button"
+              className="constructor-toolbar-icon-btn"
+              onClick={() => setBoardZoom((z) => Math.min(BOARD_ZOOM_MAX, Math.round((z + BOARD_ZOOM_STEP) * 10) / 10))}
+              disabled={boardZoom >= BOARD_ZOOM_MAX}
+              aria-label="Збільшити масштаб"
+            >
+              +
+            </button>
+            <button
+              type="button"
+              className="constructor-toolbar-zoom-reset"
+              onClick={() => setBoardZoom(1)}
+              aria-label="Масштаб 100 відсотків"
+            >
+              100%
+            </button>
           </div>
 
           <div className="constructor-actions">
@@ -1578,11 +1957,36 @@ function ConstructorPage() {
                   ? (soilMixStepBlocked
                     ? 'Несумісний набір рослин — збереження недоступне'
                     : 'Спочатку розрахуйте або застосуйте формулу ґрунту')
-                  : undefined
+                  : 'Зберігає чернетку на сервер (не в галереї). Кожне натискання створює новий проєкт.'
               }
             >
-              {saving ? 'Збереження...' : 'Зберегти'}
+              {saving ? 'Збереження...' : 'Зберегти чернетку'}
             </button>
+            {savedProjectId && !savedProjectPublished && (
+              <button
+                type="button"
+                className="constructor-toolbar-publish"
+                onClick={handlePublishToGallery}
+                disabled={publishing || saveBlockedByPlantsAndSoil}
+                title={
+                  saveBlockedByPlantsAndSoil
+                    ? 'Узгодьте склад рослин і ґрунт перед публікацією'
+                    : 'Показати цей проєкт у спільній галереї'
+                }
+              >
+                {publishing ? 'Публікація...' : 'Опублікувати в галереї'}
+              </button>
+            )}
+            {savedProjectId && savedProjectPublished && (
+              <button
+                type="button"
+                className="constructor-toolbar-unpublish"
+                onClick={handleUnpublishFromGallery}
+                disabled={publishing}
+              >
+                {publishing ? 'Оновлення...' : 'Зняти з галереї'}
+              </button>
+            )}
             {savedProjectId && (
               <button type="button" onClick={handleGoToResult} disabled={preparingResult}>
                 {preparingResult ? 'Підготовка...' : 'Згенерувати зображення'}
@@ -1599,6 +2003,19 @@ function ConstructorPage() {
         </header>
 
         {notice && <p className="constructor-notice">{notice}</p>}
+
+        <p className="constructor-draft-hint">
+          Галерея показує лише опубліковані роботи. Усі збережені проєкти (чернетки) — у{' '}
+          <Link to="/profile">профілі</Link>
+          {savedProjectId ? (
+            <>
+              {' '}
+              · поточний проєкт:{' '}
+              <strong>{savedProjectPublished ? 'у галереї' : 'чернетка'}</strong>
+            </>
+          ) : null}
+          .
+        </p>
 
         {soilMixStepBlocked && placedPlantItems.length >= 2 && (
           <div className="constructor-plant-mix-warning" role="alert">
@@ -1641,6 +2058,21 @@ function ConstructorPage() {
                 ))}
               </ul>
             ) : null}
+            {floraCompatibility.soilCatalogLinks?.length ? (
+              <div className="constructor-compat-soil-links" aria-label="Перейти до формул у каталозі">
+                <span className="constructor-compat-soil-links-label">У каталозі:</span>
+                {floraCompatibility.soilCatalogLinks.map((link) => (
+                  <button
+                    key={link.entityId}
+                    type="button"
+                    className="constructor-compat-soil-link"
+                    onClick={() => focusCatalogSoilFormula(link.entityId, link.label)}
+                  >
+                    {link.label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
             {floraCompatibility.userSummary.whatToDo?.length ? (
               <div className="constructor-compat-user-do">
                 <strong className="constructor-compat-user-do-label">Що зробити</strong>
@@ -1663,14 +2095,20 @@ function ConstructorPage() {
           onMouseLeave={stopPan}
         >
           <div
-            ref={boardRef}
-            className="constructor-board"
-            style={{ width: `${boardWidth}px`, height: `${boardHeight + (sortedSoilLayers.length > 0 ? 80 : 0)}px` }}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-            onDragLeave={handleDragLeaveBoard}
-            onClick={handleBoardClick}
+            className="constructor-board-zoom-inner"
+            style={{
+              zoom: boardZoom,
+            }}
           >
+            <div
+              ref={boardRef}
+              className="constructor-board"
+              style={{ width: `${boardWidth}px`, height: `${boardHeight + (sortedSoilLayers.length > 0 ? 80 : 0)}px` }}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              onDragLeave={handleDragLeaveBoard}
+              onClick={handleBoardClick}
+            >
             {gridCells.map((cell) => {
               const hoverClass = (() => {
                 if (!isCellInsideCandidate(cell, dragHoverCell)) return '';
@@ -1831,6 +2269,7 @@ function ConstructorPage() {
                 </>
               );
             })()}
+          </div>
           </div>
         </div>
 

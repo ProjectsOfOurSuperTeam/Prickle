@@ -403,6 +403,103 @@ function dedupeStrings(arr) {
 }
 
 /**
+ * Most frequent recommended soil formula id among plants that have soilFormulaId (same logic as constructor «Розрахувати»).
+ * @param {Array<{ soilFormulaId?: string | null }>} plants
+ * @returns {{ id: string; count: number } | null}
+ */
+function computeMajoritySoilFormulaId(plants) {
+  const ids = [];
+  for (const p of plants) {
+    if (p.soilFormulaId != null && String(p.soilFormulaId).trim() !== '') {
+      ids.push(String(p.soilFormulaId));
+    }
+  }
+  if (ids.length === 0) return null;
+  const counts = new Map();
+  for (const id of ids) counts.set(id, (counts.get(id) ?? 0) + 1);
+  let bestId = ids[0];
+  let bestC = 0;
+  for (const [id, c] of counts) {
+    if (c > bestC) {
+      bestId = id;
+      bestC = c;
+    }
+  }
+  return { id: bestId, count: bestC };
+}
+
+/**
+ * Rich soil mismatch copy when formula names are available from catalog.
+ * @param {Array<{ name: string; soilFormulaId?: string | null }>} plants
+ * @param {string | null} selected
+ * @param {(id: string) => string | null | undefined} resolveName
+ * @returns {{ problemLines: string[] } | null}
+ */
+function buildSoilMismatchNarrative(plants, selected, resolveName) {
+  if (!selected || typeof resolveName !== 'function') return null;
+  const mismatches = plants.filter(
+    (p) => p.soilFormulaId != null && String(p.soilFormulaId) !== selected,
+  );
+  if (mismatches.length === 0) return null;
+
+  const selectedName = resolveName(selected) || 'обрана формула';
+  const maj = computeMajoritySoilFormulaId(plants);
+  const majName = maj?.id ? resolveName(maj.id) : null;
+
+  /** @type {string[]} */
+  const problemLines = [];
+  for (const p of mismatches) {
+    const rec = resolveName(String(p.soilFormulaId));
+    problemLines.push(
+      `«${p.name}» — у каталозі рекомендовано «${rec || 'іншу формулу'}».`,
+    );
+  }
+
+  /** @type {{ entityId: string; label: string }[]} */
+  const catalogLinks = [];
+  const seen = new Set();
+  const pushLink = (id) => {
+    if (id == null || String(id).trim() === '') return;
+    const sid = String(id);
+    if (seen.has(sid)) return;
+    seen.add(sid);
+    catalogLinks.push({
+      entityId: sid,
+      label: resolveName(sid) || `Формула (${sid})`,
+    });
+  };
+
+  pushLink(selected);
+  for (const p of mismatches) pushLink(p.soilFormulaId);
+  if (maj?.id) pushLink(maj.id);
+
+  if (plants.length === 1) {
+    problemLines.push(
+      `Зараз на полотні обрано «${selectedName}». Якщо це не та формула, що в каталозі для цього виду, ріст може відрізнятися від очікуваного.`,
+    );
+    return { problemLines, catalogLinks };
+  }
+
+  if (maj?.id && majName) {
+    if (String(maj.id) === selected) {
+      problemLines.push(
+        `Зараз обрано «${selectedName}» — це найчастіша рекомендація серед рослин на полотні. Для перелічених вище видів у каталозі вказано іншу формулу; це не заборона, але варто врахувати.`,
+      );
+    } else {
+      problemLines.push(
+        `Зараз обрано «${selectedName}». Найчастіше рекомендована серед усіх рослин на полотні — «${majName}» (кнопка «Розрахувати формулу ґрунту» підбирає її за більшістю).`,
+      );
+    }
+  } else if (maj?.id && plants.length > 1) {
+    problemLines.push(
+      `Зараз обрано «${selectedName}». Найчастіша рекомендація серед рослин на полотні може відрізнятися — кнопка «Розрахувати формулу ґрунту» підбирає формулу за більшістю видів.`,
+    );
+  }
+
+  return { problemLines, catalogLinks };
+}
+
+/**
  * Short plain-language summary for UI (no weights or technical scales).
  * @param {{
  *   plants: Array<{ name?: string }>;
@@ -417,7 +514,17 @@ function dedupeStrings(arr) {
  * @returns {{ title: string; problems: string[]; whatToDo: string[]; level: 'ok' | 'caution' | 'risk' | 'neutral' }}
  */
 function buildUserSummary(ctx) {
-  const { plants, ecology, careSeverity, soilIssue, soilMismatch, sevL, sevW, sevH } = ctx;
+  const {
+    plants,
+    ecology,
+    careSeverity,
+    soilIssue,
+    soilMismatch,
+    sevL,
+    sevW,
+    sevH,
+    soilMismatchNarrative,
+  } = ctx;
   /** @type {string[]} */
   const problems = [];
   /** @type {string[]} */
@@ -429,14 +536,26 @@ function buildUserSummary(ctx) {
 
   if (plants.length === 1) {
     if (soilIssue) {
-      problems.push(
-        soilMismatch
-          ? 'Для цієї рослини в каталозі інша рекомендована формула ґрунту, ніж та, що зараз обрана.'
-          : 'Ще не обрано формулу ґрунту — не перевірено, чи субстрат підходить цій рослині.',
-      );
-      whatToDo.push(
-        'Оберіть формулу ґрунту в каталозі (клік по картці) або скористайтеся кнопкою «Розрахувати формулу ґрунту», якщо вона з’явилась.',
-      );
+      if (soilMismatchNarrative?.problemLines?.length) {
+        problems.push(...soilMismatchNarrative.problemLines);
+      } else if (soilMismatch) {
+        problems.push(
+          'Для цієї рослини в каталозі інша рекомендована формула ґрунту, ніж та, що зараз обрана.',
+        );
+      } else {
+        problems.push(
+          'Ще не обрано формулу ґрунту — не перевірено, чи субстрат підходить цій рослині.',
+        );
+      }
+      if (soilMismatch) {
+        whatToDo.push(
+          'Можна зберегти чернетку та згенерувати зображення. Відмінність від картки рослини в каталозі — лише довідка; змінювати формулу не обов’язково.',
+        );
+      } else {
+        whatToDo.push(
+          'Оберіть формулу ґрунту в каталозі (клік по картці) або скористайтеся кнопкою «Розрахувати формулу ґрунту», якщо вона з’явилась.',
+        );
+      }
       return {
         title: 'Потрібно обрати ґрунт',
         problems,
@@ -471,8 +590,14 @@ function buildUserSummary(ctx) {
 
     if (soilIssue) {
       if (soilMismatch) {
-        problems.push('Обрана формула ґрунту не збігається з рекомендаціями каталогу для частини рослин.');
-        whatToDo.push('Після узгодження складу рослин оберіть формулу, яка підходить усім видам.');
+        if (soilMismatchNarrative?.problemLines?.length) {
+          problems.push(...soilMismatchNarrative.problemLines);
+        } else {
+          problems.push('Обрана формула ґрунту не збігається з рекомендаціями каталогу для частини рослин.');
+        }
+        whatToDo.push(
+          'Формула вже на полотні, але для частини видів у каталозі інші рекомендації. Спочатку узгодьте склад рослин (або зонування), за потреби змініть формулу у вкладці «Формули ґрунту».',
+        );
       } else {
         whatToDo.push(
           'Коли набір стане сумісним, оберіть або розрахуйте формулу ґрунту — тоді можна буде зберегти проєкт.',
@@ -494,12 +619,20 @@ function buildUserSummary(ctx) {
       'Орієнтуйтеся на «найвимогливіший» вид: полив і місце підлаштовуйте під нього або спростіть склад.',
     );
     if (soilIssue) {
-      problems.push(
-        soilMismatch
-          ? 'Для частини рослин у каталозі інша рекомендована формула ґрунту.'
-          : 'Формула ґрунту ще не обрана.',
-      );
-      whatToDo.push('Оберіть формулу ґрунту в каталозі або за підказкою над сіткою.');
+      if (soilMismatchNarrative?.problemLines?.length) {
+        problems.push(...soilMismatchNarrative.problemLines);
+      } else if (soilMismatch) {
+        problems.push('Для частини рослин у каталозі інша рекомендована формула ґрунту.');
+      } else {
+        problems.push('Формула ґрунту ще не обрана.');
+      }
+      if (soilMismatch) {
+        whatToDo.push(
+          'Збережіть проєкт і згенеруйте зображення за потреби. Різниця з каталогом по ґрунту — на ваш розсуд; формулу міняти не обов’язково.',
+        );
+      } else {
+        whatToDo.push('Оберіть формулу ґрунту в каталозі або за підказкою над сіткою.');
+      }
     }
     return {
       title: 'Можна спробувати, але є відмінності в догляді',
@@ -510,16 +643,26 @@ function buildUserSummary(ctx) {
   }
 
   if (soilIssue) {
-    problems.push(
-      soilMismatch
-        ? 'Для частини рослин у каталозі інша рекомендована формула, ніж обрана зараз.'
-        : 'Формула ґрунту ще не обрана — не перевірено, чи субстрат підходить усім рослинам.',
-    );
-    whatToDo.push('Натисніть «Розрахувати формулу ґрунту» або оберіть формулу в каталозі.');
+    if (soilMismatchNarrative?.problemLines?.length) {
+      problems.push(...soilMismatchNarrative.problemLines);
+    } else if (soilMismatch) {
+      problems.push('Для частини рослин у каталозі інша рекомендована формула, ніж обрана зараз.');
+    } else {
+      problems.push(
+        'Формула ґрунту ще не обрана — не перевірено, чи субстрат підходить усім рослинам.',
+      );
+    }
+    if (soilMismatch) {
+      whatToDo.push(
+        'Усе обрано: збережіть чернетку та натисніть «Згенерувати зображення». Тексти про ґрунт вище — лише для довідки; змінювати формулу не потрібно.',
+      );
+    } else {
+      whatToDo.push('Натисніть «Розрахувати формулу ґрунту» або оберіть формулу в каталозі.');
+    }
     return {
       title: 'Рослини загалом підходять одна одній',
-      problems,
-      whatToDo,
+      problems: dedupeStrings(problems),
+      whatToDo: dedupeStrings(whatToDo),
       level: 'caution',
     };
   }
@@ -532,6 +675,13 @@ function buildUserSummary(ctx) {
   };
 }
 
+/**
+ * @param {{
+ *   plants: Array<{ name: string; entityId?: string; lightLevel: number; waterNeed: number; humidityLevel: number; soilFormulaId?: string | null; category?: string | null }>;
+ *   selectedSoilFormulaId?: string | null;
+ *   resolveSoilFormulaName?: (id: string) => string | null | undefined;
+ * }} input
+ */
 export function analyzeFloraCompatibility(input) {
   const raw = input.plants ?? [];
   const plants = dedupePlants(raw);
@@ -629,6 +779,8 @@ export function analyzeFloraCompatibility(input) {
   }
 
   let soilMismatch = false;
+  /** @type {{ problemLines: string[]; catalogLinks?: { entityId: string; label: string }[] } | null} */
+  let soilMismatchNarrative = null;
   if (selected && plants.length > 0) {
     const mismatches = plants.filter(
       (p) => p.soilFormulaId != null && String(p.soilFormulaId) !== selected,
@@ -636,10 +788,19 @@ export function analyzeFloraCompatibility(input) {
     if (mismatches.length > 0) {
       soilIssue = true;
       soilMismatch = true;
-      const names = mismatches.map((p) => `«${p.name}»`).join(', ');
-      soilLines.push(
-        `Для ${names} у каталозі вказана інша рекомендована формула ґрунту, ніж обрана зараз у проєкті. Це не заборона, але ріст може відрізнятися від очікуваного.`,
+      soilMismatchNarrative = buildSoilMismatchNarrative(
+        plants,
+        selected,
+        input.resolveSoilFormulaName,
       );
+      if (soilMismatchNarrative?.problemLines?.length) {
+        soilLines.push(...soilMismatchNarrative.problemLines);
+      } else {
+        const names = mismatches.map((p) => `«${p.name}»`).join(', ');
+        soilLines.push(
+          `Для ${names} у каталозі вказана інша рекомендована формула ґрунту, ніж обрана зараз у проєкті. Це не заборона, але ріст може відрізнятися від очікуваного.`,
+        );
+      }
     }
   }
 
@@ -685,6 +846,7 @@ export function analyzeFloraCompatibility(input) {
     sevL,
     sevW,
     sevH,
+    soilMismatchNarrative,
   });
 
   return {
@@ -704,5 +866,7 @@ export function analyzeFloraCompatibility(input) {
     pairingFactors,
     /** Plain-language blocks for constructor / PDF modal (prefer over pairingFactors + long careLines). */
     userSummary,
+    /** Soil formula ids + labels for «jump to catalog» in constructor (when narrative is available). */
+    soilCatalogLinks: soilMismatchNarrative?.catalogLinks ?? [],
   };
 }

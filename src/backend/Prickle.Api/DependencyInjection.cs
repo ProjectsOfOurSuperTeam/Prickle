@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using Asp.Versioning;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;

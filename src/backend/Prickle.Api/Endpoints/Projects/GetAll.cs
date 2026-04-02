@@ -1,4 +1,4 @@
-﻿using Prickle.Application.Abstractions.Authentication;
+using Prickle.Application.Abstractions.Authentication;
 using Prickle.Application.Projects;
 using Prickle.Application.Projects.GetAll;
 using Prickle.Infrastructure.Authentication;

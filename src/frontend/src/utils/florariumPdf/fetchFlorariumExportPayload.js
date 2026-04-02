@@ -84,6 +84,25 @@ export async function fetchFlorariumExportPayload(api, projectId) {
     }),
   );
 
+  /** @type {Set<string>} */
+  const soilFormulaIdsForNames = new Set();
+  if (soilFormulaId) soilFormulaIdsForNames.add(String(soilFormulaId));
+  for (const e of plantEntries) {
+    if (e.soilFormulaId) soilFormulaIdsForNames.add(String(e.soilFormulaId));
+  }
+  /** @type {Record<string, string>} */
+  const soilFormulaNames = {};
+  await Promise.all(
+    [...soilFormulaIdsForNames].map(async (id) => {
+      try {
+        const f = await api.soil.formulas.get(id);
+        soilFormulaNames[id] = f?.name ?? '';
+      } catch {
+        soilFormulaNames[id] = '';
+      }
+    }),
+  );
+
   const decorationEntries = await Promise.all(
     [...decorationCounts.entries()].map(async ([id, count]) => {
       const d = await api.decorations.get(id);
@@ -136,5 +155,7 @@ export async function fetchFlorariumExportPayload(api, projectId) {
     soilSection,
     plants: plantEntries,
     decorations: decorationEntries,
+    /** For compatibility modal: resolve formula id → display name (same as constructor). */
+    soilFormulaNames,
   };
 }

@@ -35,6 +35,10 @@ function compatibilityFromPayload(payload) {
   return analyzeFloraCompatibility({
     plants,
     selectedSoilFormulaId: payload.selectedSoilFormulaId ?? null,
+    resolveSoilFormulaName: (id) => {
+      const name = payload.soilFormulaNames?.[String(id)];
+      return name != null && name !== '' ? name : null;
+    },
   });
 }
 
