@@ -3,6 +3,7 @@
 var redis = builder.AddRedis("redis");
 
 var postgres = builder.AddPostgres("postgres")
+    .WithDataVolume()
     .WithPgAdmin()
     .WithLifetime(ContainerLifetime.Persistent);
 
