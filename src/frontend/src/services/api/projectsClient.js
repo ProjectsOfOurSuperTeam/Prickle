@@ -15,7 +15,7 @@ const API_BASE = '/api/projects';
  *   addItem: (projectId: string, body: AddProjectItemRequest) => Promise<ProjectItemResponse>,
  *   updateItem: (projectId: string, itemId: string, body: UpdateProjectItemRequest) => Promise<ProjectItemResponse>,
  *   removeItem: (projectId: string, itemId: string) => Promise<void>,
- *   generateFlorariumImage: (projectId: string, canvasImage: Blob) => Promise<{ blob: Blob; contentType: string }>,
+ *   generateFlorariumImage: (projectId: string, canvasImage: Blob) => Promise<ProjectResponse>,
  * }}
  */
 export function createProjectsClient(base) {
@@ -57,7 +57,7 @@ export function createProjectsClient(base) {
     async generateFlorariumImage(projectId, canvasImage) {
       const formData = new FormData();
       formData.append('canvasImage', canvasImage, 'constructor-canvas.png');
-      return base.requestBlob(`${API_BASE}/${projectId}/generate-florarium-image`, {
+      return request(`${API_BASE}/${projectId}/generate-florarium-image`, {
         method: 'POST',
         body: formData,
       });

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useApi } from '../services/useApi';
 import { useAuth } from '../services/useAuth';
@@ -16,20 +16,10 @@ function ResultPage() {
     location.state?.projectId ?? searchParams.get('projectId') ?? null;
 
   const canvasSnapshot = location.state?.canvasSnapshot ?? null;
-  const generatedUrlRef = useRef(null);
 
   const [snapshotPreviewUrl, setSnapshotPreviewUrl] = useState(null);
   const [generating, setGenerating] = useState(false);
-  const [generatedImageUrl, setGeneratedImageUrl] = useState(null);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    return () => {
-      if (generatedUrlRef.current) {
-        URL.revokeObjectURL(generatedUrlRef.current);
-      }
-    };
-  }, []);
 
   useEffect(() => {
     if (!canvasSnapshot) {
@@ -53,31 +43,21 @@ function ResultPage() {
 
     setGenerating(true);
     setError('');
-    setGeneratedImageUrl(null);
 
     try {
-      const { blob } = await api.projects.generateFlorariumImage(projectId, canvasSnapshot);
-      if (generatedUrlRef.current) {
-        URL.revokeObjectURL(generatedUrlRef.current);
-      }
-      const url = URL.createObjectURL(blob);
-      generatedUrlRef.current = url;
-      setGeneratedImageUrl(url);
+      await api.projects.generateFlorariumImage(projectId, canvasSnapshot);
+      navigate(`/gallery?highlightProjectId=${encodeURIComponent(projectId)}&generationStarted=1`, {
+        replace: true,
+        state: {
+          generationStarted: true,
+          projectId,
+        },
+      });
     } catch (err) {
       setError(`Помилка генерації: ${err?.detail || err?.message || 'Невідома помилка'}`);
     } finally {
       setGenerating(false);
     }
-  }
-
-  function handleDownload() {
-    if (!generatedImageUrl) return;
-    const a = document.createElement('a');
-    a.href = generatedImageUrl;
-    a.download = 'florarium.png';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
   }
 
   if (!isAuthenticated) {
@@ -133,6 +113,7 @@ function ResultPage() {
         <h1>Генерація зображення флораріуму</h1>
         <p className="result-subtitle">
           Контейнер буде взято з серверних даних про проєкт, а полотно конструктора вже передано як еталон композиції.
+          Після старту генерації ми перенаправимо вас у галерею, де зображення з&apos;явиться автоматично, щойно сервер його збереже.
         </p>
       </header>
 
@@ -177,21 +158,7 @@ function ResultPage() {
       {generating && (
         <div className="result-loading">
           <div className="result-spinner" />
-          <p>ШІ генерує фотореалістичне зображення вашого флораріуму. Це може зайняти до хвилини…</p>
-        </div>
-      )}
-
-      {generatedImageUrl && (
-        <div className="result-preview">
-          <h2>Результат</h2>
-          <div className="result-preview-image-wrap">
-            <img src={generatedImageUrl} alt="Згенерований флораріум" />
-          </div>
-          <div className="result-preview-actions">
-            <button type="button" className="result-btn result-btn-primary" onClick={handleDownload}>
-              Завантажити зображення
-            </button>
-          </div>
+          <p>Ставимо генерацію в чергу та готуємо перехід до галереї…</p>
         </div>
       )}
     </section>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { useApi } from '../services/useApi';
 import GalleryCard from '../components/GalleryCard';
 import Pagination from '../components/Pagination';
@@ -46,9 +47,20 @@ const PAGE_SIZE = 6;
 
 function GalleryPage() {
   const api = useApi();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const highlightProjectId = searchParams.get('highlightProjectId');
+  const generationStarted = location.state?.generationStarted || searchParams.get('generationStarted') === '1';
+
   const [items, setItems] = useState([]);
+  const [highlightedProject, setHighlightedProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [notice, setNotice] = useState(
+    generationStarted
+      ? 'Генерацію запущено. Картка оновиться автоматично, щойно сервер збереже зображення.'
+      : ''
+  );
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
@@ -58,13 +70,25 @@ function GalleryPage() {
       setError(null);
       try {
         const result = await api.projects.getAll({ isPublished: true, pageSize: 25 });
+        let focusedProject = null;
+
+        if (highlightProjectId) {
+          try {
+            focusedProject = await api.projects.get(highlightProjectId);
+          } catch {
+            focusedProject = null;
+          }
+        }
+
         if (!cancelled) {
           setItems(result.items ?? []);
+          setHighlightedProject(focusedProject);
         }
       } catch {
         if (!cancelled) {
           // API недоступне — використовуємо мок дані
           setItems(MOCK_PROJECTS);
+          setHighlightedProject(null);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -72,24 +96,60 @@ function GalleryPage() {
     };
     fetchData();
     return () => { cancelled = true; };
-  }, [api]);
+  }, [api, highlightProjectId]);
 
-  const totalPages = Math.ceil(items.length / PAGE_SIZE);
-  const pagedItems = items.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  useEffect(() => {
+    if (!highlightProjectId || !highlightedProject || highlightedProject.florariumImageGenerationStatus !== 'Pending') {
+      return undefined;
+    }
+
+    const intervalId = window.setInterval(async () => {
+      try {
+        const nextProject = await api.projects.get(highlightProjectId);
+        setHighlightedProject(nextProject);
+
+        if (nextProject.florariumImageGenerationStatus === 'Succeeded') {
+          setNotice('Зображення готове та збережене на сервері. Воно вже доступне в галереї.');
+        }
+
+        if (nextProject.florariumImageGenerationStatus === 'Failed') {
+          setNotice(`Генерація завершилась помилкою: ${nextProject.florariumImageGenerationError || 'невідома помилка'}`);
+        }
+      } catch {
+        setNotice('Не вдалося оновити статус генерації. Спробуйте перезавантажити галерею.');
+      }
+    }, 5000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [api, highlightProjectId, highlightedProject]);
+
+  const mergedItems = highlightedProject
+    ? [highlightedProject, ...items.filter(item => item.id !== highlightedProject.id)]
+    : items;
+
+  const totalPages = Math.ceil(mergedItems.length / PAGE_SIZE);
+  const pagedItems = mergedItems.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   return (
     <div style={{ padding: '0 2rem' }}>
       <h1 style={{ marginBottom: '1.5rem' }}>Галерея флораріумів</h1>
+      {notice && (
+        <div style={{ marginBottom: '1rem', padding: '0.9rem 1rem', borderRadius: '12px', background: '#edf7ee', color: '#23462a' }}>
+          {notice}
+        </div>
+      )}
       {loading && <div>Завантаження...</div>}
       {error && <div>Помилка: {error}</div>}
       {!loading && !error && (
         <>
-          {items.length === 0 ? (
+          {mergedItems.length === 0 ? (
             <div style={{ color: '#888' }}>Поки що немає опублікованих флораріумів.</div>
           ) : (
             <>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '2rem' }}>
-                {pagedItems.map(item => <GalleryCard key={item.id} item={item} />)}
+                {pagedItems.map(item => <GalleryCard key={item.id} item={item} highlighted={item.id === highlightProjectId} />)}
               </div>
               <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
             </>

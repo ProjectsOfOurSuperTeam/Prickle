@@ -467,8 +467,12 @@ function LandingPage() {
               {!galleryLoading && !galleryError && galleryProjects.length > 0 && (
                 <div className="gallery-carousel-track">
                   {galleryProjects.map((project) => {
-                    const previewSrc = project.preview
-                      ? `data:image/png;base64,${project.preview}`
+                    const previewBytes = project.generatedFlorariumImage ?? project.preview;
+                    const previewMimeType = project.generatedFlorariumImage
+                      ? project.generatedFlorariumImageMimeType ?? 'image/png'
+                      : 'image/png';
+                    const previewSrc = previewBytes
+                      ? `data:${previewMimeType};base64,${previewBytes}`
                       : null;
                     const name = containersMap.get(project.containerId) ?? 'Флораріум';
                     return (
