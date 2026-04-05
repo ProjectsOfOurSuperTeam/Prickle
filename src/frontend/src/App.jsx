@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import LandingPage from './pages/LandingPage';
 import AuthPage from './pages/AuthPage';
@@ -8,7 +8,14 @@ import ResultPage from './pages/ResultPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminDashboard from './pages/AdminDashboard';
 import LogoutPage from './pages/LogoutPage';
+import { useAuth } from './services/useAuth';
 import './App.css';
+
+function AdminRoute() {
+  const { isAuthenticated, isAdmin } = useAuth();
+  if (!isAuthenticated || !isAdmin) return <Navigate to="/" replace />;
+  return <AdminDashboard />;
+}
 
 function App() {
   return (
@@ -22,7 +29,7 @@ function App() {
           <Route path="result" element={<ResultPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="logout" element={<LogoutPage />} />
-          <Route path="admin" element={<AdminDashboard />} />
+          <Route path="admin" element={<AdminRoute />} />
         </Route>
       </Routes>
     </BrowserRouter>

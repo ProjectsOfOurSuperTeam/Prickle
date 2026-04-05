@@ -120,8 +120,22 @@ export class KeycloakService {
   }
 }
 
+function getRolesFromDecoded(decoded) {
+  if (!decoded) return [];
+
+  const realmRoles = decoded.realm_access?.roles;
+  if (Array.isArray(realmRoles) && realmRoles.length > 0) return realmRoles;
+
+  const role = decoded.role;
+  if (Array.isArray(role)) return role.filter((item) => typeof item === 'string');
+  if (typeof role === 'string') return [role];
+
+  return [];
+}
+
 export function mapTokensToSession(tokens) {
   const expiresAt = Date.now() + tokens.expires_in * 1000;
+  const roles = getRolesFromDecoded(tokens.decodedAccessToken);
 
   return {
     accessToken: tokens.access_token,
@@ -133,6 +147,7 @@ export function mapTokensToSession(tokens) {
       email: tokens.decodedAccessToken?.email,
       username: tokens.decodedAccessToken?.preferred_username,
       name: tokens.decodedAccessToken?.name,
+      roles,
     },
   };
 }

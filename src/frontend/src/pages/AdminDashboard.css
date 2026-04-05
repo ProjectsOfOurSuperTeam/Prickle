@@ -1,0 +1,239 @@
+.admin-dashboard {
+  padding: 2rem 2.5rem 4rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.admin-dashboard h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.75rem;
+  color: var(--color-dark-olive);
+}
+
+.admin-dashboard .admin-subtitle {
+  margin: 0 0 2rem;
+  color: var(--color-dark-olive);
+  opacity: 0.8;
+  font-size: 1rem;
+}
+
+.admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(var(--color-dark-olive-rgb), 0.15);
+  padding-bottom: 0.5rem;
+}
+
+.admin-tabs button {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-dark-olive);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.admin-tabs button:hover {
+  background: var(--color-cream);
+}
+
+.admin-tabs button.active {
+  background: var(--color-light-sage);
+  border-color: var(--color-sage);
+  color: var(--color-dark-forest);
+}
+
+.admin-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px var(--shadow-dark-forest-light);
+  border: 1px solid var(--color-light-sage);
+}
+
+.admin-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.admin-section-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--color-dark-olive);
+}
+
+.admin-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s, color 0.2s;
+}
+
+.admin-btn-primary {
+  background: var(--color-sage);
+  color: white;
+}
+
+.admin-btn-primary:hover {
+  background: var(--color-dark-olive);
+}
+
+.admin-btn-ghost {
+  background: transparent;
+  color: var(--color-dark-olive);
+  border: 1px solid rgba(var(--color-dark-olive-rgb), 0.3);
+}
+
+.admin-btn-ghost:hover {
+  background: var(--color-cream);
+}
+
+.admin-btn-danger {
+  background: transparent;
+  color: #b91c1c;
+  border: 1px solid rgba(185, 28, 28, 0.4);
+}
+
+.admin-btn-danger:hover {
+  background: rgba(185, 28, 28, 0.08);
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(var(--color-dark-olive-rgb), 0.1);
+}
+
+.admin-table th {
+  font-weight: 600;
+  color: var(--color-sage);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-table td {
+  color: var(--color-dark-forest);
+}
+
+.admin-table tr:hover td {
+  background: var(--color-cream);
+}
+
+.admin-table .admin-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.admin-form {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1.25rem;
+  background: var(--color-cream);
+  border-radius: 12px;
+  border: 1px solid rgba(var(--color-dark-olive-rgb), 0.1);
+}
+
+.admin-form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  align-items: end;
+}
+
+.admin-form label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-dark-olive);
+  margin-bottom: 0.35rem;
+}
+
+.admin-form input,
+.admin-form select,
+.admin-form textarea {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(var(--color-dark-olive-rgb), 0.25);
+  font-size: 1rem;
+  background: white;
+}
+
+.admin-form input:focus,
+.admin-form select:focus,
+.admin-form textarea:focus {
+  outline: 2px solid var(--color-sage);
+  outline-offset: 1px;
+}
+
+.admin-form-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.admin-error {
+  padding: 0.75rem 1rem;
+  background: rgba(185, 28, 28, 0.1);
+  border: 1px solid rgba(185, 28, 28, 0.3);
+  border-radius: 8px;
+  color: #b91c1c;
+  margin-bottom: 1rem;
+}
+
+.admin-loading {
+  padding: 2rem;
+  text-align: center;
+  color: var(--color-dark-olive);
+}
+
+.admin-confirm {
+  padding: 1rem 1.25rem;
+  background: var(--color-cream);
+  border-radius: 8px;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.admin-confirm span {
+  color: var(--color-dark-forest);
+}
+
+@media (max-width: 768px) {
+  .admin-dashboard {
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
+}
