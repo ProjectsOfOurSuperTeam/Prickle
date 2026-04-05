@@ -4,4 +4,4 @@ public sealed record GenerateFlorariumImageCommand(
     Guid ProjectId,
     Guid UserId,
     byte[] CanvasImage,
-    string ImageMimeType = "image/png") : ICommand<Result<GenerateFlorariumImageResponse>>;
+    string ImageMimeType = "image/png") : ICommand<Result<ProjectResponse>>;

@@ -8,10 +8,11 @@ using SharedKernel;
 
 namespace Prickle.Infrastructure.ImageGeneration;
 
-internal sealed class OpenRouterFlorariumImageGenerator : IFlorariumImageGenerator
+internal sealed class OpenRouterFlorariumImageGenerator : IFlorariumImageGenerator, IDisposable
 {
     private const string ApiUrl = "https://openrouter.ai/api/v1/chat/completions";
     private const string ModelName = "google/gemini-3.1-flash-image-preview";
+    private static readonly TimeSpan RequestTimeout = TimeSpan.FromMinutes(30);
 
     private readonly HttpClient _httpClient;
     private readonly string _apiKey;
@@ -19,18 +20,19 @@ internal sealed class OpenRouterFlorariumImageGenerator : IFlorariumImageGenerat
     private readonly string _frontendAssetsImagesPath;
 
     public OpenRouterFlorariumImageGenerator(
-        IHttpClientFactory httpClientFactory,
         IConfiguration configuration,
         IHostEnvironment hostEnvironment,
         ILogger<OpenRouterFlorariumImageGenerator> logger)
     {
-    
         _logger = logger;
         _apiKey = configuration.GetValue<string>("GeminiApiKey") 
             ?? Environment.GetEnvironmentVariable("GEMINI_API_KEY")
             ?? throw new InvalidOperationException(
             "Gemini API key is not configured. Set GeminiApiKey in configuration or GEMINI_API_KEY environment variable.");
-        _httpClient = httpClientFactory.CreateClient();
+        _httpClient = new HttpClient
+        {
+            Timeout = RequestTimeout
+        };
         _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
 
         _frontendAssetsImagesPath = Path.GetFullPath(Path.Combine(
@@ -118,6 +120,13 @@ internal sealed class OpenRouterFlorariumImageGenerator : IFlorariumImageGenerat
 
             return Result.Success(imageBytes);
         }
+        catch (OperationCanceledException ex)
+        {
+            _logger.LogError(ex, "OpenRouter image generation was cancelled before completion");
+            return Result.Failure<byte[]>(Error.Problem(
+                "ImageGeneration.Cancelled",
+                $"Image generation did not finish before the allowed timeout of {RequestTimeout}."));
+        }
         catch (HttpRequestException ex)
         {
             _logger.LogError(ex, "HTTP request failed for OpenRouter image generation");
@@ -199,5 +208,10 @@ internal sealed class OpenRouterFlorariumImageGenerator : IFlorariumImageGenerat
             ".webp" => "image/webp",
             _ => "image/png"
         };
+    }
+
+    public void Dispose()
+    {
+        _httpClient.Dispose();
     }
 }

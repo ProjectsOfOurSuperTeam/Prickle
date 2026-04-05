@@ -1,4 +1,5 @@
 using Prickle.Application.Abstractions.Authentication;
+using Prickle.Application.Projects;
 using Prickle.Application.Projects.GenerateFlorariumImage;
 using Prickle.Infrastructure.Authentication;
 
@@ -45,17 +46,18 @@ internal sealed class GenerateFlorariumImageEndpoint : IEndpoint
                 cancellationToken);
 
             return result.Match(
-                response => Results.File(response.ImageBytes, response.MimeType, "florarium.png"),
+                response => Results.AcceptedAtRoute(Get.EndpointName, new { id = response.Id }, response),
                 CustomResults.Problem);
         })
         .WithName(EndpointName)
         .WithTags(Tags.Projects)
-        .WithSummary("Generates a photorealistic florarium image using OpenRouter (Gemini 3.1 Flash Image).")
+        .WithSummary("Queues photorealistic florarium image generation using OpenRouter (Gemini 3.1 Flash Image).")
         .WithDescription(
-            "Generates a photorealistic image of the florarium based on project data, server-side container reference image, and a constructor canvas snapshot. Uses OpenRouter with google/gemini-3.1-flash-image-preview.")
+            "Queues photorealistic image generation for the florarium based on project data, server-side container reference image, and a constructor canvas snapshot. The result is generated asynchronously and persisted in the database.")
         .DisableAntiforgery()
-        .Produces(StatusCodes.Status200OK, contentType: "image/png")
+        .Produces<ProjectResponse>(StatusCodes.Status202Accepted)
         .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status409Conflict)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
         .HasPermission(AuthorizationPolicies.User);
     }
