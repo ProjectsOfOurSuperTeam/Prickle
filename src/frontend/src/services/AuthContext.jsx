@@ -78,6 +78,26 @@ export function AuthProvider({ children }) {
     clearPersistedSession();
   }, [service, session]);
 
+  const register = useCallback(
+    async ({ username, email, password, firstName, lastName }) => {
+      setIsLoading(true);
+      setError('');
+
+      try {
+        await service.register({ username, email, password, firstName, lastName });
+        // Registration successful, user needs to log in
+        return true;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Не вдалося зареєструватися.';
+        setError(message);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [service],
+  );
+
   const clearError = useCallback(() => {
     setError('');
   }, []);
@@ -92,10 +112,11 @@ export function AuthProvider({ children }) {
       error,
       getAccessToken,
       login,
+      register,
       logout,
       clearError,
     }),
-    [session, isLoading, error, getAccessToken, login, logout, clearError],
+    [session, isLoading, error, getAccessToken, login, register, logout, clearError],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -8,7 +8,7 @@ const initialLogin = { email: '', password: '' };
 const initialRegister = { name: '', email: '', password: '', confirmPassword: '' };
 
 function AuthPage() {
-  const { login, isLoading, error: authError, clearError, isAuthenticated } = useAuth();
+  const { login, register, isLoading, error: authError, clearError, isAuthenticated } = useAuth();
   const [mode, setMode] = useState('login');
   const [loginForm, setLoginForm] = useState(initialLogin);
   const [registerForm, setRegisterForm] = useState(initialRegister);
@@ -72,20 +72,43 @@ function AuthPage() {
     }
   };
 
-  const handleRegisterSubmit = (event) => {
+  const handleRegisterSubmit = async (event) => {
     event.preventDefault();
     setSubmitted((prev) => ({ ...prev, register: true }));
+    clearError();
 
     if (!isRegisterValid) {
       setStatus((prev) => ({ ...prev, register: 'Перевірте помилки у формі.' }));
       return;
     }
 
-    // TODO: Registration via Keycloak API is intentionally deferred by request.
-    setStatus((prev) => ({
-      ...prev,
-      register: 'Реєстрацію тимчасово не підключено. Скористайтеся входом.',
-    }));
+    try {
+      // Parse name into firstName and lastName
+      const nameParts = registerForm.name.trim().split(/\s+/);
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      await register({
+        username: registerForm.email.trim(),
+        email: registerForm.email.trim(),
+        password: registerForm.password,
+        firstName,
+        lastName,
+      });
+
+      // Success - reset form and show success message
+      setRegisterForm(initialRegister);
+      setSubmitted((prev) => ({ ...prev, register: false }));
+      setStatus((prev) => ({
+        ...prev,
+        register: 'Реєстрація успішна! Перейдіть на вкладку "Вхід", щоб увійти.',
+      }));
+    } catch {
+      setStatus((prev) => ({
+        ...prev,
+        register: authError || 'Помилка реєстрації. Перевірте дані та спробуйте знову.',
+      }));
+    }
   };
 
   const showLoginErrors = submitted.login && !isLoginValid;
@@ -267,7 +290,9 @@ function AuthPage() {
             {status.register ? <p className="auth-hint">{status.register}</p> : null}
 
             <div className="auth-actions">
-              <button type="submit">Створити акаунт</button>
+              <button type="submit" disabled={isLoading}>
+                {isLoading ? 'Реєстрація...' : 'Створити акаунт'}
+              </button>
               <button
                 type="button"
                 className="auth-link"

@@ -14,7 +14,7 @@ async function parseError(response) {
   const fallback = `HTTP ${response.status}`;
   try {
     const data = await response.json();
-    return data.error_description || data.error || fallback;
+    return data.detail || data.title || data.message || data.error_description || data.error || fallback;
   } catch {
     return fallback;
   }
@@ -117,6 +117,26 @@ export class KeycloakService {
     if (!response.ok && response.status !== 204) {
       throw new Error(await parseError(response));
     }
+  }
+
+  async register({ username, email, password, firstName, lastName }) {
+    const response = await this.fetchFn(this.config.registrationEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username,
+        email,
+        password,
+        firstName,
+        lastName,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(await parseError(response));
+    }
+
+    return await response.json();
   }
 }
 
