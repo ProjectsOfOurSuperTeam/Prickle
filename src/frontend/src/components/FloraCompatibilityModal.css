@@ -1,0 +1,196 @@
+.flora-compat-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.flora-compat-backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  margin: 0;
+  padding: 0;
+  background: rgba(30, 40, 35, 0.45);
+  cursor: pointer;
+}
+
+.flora-compat-dialog {
+  position: relative;
+  z-index: 1;
+  max-width: 520px;
+  width: 100%;
+  max-height: min(85vh, 640px);
+  overflow: auto;
+  padding: 1.35rem 1.5rem;
+  border-radius: 12px;
+  background: #f8faf7;
+  border: 1px solid rgba(45, 106, 79, 0.25);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.flora-compat-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1b4332;
+}
+
+.flora-compat-lead {
+  margin: 0 0 1rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: #4a5568;
+}
+
+.flora-compat-verdict {
+  margin: 0 0 0.85rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.flora-compat-verdict--ok {
+  background: rgba(45, 106, 79, 0.12);
+  border: 1px solid rgba(45, 106, 79, 0.28);
+  color: #14532d;
+}
+
+.flora-compat-verdict--caution {
+  background: rgba(180, 120, 30, 0.12);
+  border: 1px solid rgba(160, 100, 20, 0.35);
+  color: #5c3d0a;
+}
+
+.flora-compat-verdict--risk {
+  background: rgba(140, 34, 34, 0.1);
+  border: 1px solid rgba(120, 40, 40, 0.35);
+  color: #6b1c1c;
+}
+
+.flora-compat-verdict--neutral {
+  background: rgba(45, 80, 90, 0.08);
+  border: 1px solid rgba(45, 80, 90, 0.2);
+  color: #2d3748;
+}
+
+.flora-compat-user-problems {
+  margin: 0 0 0.75rem;
+  padding-left: 1.2rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #2d3748;
+}
+
+.flora-compat-user-problems li {
+  margin-bottom: 0.4rem;
+}
+
+.flora-compat-user-do {
+  margin: 0 0 1.25rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(45, 106, 79, 0.18);
+}
+
+.flora-compat-user-do-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.82rem;
+  color: #1b4332;
+}
+
+.flora-compat-user-do-list {
+  margin: 0;
+  padding-left: 1.15rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #2d3748;
+}
+
+.flora-compat-user-do-list li {
+  margin-bottom: 0.35rem;
+}
+
+.flora-compat-factors {
+  margin: 0 0 0.9rem;
+  padding: 0.55rem 0.7rem;
+  padding-left: 1.25rem;
+  border-radius: 8px;
+  background: rgba(45, 106, 79, 0.06);
+  border: 1px solid rgba(45, 106, 79, 0.14);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #2d3748;
+  list-style: disc;
+}
+
+.flora-compat-factors li {
+  margin-bottom: 0.45rem;
+}
+
+.flora-compat-factor-label {
+  font-weight: 700;
+  color: #1b4332;
+}
+
+.flora-compat-factor-w {
+  font-weight: 700;
+  color: #1b4332;
+  white-space: nowrap;
+}
+
+.flora-compat-empty {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: #5a6c5e;
+}
+
+.flora-compat-list {
+  margin: 0 0 1.25rem;
+  padding-left: 1.2rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #2d3748;
+}
+
+.flora-compat-list li {
+  margin-bottom: 0.4rem;
+}
+
+.flora-compat-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: flex-end;
+}
+
+.flora-compat-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid rgba(44, 62, 80, 0.35);
+  background: #fff;
+  color: #2c3e50;
+}
+
+.flora-compat-btn--ghost:hover {
+  background: rgba(44, 62, 80, 0.06);
+}
+
+.flora-compat-btn--primary {
+  border: none;
+  background: linear-gradient(135deg, #2d6a4f 0%, #40916c 100%);
+  color: #fff;
+}
+
+.flora-compat-btn--primary:hover {
+  filter: brightness(1.05);
+}

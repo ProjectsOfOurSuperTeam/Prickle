@@ -23,6 +23,28 @@ internal sealed class ProjectEntityConfiguration : IEntityTypeConfiguration<Proj
         builder.Property(x => x.Preview)
             .HasColumnType("BYTEA");
 
+        builder.Property(x => x.GeneratedFlorariumImage)
+            .HasColumnType("BYTEA");
+
+        builder.Property(x => x.GeneratedFlorariumImageMimeType)
+            .HasMaxLength(64);
+
+        builder.Property(x => x.PendingFlorariumCanvasImage)
+            .HasColumnType("BYTEA");
+
+        builder.Property(x => x.PendingFlorariumCanvasImageMimeType)
+            .HasMaxLength(64);
+
+        builder.Property(x => x.FlorariumImageGenerationStatus)
+            .IsRequired()
+            .HasDefaultValue(FlorariumImageGenerationStatus.NotRequested);
+
+        builder.Property(x => x.FlorariumImageRequestedAt);
+
+        builder.Property(x => x.FlorariumImageCompletedAt);
+
+        builder.Property(x => x.FlorariumImageGenerationError);
+
         builder.Property(x => x.CreatedAt)
             .IsRequired()
             .HasDefaultValueSql("NOW()");
@@ -38,6 +60,8 @@ internal sealed class ProjectEntityConfiguration : IEntityTypeConfiguration<Proj
         builder.HasIndex(x => x.CreatedAt)
             .IsDescending();
 
+        builder.HasIndex(x => x.FlorariumImageGenerationStatus);
+
         builder.HasOne<Container>()
             .WithMany()
             .HasForeignKey(x => x.ContainerId)
@@ -47,6 +71,8 @@ internal sealed class ProjectEntityConfiguration : IEntityTypeConfiguration<Proj
             .WithOne()
             .HasForeignKey(x => x.ProjectId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Metadata.FindNavigation(nameof(Project.Items))?.SetField("_items");
 
         builder.Navigation(x => x.Items)
             .EnableLazyLoading(false);

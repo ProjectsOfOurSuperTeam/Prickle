@@ -1,13 +1,15 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Prickle.Application.Abstractions.ImageGeneration;
 using Prickle.Application.Abstractions.Authentication;
 using Prickle.Application.Abstractions.Database;
 using Prickle.Infrastructure.Authentication;
 using Prickle.Infrastructure.Database;
 using Prickle.Infrastructure.DomainEvents;
+using Prickle.Infrastructure.ImageGeneration;
 
 namespace Prickle.Infrastructure;
 
@@ -26,6 +28,10 @@ public static class DependencyInjection
     private static IServiceCollection AddServices(this IServiceCollection services)
     {
         services.AddTransient<IDomainEventsDispatcher, DomainEventsDispatcher>();
+        services.AddSingleton<FlorariumImageGenerationWorker>();
+        services.AddSingleton<IFlorariumImageGenerationQueue>(sp => sp.GetRequiredService<FlorariumImageGenerationWorker>());
+        services.AddHostedService(sp => sp.GetRequiredService<FlorariumImageGenerationWorker>());
+        services.AddScoped<IFlorariumImageGenerator, OpenRouterFlorariumImageGenerator>();
 
         return services;
     }

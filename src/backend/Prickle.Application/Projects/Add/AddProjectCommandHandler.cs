@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Prickle.Application.Abstractions.Database;
 using Prickle.Domain.Containers;
 using Prickle.Domain.Projects;
@@ -34,17 +34,6 @@ internal sealed class AddProjectCommandHandler
         dbContext.Projects.Add(project);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        var response = new ProjectResponse
-        {
-            Id = project.Id,
-            UserId = project.UserId,
-            ContainerId = project.ContainerId,
-            Preview = project.Preview,
-            CreatedAt = project.CreatedAt,
-            IsPublished = project.IsPublished,
-            Items = []
-        };
-
-        return Result.Success(response);
+        return Result.Success(project.ToResponse());
     }
 }

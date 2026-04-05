@@ -17,7 +17,7 @@ namespace Prickle.Infrastructure.Database.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.2")
+                .HasAnnotation("ProductVersion", "10.0.3")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -204,11 +204,47 @@ namespace Prickle.Infrastructure.Database.Migrations
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("NOW()");
 
+                    b.Property<DateTimeOffset?>("FlorariumImageCompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("florarium_image_completed_at");
+
+                    b.Property<string>("FlorariumImageGenerationError")
+                        .HasColumnType("text")
+                        .HasColumnName("florarium_image_generation_error");
+
+                    b.Property<int>("FlorariumImageGenerationStatus")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("florarium_image_generation_status");
+
+                    b.Property<DateTimeOffset?>("FlorariumImageRequestedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("florarium_image_requested_at");
+
+                    b.Property<byte[]>("GeneratedFlorariumImage")
+                        .HasColumnType("BYTEA")
+                        .HasColumnName("generated_florarium_image");
+
+                    b.Property<string>("GeneratedFlorariumImageMimeType")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("generated_florarium_image_mime_type");
+
                     b.Property<bool>("IsPublished")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(false)
                         .HasColumnName("is_published");
+
+                    b.Property<byte[]>("PendingFlorariumCanvasImage")
+                        .HasColumnType("BYTEA")
+                        .HasColumnName("pending_florarium_canvas_image");
+
+                    b.Property<string>("PendingFlorariumCanvasImageMimeType")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("pending_florarium_canvas_image_mime_type");
 
                     b.Property<byte[]>("Preview")
                         .HasColumnType("BYTEA")
@@ -227,6 +263,9 @@ namespace Prickle.Infrastructure.Database.Migrations
                     b.HasIndex("CreatedAt")
                         .IsDescending()
                         .HasDatabaseName("ix_projects_created_at");
+
+                    b.HasIndex("FlorariumImageGenerationStatus")
+                        .HasDatabaseName("ix_projects_florarium_image_generation_status");
 
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_projects_user_id");
@@ -304,6 +343,11 @@ namespace Prickle.Infrastructure.Database.Migrations
                         .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("HexColor")
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)")
+                        .HasColumnName("hex_color");
 
                     b.Property<string>("Name")
                         .IsRequired()

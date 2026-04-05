@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Prickle.Domain.Containers;
 using Prickle.Domain.Decorations;
 using Prickle.Domain.Plants;
@@ -16,6 +16,114 @@ public static class DbSeeder
         SeedContainers(context);
         SeedDecorations(context);
         SeedPlants(context);
+        SeedProjects(context);
+    }
+
+    public static void SeedProjects(DbContext context)
+    {
+        if (context.Set<Project>().Any())
+        {
+            return;
+        }
+
+        var seedUserId = new Guid("7b9841d1-3f55-46a2-b636-32ba4aedc928");
+
+        var containers = context.Set<Container>().ToDictionary(c => c.Name, c => c.Id);
+        var plants = context.Set<Plant>().ToDictionary(p => p.NameLatin, p => p.Id);
+        var plantsByName = context.Set<Plant>().ToDictionary(p => p.Name, p => p.Id);
+        var decorations = context.Set<Decoration>().ToDictionary(d => d.Name, d => d.Id);
+        var soilFormulas = context.Set<SoilFormulas>().ToDictionary(f => f.Name, f => f.Id);
+
+        Guid Container(string name) => containers[name];
+        Guid Plant(string nameLatin) => plants.TryGetValue(nameLatin, out var id) ? id : plantsByName[nameLatin];
+        Guid Decoration(string name) => decorations[name];
+        Guid SoilFormula(string name) => soilFormulas[name];
+
+        // 1. Succulent Desktop — exact match for AI generation prompt (Ікосаедр, Echeveria, Haworthia, Lithops, white gravel, black lava, desert mix)
+        var proj1Result = Project.Create(seedUserId, Container("Ікосаедр (Геометрія)"));
+        if (proj1Result.IsSuccess)
+        {
+            var p1 = proj1Result.Value;
+            p1.AddItem(ProjectItemType.Plant, Plant("Echeveria elegans"), 2, 2, 1);
+            p1.AddItem(ProjectItemType.Plant, Plant("Haworthia fasciata"), 4, 2, 1);
+            p1.AddItem(ProjectItemType.Plant, Plant("Lithops spp."), 3, 4, 0);
+            p1.AddItem(ProjectItemType.Decoration, Decoration("Біла морська галька"), 1, 1, 0);
+            p1.AddItem(ProjectItemType.Decoration, Decoration("Чорна вулканічна лава"), 5, 4, 0);
+            p1.AddItem(ProjectItemType.Soil, SoilFormula("Пустельний мікс (Сукулент)"), 0, 0, 0);
+            p1.Publish();
+            context.Set<Project>().Add(p1);
+        }
+
+        // 2. Tropical Mini-Forest — Fittonia, Soleirolia, driftwood, tropical formula
+        var proj2Result = Project.Create(seedUserId, Container("Мінімалістичний Куб"));
+        if (proj2Result.IsSuccess)
+        {
+            var p2 = proj2Result.Value;
+            p2.AddItem(ProjectItemType.Plant, Plant("Fittonia albivenis"), 2, 2, 1);
+            p2.AddItem(ProjectItemType.Plant, Plant("Soleirolia soleirolii"), 1, 1, 0);
+            p2.AddItem(ProjectItemType.Plant, Plant("Soleirolia soleirolii"), 4, 4, 0);
+            p2.AddItem(ProjectItemType.Decoration, Decoration("Дубова коряга \"Дрифтвуд\""), 3, 3, 1);
+            p2.AddItem(ProjectItemType.Soil, SoilFormula("Тропічний вологий (Класика)"), 0, 0, 0);
+            p2.Publish();
+            context.Set<Project>().Add(p2);
+        }
+
+        // 3. Desert Cactus Garden — Pyramid, cacti, golden sand, red jasper
+        var proj3Result = Project.Create(seedUserId, Container("Велика Піраміда"));
+        if (proj3Result.IsSuccess)
+        {
+            var p3 = proj3Result.Value;
+            p3.AddItem(ProjectItemType.Plant, Plant("Mammillaria elongata"), 3, 2, 1);
+            p3.AddItem(ProjectItemType.Plant, Plant("Astrophytum asterias"), 2, 4, 0);
+            p3.AddItem(ProjectItemType.Plant, Plant("Rebutia minuscula"), 4, 4, 0);
+            p3.AddItem(ProjectItemType.Decoration, Decoration("Золотистий пустельний пісок"), 1, 1, 0);
+            p3.AddItem(ProjectItemType.Decoration, Decoration("Червона яшма"), 5, 3, 0);
+            p3.AddItem(ProjectItemType.Soil, SoilFormula("Аридний мінеральний"), 0, 0, 0);
+            p3.Publish();
+            context.Set<Project>().Add(p3);
+        }
+
+        // 4. Mossarium Zen — Lotus bowl, mosses, torii gate, forest formula
+        var proj4Result = Project.Create(seedUserId, Container("Чаша \"Лотос\""));
+        if (proj4Result.IsSuccess)
+        {
+            var p4 = proj4Result.Value;
+            p4.AddItem(ProjectItemType.Plant, Plant("Leucobryum glaucum"), 2, 2, 0);
+            p4.AddItem(ProjectItemType.Plant, Plant("Taxiphyllum barbieri"), 3, 3, 0);
+            p4.AddItem(ProjectItemType.Decoration, Decoration("Японська брама Торії"), 3, 2, 1);
+            p4.AddItem(ProjectItemType.Decoration, Decoration("Сланцева крихта"), 1, 4, 0);
+            p4.AddItem(ProjectItemType.Soil, SoilFormula("Лісовий мох (Мосаріум)"), 0, 0, 0);
+            p4.Publish();
+            context.Set<Project>().Add(p4);
+        }
+
+        // 5. Carnivorous Bog — Sphere, Venus flytrap, Drosera, carnivorous formula
+        var proj5Result = Project.Create(seedUserId, Container("Еко-Сфера (Закрита)"));
+        if (proj5Result.IsSuccess)
+        {
+            var p5 = proj5Result.Value;
+            p5.AddItem(ProjectItemType.Plant, Plant("Dionaea muscipula"), 3, 2, 1);
+            p5.AddItem(ProjectItemType.Plant, Plant("Drosera capensis"), 2, 4, 0);
+            p5.AddItem(ProjectItemType.Soil, SoilFormula("Хижий (Для венериної мухоловки)"), 0, 0, 0);
+            p5.Publish();
+            context.Set<Project>().Add(p5);
+        }
+
+        // 6. Geometric Succulent Trio — Teardrop, compact succulents
+        var proj6Result = Project.Create(seedUserId, Container("Флораріум \"Крапля\""));
+        if (proj6Result.IsSuccess)
+        {
+            var p6 = proj6Result.Value;
+            p6.AddItem(ProjectItemType.Plant, Plant("Echeveria elegans"), 2, 2, 1);
+            p6.AddItem(ProjectItemType.Plant, Plant("Pachyphytum oviferum"), 3, 3, 0);
+            p6.AddItem(ProjectItemType.Plant, Plant("Adromischus cooperi"), 4, 2, 0);
+            p6.AddItem(ProjectItemType.Decoration, Decoration("Біла морська галька"), 1, 1, 0);
+            p6.AddItem(ProjectItemType.Soil, SoilFormula("Пустельний мікс (Сукулент)"), 0, 0, 0);
+            p6.Publish();
+            context.Set<Project>().Add(p6);
+        }
+
+        context.SaveChanges();
     }
     public static void SeedPlants(DbContext context)
     {
@@ -509,38 +617,38 @@ public static class DbSeeder
 
         var soilTypes = new[]
         {
-            SoilType.Create("Кокосовий торф"),           // 1
-            SoilType.Create("Сфагнум"),                   // 2
-            SoilType.Create("Перліт"),                    // 3
-            SoilType.Create("Деревне вугілля"),           // 4
-            SoilType.Create("Дренаж"),                    // 5
-            SoilType.Create("Грунт для кактусів"),        // 6
-            SoilType.Create("Кварцовий пісок"),           // 7
-            SoilType.Create("Дрібний гравій"),            // 8
-            SoilType.Create("Лісова земля (кисла)"),      // 9
-            SoilType.Create("Подрібнений мох сфагнум"),   // 10
-            SoilType.Create("Вермикуліт"),                // 11
-            SoilType.Create("Вугілля"),                   // 12
-            SoilType.Create("Верховий кислий торф"),      // 13
-            SoilType.Create("Перліт або чистий кварцовий пісок"), // 14
-            SoilType.Create("Соснова кора (дрібна)"),    // 15
-            SoilType.Create("Кокосові чіпси"),            // 16
-            SoilType.Create("Цеоліт/Лечуза Пон"),         // 17
-            SoilType.Create("Лава"),                      // 18
-            SoilType.Create("Пісок"),                     // 19
-            SoilType.Create("Листова земля"),             // 20
-            SoilType.Create("Торф"),                      // 21
-            SoilType.Create("Хвойний опад"),              // 22
-            SoilType.Create("Кокосовий субстрат"),        // 23
-            SoilType.Create("Різаний сфагнум"),           // 24
-            SoilType.Create("Біогумус"),                  // 25
-            SoilType.Create("Академама (обпалена глина)"), // 26
-            SoilType.Create("Гумус"),                     // 27
-            SoilType.Create("Річковий пісок"),            // 28
-            SoilType.Create("Універсальний садовий ґрунт"), // 29
-            SoilType.Create("Дренажний шар (на дно)"),    // 30
-            SoilType.Create("Садова земля"),              // 31
-            SoilType.Create("Кора"),                      // 32
+            SoilType.Create("Кокосовий торф", "#5C4033"),           // 1
+            SoilType.Create("Сфагнум", "#8F9779"),                   // 2
+            SoilType.Create("Перліт", "#F0F0F0"),                    // 3
+            SoilType.Create("Деревне вугілля", "#353839"),           // 4
+            SoilType.Create("Дренаж", "#70543E"),                    // 5
+            SoilType.Create("Грунт для кактусів", "#8C7A6B"),        // 6
+            SoilType.Create("Кварцовий пісок", "#E2D2B0"),           // 7
+            SoilType.Create("Дрібний гравій", "#A0A0A0"),            // 8
+            SoilType.Create("Лісова земля (кисла)", "#3B2F2F"),      // 9
+            SoilType.Create("Подрібнений мох сфагнум", "#7A8B64"),   // 10
+            SoilType.Create("Вермикуліт", "#CDBA96"),                // 11
+            SoilType.Create("Вугілля", "#2F2F2F"),                   // 12
+            SoilType.Create("Верховий кислий торф", "#4A3C31"),      // 13
+            SoilType.Create("Перліт або чистий кварцовий пісок", "#E8E5DF"), // 14
+            SoilType.Create("Соснова кора (дрібна)", "#5C3A21"),    // 15
+            SoilType.Create("Кокосові чіпси", "#6B4E31"),            // 16
+            SoilType.Create("Цеоліт/Лечуза Пон", "#D1C7B7"),         // 17
+            SoilType.Create("Лава", "#4D2D2D"),                      // 18
+            SoilType.Create("Пісок", "#C2B280"),                     // 19
+            SoilType.Create("Листова земля", "#4F3824"),             // 20
+            SoilType.Create("Торф", "#3A2E28"),                      // 21
+            SoilType.Create("Хвойний опад", "#6E4F32"),              // 22
+            SoilType.Create("Кокосовий субстрат", "#5E412F"),        // 23
+            SoilType.Create("Різаний сфагнум", "#82916F"),           // 24
+            SoilType.Create("Біогумус", "#2A2118"),                  // 25
+            SoilType.Create("Академама (обпалена глина)", "#B06D4D"), // 26
+            SoilType.Create("Гумус", "#2E251E"),                     // 27
+            SoilType.Create("Річковий пісок", "#B5A68B"),            // 28
+            SoilType.Create("Універсальний садовий ґрунт", "#3F3024"), // 29
+            SoilType.Create("Дренажний шар (на дно)", "#8B7765"),    // 30
+            SoilType.Create("Садова земля", "#463629"),              // 31
+            SoilType.Create("Кора", "#523828"),                      // 32
         };
 
         foreach (var result in soilTypes)

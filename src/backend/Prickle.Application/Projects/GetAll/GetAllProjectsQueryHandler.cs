@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Prickle.Application.Abstractions.Database;
 using Prickle.Domain.Projects;
 
@@ -53,24 +53,7 @@ internal sealed class GetAllProjectsQueryHandler
             .Take(pageSize)
             .ToListAsync(cancellationToken);
 
-        var items = projects.Select(p => new ProjectResponse
-        {
-            Id = p.Id,
-            UserId = p.UserId,
-            ContainerId = p.ContainerId,
-            Preview = p.Preview,
-            CreatedAt = p.CreatedAt,
-            IsPublished = p.IsPublished,
-            Items = p.Items.Select(i => new ProjectItemResponse
-            {
-                Id = i.Id,
-                ItemType = i.ItemType,
-                ItemId = i.ItemId,
-                PosX = i.PosX,
-                PosY = i.PosY,
-                PosZ = i.PosZ
-            }).ToList()
-        }).ToList();
+        var items = projects.Select(p => p.ToResponse()).ToList();
 
         return Result.Success(new ProjectsResponse
         {

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../services/useAuth';
 import { useApi } from '../services/useApi';
 import { ApiError } from '../services/api/apiError';
+import { ExportPdfButton } from '../components/ExportPdfButton';
 import './ProfilePage.css';
 
 function volumeToSize(volume) {
@@ -27,6 +28,7 @@ function formatCreatedAt(isoDate) {
 function ProfilePage() {
   const { isAuthenticated, user } = useAuth();
   const api = useApi();
+  const navigate = useNavigate();
 
   const [projects, setProjects] = useState(null);
   const [containersMap, setContainersMap] = useState(new Map());
@@ -45,13 +47,44 @@ function ProfilePage() {
       try {
         setLoading(true);
         setError(null);
-        const [projectsRes, containersRes] = await Promise.all([
-          api.projects.getAll({
-            userId: user.id,
+
+        async function fetchAllUserProjects() {
+          const pageSize = 25;
+          let page = 1;
+          let total = Number.POSITIVE_INFINITY;
+          const items = [];
+
+          while (items.length < total) {
+            const response = await api.projects.getAll({
+              userId: user.id,
+              page,
+              pageSize,
+              sortBy: '-createdat',
+            });
+
+            const batch = response?.items ?? [];
+            const responseTotal = Number.isFinite(response?.total) ? response.total : batch.length;
+
+            items.push(...batch);
+            total = responseTotal;
+
+            if (batch.length < pageSize) {
+              break;
+            }
+
+            page += 1;
+          }
+
+          return {
+            items,
             page: 1,
-            pageSize: 20,
-            sortBy: '-createdat',
-          }),
+            pageSize,
+            total: items.length,
+          };
+        }
+
+        const [projectsRes, containersRes] = await Promise.all([
+          fetchAllUserProjects(),
           api.containers.getAll({ pageSize: 25 }),
         ]);
 
@@ -109,6 +142,8 @@ function ProfilePage() {
         name: c?.name ?? 'Проєкт',
         size: c != null ? volumeToSize(c.volume) : 'Medium',
         updatedAt: formatCreatedAt(p.createdAt),
+        isPublished: p.isPublished,
+        sourceProject: p,
       };
     });
   })();
@@ -166,10 +201,25 @@ function ProfilePage() {
                 <div>
                   <h3>{item.name}</h3>
                   <p>Розмір: {item.size}</p>
+                  <p>Статус: {item.isPublished ? 'Опубліковано' : 'Чернетка'}</p>
                 </div>
                 <div className="card-meta">
                   <span>Оновлено</span>
                   <strong>{item.updatedAt}</strong>
+                  <div className="profile-card-actions">
+                    <button
+                      type="button"
+                      className="profile-action-btn"
+                      onClick={() => navigate('/constructor', { state: { fromProject: item.sourceProject } })}
+                    >
+                      Відкрити в конструкторі
+                    </button>
+                    <ExportPdfButton
+                      projectId={item.id}
+                      variant="secondary"
+                      className="profile-export-pdf"
+                    />
+                  </div>
                 </div>
               </article>
             ))

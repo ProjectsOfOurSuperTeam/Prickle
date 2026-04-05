@@ -1,4 +1,4 @@
-﻿using Prickle.Application.Soil.Types;
+using Prickle.Application.Soil.Types;
 using Prickle.Application.Soil.Types.Add;
 using Prickle.Infrastructure.Authentication;
 
@@ -6,7 +6,7 @@ namespace Prickle.Api.Endpoints.Soil.Types;
 
 internal sealed class Add : IEndpoint
 {
-    public sealed record AddSoilTypeRequest(string Name);
+    public sealed record AddSoilTypeRequest(string Name, string? HexColor);
     public const string EndpointName = "AddSoilType";
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
@@ -15,7 +15,7 @@ internal sealed class Add : IEndpoint
             IMediator mediator,
             CancellationToken cancellationToken) =>
         {
-            var result = await mediator.Send(new AddSoilTypeCommand(request.Name), cancellationToken);
+            var result = await mediator.Send(new AddSoilTypeCommand(request.Name, request.HexColor), cancellationToken);
 
             return result.Match(
                    (soilType) => Results.CreatedAtRoute(Get.EndpointName, new { id = soilType.Id }, soilType),

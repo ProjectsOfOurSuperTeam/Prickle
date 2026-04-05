@@ -1,0 +1,72 @@
+.export-pdf-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.export-pdf-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.export-pdf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  border: 1px solid rgba(44, 62, 80, 0.35);
+  background: #fff;
+  color: #2c3e50;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.export-pdf-btn:hover:not(:disabled) {
+  background: rgba(44, 62, 80, 0.06);
+  border-color: rgba(44, 62, 80, 0.5);
+}
+
+.export-pdf-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.export-pdf-btn--primary {
+  background: linear-gradient(135deg, #2d6a4f 0%, #40916c 100%);
+  color: #fff;
+  border: none;
+}
+
+.export-pdf-btn--primary:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.export-pdf-btn--ghost {
+  background: transparent;
+  border-style: dashed;
+}
+
+.export-pdf-btn--ghost:hover:not(:disabled) {
+  background: rgba(44, 62, 80, 0.05);
+}
+
+.export-pdf-btn--primary.export-pdf-btn--ghost {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px dashed rgba(255, 255, 255, 0.75);
+  color: #fff;
+}
+
+.export-pdf-btn--primary.export-pdf-btn--ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+  filter: none;
+}
+
+.export-pdf-error {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #c0392b;
+}

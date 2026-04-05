@@ -10,6 +10,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import LogoutPage from './pages/LogoutPage';
 import { useAuth } from './services/useAuth';
 import './App.css';
+import GalleryPage from "./pages/GalleryPage.jsx";
 
 function AdminRoute() {
   const { isAuthenticated, isAdmin } = useAuth();
@@ -29,7 +30,8 @@ function App() {
           <Route path="result" element={<ResultPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="logout" element={<LogoutPage />} />
-          <Route path="admin" element={<AdminRoute />} />
+          <Route path="admin" element={<AdminDashboard />} />
+          <Route path="gallery" element={<GalleryPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

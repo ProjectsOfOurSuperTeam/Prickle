@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Prickle.Infrastructure.Database;
 
 namespace Prickle.Api.Extensions;
@@ -12,7 +12,7 @@ public static class MigrationExtensions
         using var dbContext =
             scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         dbContext.Database.EnsureDeleted();
-        dbContext.Database.Migrate();
+        dbContext.Database.EnsureCreated();
         DbSeeder.SeedAll(dbContext);
     }
 }

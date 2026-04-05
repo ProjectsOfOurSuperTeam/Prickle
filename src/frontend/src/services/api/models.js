@@ -47,7 +47,7 @@
 // ----- Projects -----
 
 /** @typedef {{ id: string; projectId: string; itemType: number; itemId: string; posX: number; posY: number; posZ: number }} ProjectItemResponse */
-/** @typedef {{ id: string; userId: string; containerId: string; preview?: string | null; createdAt: string; isPublished: boolean; items: ProjectItemResponse[] }} ProjectResponse */
+/** @typedef {{ id: string; userId: string; containerId: string; preview?: string | null; generatedFlorariumImage?: string | null; generatedFlorariumImageMimeType?: string | null; florariumImageGenerationStatus: string; florariumImageGenerationError?: string | null; florariumImageRequestedAt?: string | null; florariumImageCompletedAt?: string | null; createdAt: string; isPublished: boolean; items: ProjectItemResponse[] }} ProjectResponse */
 /** @typedef {{ containerId: string; preview?: string | null }} AddProjectRequest */
 /** @typedef {{ preview?: string | null }} UpdateProjectRequest */
 /** @typedef {{ itemType: number; itemId: string; posX: number; posY: number; posZ: number }} AddProjectItemRequest */
