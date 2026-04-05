@@ -122,10 +122,14 @@ export class KeycloakService {
 
 function getRolesFromDecoded(decoded) {
   if (!decoded) return [];
+
   const realmRoles = decoded.realm_access?.roles;
-  if (Array.isArray(realmRoles)) return realmRoles;
-  const single = decoded.role;
-  if (typeof single === 'string') return [single];
+  if (Array.isArray(realmRoles) && realmRoles.length > 0) return realmRoles;
+
+  const role = decoded.role;
+  if (Array.isArray(role)) return role.filter((item) => typeof item === 'string');
+  if (typeof role === 'string') return [role];
+
   return [];
 }
 
