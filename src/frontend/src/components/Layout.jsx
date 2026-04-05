@@ -7,7 +7,7 @@ import './Layout.css';
 
 // Layout component with navigation
 function Layout() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isAdmin } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -39,6 +39,7 @@ function Layout() {
             <li><Link to="/gallery" onClick={closeMenu}>Галерея</Link></li>
             <li><Link to="/constructor" onClick={closeMenu}>Конструктор</Link></li>
             {isAuthenticated && <li><Link to="/profile" onClick={closeMenu}>Профіль</Link></li>}
+            {isAdmin && <li><Link to="/admin" onClick={closeMenu}>Адмін</Link></li>}
             {isAuthenticated && <li><Link to="/logout" className="nav-btn-login" onClick={closeMenu}>Вийти</Link></li>}
             {!isAuthenticated && <li><Link to="/auth" className="nav-btn-login" onClick={closeMenu}>Увійти</Link></li>}
           </ul>
