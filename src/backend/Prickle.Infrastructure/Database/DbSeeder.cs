@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Prickle.Domain.Containers;
 using Prickle.Domain.Decorations;
 using Prickle.Domain.Plants;
@@ -160,7 +160,7 @@ public static class DbSeeder
                 lightLevel: PlantLightLevel.VeryHigh,
                 waterNeed: PlantWaterNeed.VeryLow,
                 humidityLevel: PlantHumidityLevel.VeryLow,
-                itemMaxSize: ProjectItemSize.Medium, // 0.10
+                itemMaxSize: ProjectItemSize.Small,
                 soilFormulaId: desert),
 
             Plant.Create(
@@ -173,7 +173,7 @@ public static class DbSeeder
                 lightLevel: PlantLightLevel.Medium,
                 waterNeed: PlantWaterNeed.VeryLow,
                 humidityLevel: PlantHumidityLevel.Low,
-                itemMaxSize: ProjectItemSize.Medium, // 0.12
+                itemMaxSize: ProjectItemSize.Small,
                 soilFormulaId: desert),
 
             Plant.Create(
@@ -264,7 +264,7 @@ public static class DbSeeder
                 lightLevel: PlantLightLevel.High,
                 waterNeed: PlantWaterNeed.Low,
                 humidityLevel: PlantHumidityLevel.VeryLow,
-                itemMaxSize: ProjectItemSize.Medium, // 0.12
+                itemMaxSize: ProjectItemSize.Small,
                 soilFormulaId: desert),
 
             Plant.Create(
@@ -343,7 +343,7 @@ public static class DbSeeder
                 lightLevel: PlantLightLevel.VeryHigh,
                 waterNeed: PlantWaterNeed.VeryLow,
                 humidityLevel: PlantHumidityLevel.VeryLow,
-                itemMaxSize: ProjectItemSize.Medium, // 0.10
+                itemMaxSize: ProjectItemSize.Large,
                 soilFormulaId: arid),
 
             Plant.Create(
@@ -806,121 +806,137 @@ public static class DbSeeder
 
         var decorations = new[]
         {
-            // Каміння
+            // Каміння — gravel/slate: small accents; lava/jasper: medium rock masses
             Decoration.Create(
                 name: "Біла морська галька",
                 description: "Гладеньке біле каміння середнього розміру. Створює яскравий контраст із зеленим мохом.",
                 category: DecorationCategory.Stones,
                 imageUrl: "entities/decorations/white_sea_gravel.png",
-                imageIsometricUrl: "entities/decorations/white_sea_gravel_isometric.png"),
+                imageIsometricUrl: "entities/decorations/white_sea_gravel_isometric.png",
+                itemMaxSize: ProjectItemSize.Small),
 
             Decoration.Create(
                 name: "Чорна вулканічна лава",
                 description: "Пористе чорне каміння з грубою текстурою. Ідеально підходить для пустельних композицій.",
                 category: DecorationCategory.Stones,
                 imageUrl: "entities/decorations/volcanic_lava_rock.png",
-                imageIsometricUrl: "entities/decorations/volcanic_lava_rock_isometric.png"),
+                imageIsometricUrl: "entities/decorations/volcanic_lava_rock_isometric.png",
+                itemMaxSize: ProjectItemSize.Medium),
 
             Decoration.Create(
                 name: "Сланцева крихта",
                 description: "Пласкі шматочки сірого сланцю. Можна використовувати для створення імітації скель або східців.",
                 category: DecorationCategory.Stones,
                 imageUrl: "entities/decorations/slate_chips.png",
-                imageIsometricUrl: "entities/decorations/slate_chips_isometric.png"),
+                imageIsometricUrl: "entities/decorations/slate_chips_isometric.png",
+                itemMaxSize: ProjectItemSize.Small),
 
             Decoration.Create(
                 name: "Червона яшма",
                 description: "Природний мінерал насиченого теракотового кольору. Додає теплих відтінків флораріуму.",
                 category: DecorationCategory.Stones,
                 imageUrl: "entities/decorations/red_jasper.png",
-                imageIsometricUrl: "entities/decorations/red_jasper_isometric.png"),
+                imageIsometricUrl: "entities/decorations/red_jasper_isometric.png",
+                itemMaxSize: ProjectItemSize.Medium),
 
-            // Пісок
+            // Пісок — spread areas (medium footprint)
             Decoration.Create(
                 name: "Блакитний кварцовий пісок",
                 description: "Дрібнозернистий пісок насиченого кольору. Використовується для імітації води або річок.",
                 category: DecorationCategory.Sand,
                 imageUrl: "entities/decorations/blue_quartz_sand.png",
-                imageIsometricUrl: "entities/decorations/blue_quartz_sand_isometric.png"),
+                imageIsometricUrl: "entities/decorations/blue_quartz_sand_isometric.png",
+                itemMaxSize: ProjectItemSize.Medium),
 
             Decoration.Create(
                 name: "Золотистий пустельний пісок",
                 description: "Натуральний чистий пісок для створення реалістичних пустельних пейзажів.",
                 category: DecorationCategory.Sand,
                 imageUrl: "entities/decorations/desert_gold_sand.png",
-                imageIsometricUrl: "entities/decorations/desert_gold_sand_isometric.png"),
+                imageIsometricUrl: "entities/decorations/desert_gold_sand_isometric.png",
+                itemMaxSize: ProjectItemSize.Medium),
 
-            // Дерево
+            // Дерево — driftwood is a large focal piece; bark chips stay small
             Decoration.Create(
                 name: "Дубова коряга \"Дрифтвуд\"",
                 description: "Вивітрена водою деревина вигадливої форми. Нагадує старе дерево в мініатюрі.",
                 category: DecorationCategory.Wood,
                 imageUrl: "entities/decorations/oak_driftwood.png",
-                imageIsometricUrl: "entities/decorations/oak_driftwood_isometric.png"),
+                imageIsometricUrl: "entities/decorations/oak_driftwood_isometric.png",
+                itemMaxSize: ProjectItemSize.Large),
 
             Decoration.Create(
                 name: "Кора соснова",
                 description: "Натуральні шматочки кори для декорування поверхні ґрунту в лісових композиціях.",
                 category: DecorationCategory.Wood,
                 imageUrl: "entities/decorations/pine_bark.png",
-                imageIsometricUrl: "entities/decorations/pine_bark_isometric.png"),
+                imageIsometricUrl: "entities/decorations/pine_bark_isometric.png",
+                itemMaxSize: ProjectItemSize.Small),
 
-            // Фігурки
+            // Фігурки — tall/wide props vs. tiny accents
             Decoration.Create(
                 name: "Класичний маяк",
                 description: "Деталізована фігурка біло-червоного маяка. Центр композиції для морської тематики.",
                 category: DecorationCategory.Figurines,
                 imageUrl: "entities/decorations/classic_lighthouse.png",
-                imageIsometricUrl: "entities/decorations/classic_lighthouse_isometric.png"),
+                imageIsometricUrl: "entities/decorations/classic_lighthouse_isometric.png",
+                itemMaxSize: ProjectItemSize.Large),
 
             Decoration.Create(
                 name: "Японська брама Торії",
                 description: "Червона ритуальна брама. Додає східного колориту та спокою вашому садочку.",
                 category: DecorationCategory.Figurines,
                 imageUrl: "entities/decorations/torii_gate.png",
-                imageIsometricUrl: "entities/decorations/torii_gate_isometric.png"),
+                imageIsometricUrl: "entities/decorations/torii_gate_isometric.png",
+                itemMaxSize: ProjectItemSize.Large),
 
             Decoration.Create(
                 name: "Кам'яний місток",
                 description: "Маленький вигнутий місток, що ідеально лягає над \"річкою\" з піску.",
                 category: DecorationCategory.Figurines,
                 imageUrl: "entities/decorations/stone_bridge.png",
-                imageIsometricUrl: "entities/decorations/stone_bridge_isometric.png"),
+                imageIsometricUrl: "entities/decorations/stone_bridge_isometric.png",
+                itemMaxSize: ProjectItemSize.Small),
 
             Decoration.Create(
                 name: "Будиночок хобіта",
                 description: "Крихітні круглі двері в \"пагорбі\", прикрашені імітацією ліан.",
                 category: DecorationCategory.Figurines,
                 imageUrl: "entities/decorations/hobbit_house.png",
-                imageIsometricUrl: "entities/decorations/hobbit_house_isometric.png"),
+                imageIsometricUrl: "entities/decorations/hobbit_house_isometric.png",
+                itemMaxSize: ProjectItemSize.Medium),
 
             Decoration.Create(
                 name: "Мініатюрна лава",
                 description: "Дерев'яна садова лавка для створення затишного паркового куточка.",
                 category: DecorationCategory.Figurines,
                 imageUrl: "entities/decorations/mini_bench.png",
-                imageIsometricUrl: "entities/decorations/mini_bench_isometric.png"),
+                imageIsometricUrl: "entities/decorations/mini_bench_isometric.png",
+                itemMaxSize: ProjectItemSize.Small),
 
             Decoration.Create(
                 name: "Набір лісових грибів",
                 description: "Три червоних мухомори різного розміру на спільній основі.",
                 category: DecorationCategory.Figurines,
                 imageUrl: "entities/decorations/forest_mushrooms.png",
-                imageIsometricUrl: "entities/decorations/forest_mushrooms_isometric.png"),
+                imageIsometricUrl: "entities/decorations/forest_mushrooms_isometric.png",
+                itemMaxSize: ProjectItemSize.Small),
 
             Decoration.Create(
                 name: "Спляче лисеня",
                 description: "Маленька помаранчева фігурка лисиці, що згорнулася клубочком.",
                 category: DecorationCategory.Figurines,
                 imageUrl: "entities/decorations/sleeping_fox.png",
-                imageIsometricUrl: "entities/decorations/sleeping_fox_isometric.png"),
+                imageIsometricUrl: "entities/decorations/sleeping_fox_isometric.png",
+                itemMaxSize: ProjectItemSize.Small),
 
             Decoration.Create(
                 name: "Керамічна панда",
                 description: "Маленька панда, що жує бамбук. Добре виглядає поруч із сукулентами.",
                 category: DecorationCategory.Figurines,
                 imageUrl: "entities/decorations/panda_figure.png",
-                imageIsometricUrl: "entities/decorations/panda_figure_isometric.png"),
+                imageIsometricUrl: "entities/decorations/panda_figure_isometric.png",
+                itemMaxSize: ProjectItemSize.Small),
 
             // Природа
             Decoration.Create(
@@ -928,29 +944,33 @@ public static class DbSeeder
                 description: "Натуральна мушля невеликого розміру для акцентів у відкритих формах.",
                 category: DecorationCategory.Nature,
                 imageUrl: "entities/decorations/sea_shell.png",
-                imageIsometricUrl: "entities/decorations/sea_shell_isometric.png"),
+                imageIsometricUrl: "entities/decorations/sea_shell_isometric.png",
+                itemMaxSize: ProjectItemSize.Small),
 
-            // Мінерали
+            // Мінерали — clusters medium; tall crystal large; chips small
             Decoration.Create(
                 name: "Друза аметисту",
                 description: "Натуральний фіолетовий кристал. Додає магічного вигляду та блиску під світлом.",
                 category: DecorationCategory.Minerals,
                 imageUrl: "entities/decorations/amethyst_cluster.png",
-                imageIsometricUrl: "entities/decorations/amethyst_cluster_isometric.png"),
+                imageIsometricUrl: "entities/decorations/amethyst_cluster_isometric.png",
+                itemMaxSize: ProjectItemSize.Medium),
 
             Decoration.Create(
                 name: "Прозорий гірський кришталь",
                 description: "Вертикальний гострий кристал, що імітує крижану скелю.",
                 category: DecorationCategory.Minerals,
                 imageUrl: "entities/decorations/quartz_crystal.png",
-                imageIsometricUrl: "entities/decorations/quartz_crystal_isometric.png"),
+                imageIsometricUrl: "entities/decorations/quartz_crystal_isometric.png",
+                itemMaxSize: ProjectItemSize.Large),
 
             Decoration.Create(
                 name: "Бурштинова крихта",
                 description: "Дрібні прозорі камінці медового кольору для розсипання по ґрунту.",
                 category: DecorationCategory.Minerals,
                 imageUrl: "entities/decorations/amber_chips.png",
-                imageIsometricUrl: "entities/decorations/amber_chips_isometric.png"),
+                imageIsometricUrl: "entities/decorations/amber_chips_isometric.png",
+                itemMaxSize: ProjectItemSize.Small),
         };
 
         foreach (var result in decorations)

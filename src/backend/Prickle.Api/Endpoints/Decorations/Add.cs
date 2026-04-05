@@ -1,6 +1,7 @@
 ﻿using Prickle.Application.Decorations;
 using Prickle.Application.Decorations.Add;
 using Prickle.Domain.Decorations;
+using Prickle.Domain.Projects;
 using Prickle.Infrastructure.Authentication;
 using SharedKernel;
 
@@ -15,6 +16,7 @@ internal sealed class Add : IEndpoint
         public required int Category { get; init; }
         public string? ImageUrl { get; init; }
         public string? ImageIsometricUrl { get; init; }
+        public required int ItemMaxSize { get; init; }
     }
     public const string EndpointName = "AddDecoration";
 
@@ -38,13 +40,25 @@ internal sealed class Add : IEndpoint
                     );
             }
 
+            if (!ProjectItemSize.TryFromValue(request.ItemMaxSize, out var itemMaxSize))
+            {
+                return await ValueTask.FromResult(
+                    CustomResults.Problem(
+                        Result.Failure(
+                            DecorationErrors.InvalidItemSize(request.ItemMaxSize)
+                            )
+                        )
+                    );
+            }
+
             var result = await mediator.Send(
                 new AddDecorationCommand(
                     request.Name,
                     request.Description,
                     category,
                     request.ImageUrl,
-                    request.ImageIsometricUrl
+                    request.ImageIsometricUrl,
+                    itemMaxSize
                 ),
                 cancellationToken);
 

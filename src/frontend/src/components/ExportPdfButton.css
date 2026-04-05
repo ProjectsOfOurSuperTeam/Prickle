@@ -11,7 +11,8 @@
   gap: 0.5rem;
 }
 
-.export-pdf-btn {
+/* Element + class beats global `button` / `button:hover` from index.css */
+button.export-pdf-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -22,47 +23,61 @@
   background: #fff;
   color: #2c3e50;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease, filter 0.15s ease;
+  transform: none;
+  box-shadow: none;
 }
 
-.export-pdf-btn:hover:not(:disabled) {
+button.export-pdf-btn:hover:not(:disabled) {
   background: rgba(44, 62, 80, 0.06);
   border-color: rgba(44, 62, 80, 0.5);
+  transform: none;
+  box-shadow: none;
 }
 
-.export-pdf-btn:disabled {
+button.export-pdf-btn:disabled {
   opacity: 0.65;
   cursor: not-allowed;
 }
 
-.export-pdf-btn--primary {
+button.export-pdf-btn--primary {
   background: linear-gradient(135deg, #2d6a4f 0%, #40916c 100%);
   color: #fff;
   border: none;
 }
 
-.export-pdf-btn--primary:hover:not(:disabled) {
-  filter: brightness(1.05);
+button.export-pdf-btn--primary:hover:not(:disabled) {
+  filter: brightness(1.07);
+  background: linear-gradient(135deg, #256341 0%, #3a8562 100%);
+  transform: none;
+  box-shadow: 0 2px 10px rgba(27, 67, 50, 0.28);
 }
 
-.export-pdf-btn--ghost {
+button.export-pdf-btn--ghost {
   background: transparent;
   border-style: dashed;
 }
 
-.export-pdf-btn--ghost:hover:not(:disabled) {
+button.export-pdf-btn--ghost:hover:not(:disabled) {
   background: rgba(44, 62, 80, 0.05);
+  transform: none;
+  box-shadow: none;
 }
 
-.export-pdf-btn--primary.export-pdf-btn--ghost {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px dashed rgba(255, 255, 255, 0.75);
-  color: #fff;
+/* “Переглянути PDF” + primary: light surfaces (result page) — readable sage outline, not white-on-white */
+button.export-pdf-btn--primary.export-pdf-btn--ghost {
+  background: rgba(45, 106, 79, 0.1);
+  border: 1px dashed rgba(45, 106, 79, 0.55);
+  color: #1b4332;
 }
 
-.export-pdf-btn--primary.export-pdf-btn--ghost:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.2);
+button.export-pdf-btn--primary.export-pdf-btn--ghost:hover:not(:disabled) {
+  background: rgba(45, 106, 79, 0.18);
+  border-color: rgba(45, 106, 79, 0.75);
+  color: #0f291f;
   filter: none;
+  transform: none;
+  box-shadow: none;
 }
 
 .export-pdf-error {

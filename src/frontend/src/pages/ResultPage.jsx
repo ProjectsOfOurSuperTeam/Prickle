@@ -17,6 +17,14 @@ function ResultPage() {
 
   const canvasSnapshot = location.state?.canvasSnapshot ?? null;
 
+  function handleBackToConstructor() {
+    if (projectId) {
+      navigate('/constructor', { state: { resumeProjectId: projectId } });
+    } else {
+      navigate('/constructor');
+    }
+  }
+
   const [snapshotPreviewUrl, setSnapshotPreviewUrl] = useState(null);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
@@ -99,7 +107,7 @@ function ResultPage() {
         </header>
         <div className="result-actions">
           <ExportPdfButton projectId={projectId} variant="primary" />
-          <button type="button" className="result-btn" onClick={() => navigate('/constructor')}>
+          <button type="button" className="result-btn" onClick={handleBackToConstructor}>
             Повернутися до конструктора
           </button>
         </div>
@@ -149,7 +157,7 @@ function ResultPage() {
         <button
           type="button"
           className="result-btn"
-          onClick={() => navigate('/constructor')}
+          onClick={handleBackToConstructor}
         >
           Повернутися до конструктора
         </button>

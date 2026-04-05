@@ -25,9 +25,9 @@
 
 // ----- Decorations -----
 
-/** @typedef {{ id: string; name: string; description?: string | null; category: number; imageUrl?: string | null; imageIsometricUrl?: string | null }} DecorationResponse */
-/** @typedef {{ name: string; description?: string | null; category: number; imageUrl?: string | null; imageIsometricUrl?: string | null }} AddDecorationRequest */
-/** @typedef {{ name: string; description?: string | null; category: number; imageUrl?: string | null; imageIsometricUrl?: string | null }} UpdateDecorationRequest */
+/** @typedef {{ id: string; name: string; description?: string | null; category: number; imageUrl?: string | null; imageIsometricUrl?: string | null; itemMaxSize: number | string }} DecorationResponse */
+/** @typedef {{ name: string; description?: string | null; category: number; imageUrl?: string | null; imageIsometricUrl?: string | null; itemMaxSize: number }} AddDecorationRequest */
+/** @typedef {{ name: string; description?: string | null; category: number; imageUrl?: string | null; imageIsometricUrl?: string | null; itemMaxSize: number }} UpdateDecorationRequest */
 /** @typedef {{ items: IdNamePair[] }} DecorationCategoriesResponse */
 
 // ----- Soil types -----

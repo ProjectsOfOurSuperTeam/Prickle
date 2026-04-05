@@ -1,4 +1,5 @@
 ﻿using Prickle.Domain.Decorations;
+using Prickle.Domain.Projects;
 
 namespace Prickle.Application.Decorations.Update;
 
@@ -8,4 +9,5 @@ public sealed record UpdateDecorationCommand(
     string? Description,
     DecorationCategory Category,
     string? ImageUrl,
-    string? ImageIsometricUrl) : ICommand<Result<DecorationResponse>>;
+    string? ImageIsometricUrl,
+    ProjectItemSize ItemMaxSize) : ICommand<Result<DecorationResponse>>;

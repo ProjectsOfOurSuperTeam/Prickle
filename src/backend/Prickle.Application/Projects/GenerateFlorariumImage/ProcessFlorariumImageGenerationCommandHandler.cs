@@ -150,7 +150,7 @@ internal sealed class ProcessFlorariumImageGenerationCommandHandler(
         var decorationsList = decorationItems
             .Select(di => decorations.TryGetValue(di.ItemId, out var dec) ? dec : null)
             .Where(d => d is not null)
-            .Select(d => $"- {d!.Name}: {d.Description ?? "N/A"}")
+            .Select(d => $"- {d!.Name} (Size scale: {d.ItemMaxSize.Name}). {d.Description ?? "N/A"}")
             .ToList();
 
         var soilList = new List<string>();

@@ -21,7 +21,8 @@ internal sealed class GetDecorationQueryHandler(IApplicationDbContext dbContext)
             Description = decoration.Description,
             Category = decoration.Category,
             ImageUrl = decoration.ImageUrl,
-            ImageIsometricUrl = decoration.ImageIsometricUrl
+            ImageIsometricUrl = decoration.ImageIsometricUrl,
+            ItemMaxSize = decoration.ItemMaxSize
         };
         return Result.Success(response);
     }
