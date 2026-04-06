@@ -26,5 +26,6 @@ export function createKeycloakConfig() {
     tokenEndpoint: `${baseUrl}/realms/${REALM}/protocol/openid-connect/token`,
     logoutEndpoint: `${baseUrl}/realms/${REALM}/protocol/openid-connect/logout`,
     userInfoEndpoint: `${baseUrl}/realms/${REALM}/protocol/openid-connect/userinfo`,
+    registrationEndpoint: '/api/auth/register',
   };
 }

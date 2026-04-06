@@ -9,7 +9,9 @@ var postgres = builder.AddPostgres("postgres")
 
 var prickleDb = postgres.AddDatabase("prickleDb");
 
-var keycloak = builder.AddKeycloak("keycloak", 8080)
+var keycloakAdminPassword = builder.AddParameter("KeycloakAdminPassword", secret: true);
+
+var keycloak = builder.AddKeycloak("keycloak", 8080, adminPassword: keycloakAdminPassword)
     .WithDataVolume()
     .WithRealmImport("./realms");
 
@@ -22,6 +24,8 @@ var api = builder.AddProject<Projects.Prickle_Api>("api")
         e.Url += "/scalar";
     })
     .WithEnvironment("GEMINI_API_KEY", geminiApiKey)
+    .WithEnvironment("Keycloak__AdminUsername", "admin")
+    .WithEnvironment("Keycloak__AdminPassword", keycloakAdminPassword)
     .WithReference(keycloak).WaitFor(keycloak)
     .WithReference(prickleDb).WaitFor(prickleDb);
 

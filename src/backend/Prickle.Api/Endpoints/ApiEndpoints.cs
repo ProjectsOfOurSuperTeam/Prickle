@@ -3,6 +3,13 @@ namespace Prickle.Api.Endpoints;
 public static class ApiEndpoints
 {
     public const string ApiBase = "/api";
+
+    public static class Auth
+    {
+        private const string Base = ApiBase + "/auth";
+        public const string Register = Base + "/register";
+    }
+
     public static class Soil
     {
         private const string Base = ApiBase + "/soil";

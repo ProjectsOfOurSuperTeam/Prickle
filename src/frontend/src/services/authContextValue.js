@@ -5,6 +5,7 @@ export const authContextValue = {
   error: '',
   getAccessToken: () => null,
   login: async () => {},
+  register: async () => {},
   logout: async () => {},
   clearError: () => {},
 };

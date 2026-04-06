@@ -21,6 +21,7 @@ public static class DependencyInjection
         services.AddEndpointsApiExplorer();
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();
+        services.AddHttpClient();
         services.AddOpenApi(options =>
         {
             options.AddDocumentTransformer<KeycloakSecuritySchemeTransformer>();
