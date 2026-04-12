@@ -26,4 +26,9 @@ public static class DecorationErrors
         "Decoration.InvalidCategory",
         $"Invalid decoration category '{category}'"
     );
+
+    public static Error InvalidItemSize(int itemSize) => Error.Problem(
+        "Decoration.InvalidItemSize",
+        $"Invalid decoration item size '{itemSize}'"
+    );
 }

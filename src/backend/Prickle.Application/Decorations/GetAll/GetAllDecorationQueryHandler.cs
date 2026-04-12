@@ -49,7 +49,8 @@ internal sealed class GetAllDecorationQueryHandler
                 Description = d.Description,
                 Category = d.Category,
                 ImageUrl = d.ImageUrl,
-                ImageIsometricUrl = d.ImageIsometricUrl
+                ImageIsometricUrl = d.ImageIsometricUrl,
+                ItemMaxSize = d.ItemMaxSize
             })
             .ToListAsync(cancellationToken);
 

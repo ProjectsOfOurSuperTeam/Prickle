@@ -29,6 +29,9 @@ internal sealed class DecorationEntityConfiguration : IEntityTypeConfiguration<D
         builder.Property(x => x.Category)
             .IsRequired();
 
+        builder.Property(x => x.ItemMaxSize)
+            .IsRequired();
+
         builder.HasIndex(x => x.Name)
             .IsUnique();
 

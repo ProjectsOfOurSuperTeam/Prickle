@@ -16,7 +16,7 @@ const emptyPlantForm = () => ({
   name: '', nameLatin: '', description: '', category: 0, lightLevel: 0, waterNeed: 0,
   humidityLevel: 0, itemMaxSize: 0, soilFormulaId: '',
 });
-const emptyDecorationForm = () => ({ name: '', description: '', category: 0 });
+const emptyDecorationForm = () => ({ name: '', description: '', category: 0, itemMaxSize: 0 });
 const emptySoilTypeForm = () => ({ name: '' });
 const emptySoilFormulaForm = () => ({ name: '', formulaItems: [{ soilTypeId: 0, percentage: 100, order: 0 }] });
 
@@ -238,6 +238,7 @@ function AdminDashboard() {
         name: decorationForm.name.trim(),
         description: decorationForm.description?.trim() || null,
         category: Number(decorationForm.category),
+        itemMaxSize: Number(decorationForm.itemMaxSize),
       });
       setDecorationForm(emptyDecorationForm());
       setDecorationAddOpen(false);
@@ -253,6 +254,7 @@ function AdminDashboard() {
         name: decorationForm.name.trim(),
         description: decorationForm.description?.trim() || null,
         category: Number(decorationForm.category),
+        itemMaxSize: Number(decorationForm.itemMaxSize),
       });
       setDecorationEditId(null);
       setDecorationForm(emptyDecorationForm());
@@ -376,6 +378,15 @@ function AdminDashboard() {
         name: d.name ?? '',
         description: d.description ?? '',
         category: d.category ?? 0,
+        itemMaxSize: (() => {
+          const v = d.itemMaxSize;
+          if (v === undefined || v === null) return 0;
+          if (typeof v === 'number' && Number.isFinite(v)) return v;
+          const byName = itemSizes.find((s) => s.name === v);
+          if (byName) return byName.id;
+          const n = Number(v);
+          return Number.isFinite(n) ? n : 0;
+        })(),
       });
       setDecorationEditId(id);
       setDecorationAddOpen(false);
@@ -669,7 +680,11 @@ function AdminDashboard() {
               onClick={() => {
                 setDecorationAddOpen(true);
                 setDecorationEditId(null);
-                setDecorationForm({ ...emptyDecorationForm(), category: decorationCategories[0]?.id ?? 0 });
+                setDecorationForm({
+                  ...emptyDecorationForm(),
+                  category: decorationCategories[0]?.id ?? 0,
+                  itemMaxSize: itemSizes[0]?.id ?? 0,
+                });
               }}
             >
               Додати
@@ -681,6 +696,7 @@ function AdminDashboard() {
                 <tr>
                   <th>Назва</th>
                   <th>Категорія</th>
+                  <th>Розмір</th>
                   <th>Дії</th>
                 </tr>
               </thead>
@@ -689,6 +705,7 @@ function AdminDashboard() {
                   <tr key={d.id}>
                     <td>{d.name}</td>
                     <td>{findName(decorationCategories, d.category)}</td>
+                    <td>{itemSizes.find((s) => s.id === d.itemMaxSize || s.name === d.itemMaxSize)?.name ?? d.itemMaxSize}</td>
                     <td>
                       <div className="admin-actions">
                         <button type="button" className="admin-btn admin-btn-ghost" onClick={() => openDecorationEdit(d.id)}>Редагувати</button>
@@ -726,6 +743,14 @@ function AdminDashboard() {
                   <select value={decorationForm.category} onChange={(e) => setDecorationForm((f) => ({ ...f, category: e.target.value }))} required>
                     {decorationCategories.map((cat) => (
                       <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label>Макс. розмір на сітці</label>
+                  <select value={decorationForm.itemMaxSize} onChange={(e) => setDecorationForm((f) => ({ ...f, itemMaxSize: e.target.value }))} required>
+                    {itemSizes.map((s) => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
                     ))}
                   </select>
                 </div>

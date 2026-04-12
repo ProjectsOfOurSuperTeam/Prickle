@@ -77,10 +77,31 @@ function getSoilGradientByKey(key) {
   };
 }
 
+/**
+ * Maps API ProjectItemSize (numeric enum value or name string) to isometric grid span.
+ * Domain: Small=1x1, Medium=2x2, Large=3x3, ExtraLarge=4x4.
+ */
+function projectItemSizeToFootprint(itemMaxSize) {
+  if (typeof itemMaxSize === 'number' && Number.isFinite(itemMaxSize)) {
+    if (itemMaxSize >= 0 && itemMaxSize <= 3) return itemMaxSize + 1;
+  }
+  if (typeof itemMaxSize === 'string') {
+    const trimmed = itemMaxSize.trim();
+    const byName = {
+      Small: 1,
+      Medium: 2,
+      Large: 3,
+      ExtraLarge: 4,
+    };
+    if (byName[trimmed] !== undefined) return byName[trimmed];
+    const n = Number(trimmed);
+    if (Number.isFinite(n) && n >= 0 && n <= 3) return n + 1;
+  }
+  return 2;
+}
+
 function estimatePlantFootprint(plant) {
-  if (plant.itemMaxSize <= 10) return 1;
-  if (plant.itemMaxSize <= 25) return 2;
-  return 3;
+  return projectItemSizeToFootprint(plant.itemMaxSize);
 }
 
 function estimateContainerFootprint(container) {
@@ -229,8 +250,9 @@ function ConstructorPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const fromProject = location.state?.fromProject ?? null;
+  const resumeProjectId = location.state?.resumeProjectId ?? null;
   /** false = landing (new sketch vs gallery); true = full editor. Skip when restoring from gallery. */
-  const [editorOpen, setEditorOpen] = useState(() => Boolean(fromProject));
+  const [editorOpen, setEditorOpen] = useState(() => Boolean(fromProject || resumeProjectId));
   /** Avoid re-running gallery restore when catalog arrays get new references after user edits. */
   const restoredFromProjectIdRef = useRef(null);
   const boardRef = useRef(null);
@@ -255,7 +277,7 @@ function ConstructorPage() {
   const [placedItems, setPlacedItems] = useState([]);
   const [dragHoverCell, setDragHoverCell] = useState(null);
   const [notice, setNotice] = useState('');
-  const [loading, setLoading] = useState(() => (isAuthenticated ? Boolean(fromProject) : false));
+  const [loading, setLoading] = useState(() => (isAuthenticated ? Boolean(fromProject || resumeProjectId) : false));
   const [error, setError] = useState('');
   const [isPanning, setIsPanning] = useState(false);
   /** Placed item selected by click — delete button shows only for this instance. */
@@ -272,8 +294,17 @@ function ConstructorPage() {
   const [publishing, setPublishing] = useState(false);
   const [preparingResult, setPreparingResult] = useState(false);
   const [boardZoom, setBoardZoom] = useState(1);
+  /** Loaded when returning from /result via state.resumeProjectId */
+  const [resumeProject, setResumeProject] = useState(null);
+  const [noticeDismissed, setNoticeDismissed] = useState(false);
+  const [galleryHintDismissed, setGalleryHintDismissed] = useState(false);
+  const [compatPanelExpanded, setCompatPanelExpanded] = useState(true);
   const historyRef = useRef({ past: [], future: [] });
   const [, setHistoryTick] = useState(0);
+
+  useEffect(() => {
+    setNoticeDismissed(false);
+  }, [notice]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -290,10 +321,34 @@ function ConstructorPage() {
     };
   }, [isAuthenticated]);
 
-  // Open editor when navigating here with a project (e.g. «Відтворити» from gallery).
+  // Open editor when navigating here with a project (e.g. «Відтворити» from gallery or resume from result page).
   useEffect(() => {
-    if (fromProject) setEditorOpen(true);
-  }, [fromProject]);
+    if (fromProject || resumeProjectId) setEditorOpen(true);
+  }, [fromProject, resumeProjectId]);
+
+  useEffect(() => {
+    if (!resumeProjectId || !isAuthenticated) {
+      setResumeProject(null);
+      return undefined;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const project = await api.projects.get(resumeProjectId);
+        if (!cancelled) setResumeProject(project);
+      } catch {
+        if (!cancelled) {
+          setResumeProject(null);
+          setNotice('Не вдалося завантажити проєкт для редагування.');
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [resumeProjectId, isAuthenticated, api.projects]);
+
+  const projectForRestore = fromProject ?? resumeProject;
 
   useEffect(() => {
     function onEscape(event) {
@@ -370,17 +425,17 @@ function ConstructorPage() {
     };
   }, [api, isAuthenticated, editorOpen]);
 
-  // Restore project from gallery "Відтворити" click
+  // Restore project from gallery "Відтворити" or /result "Повернутися до конструктора"
   useEffect(() => {
-    if (loading || !fromProject?.id) {
-      if (!fromProject) restoredFromProjectIdRef.current = null;
+    if (loading || !projectForRestore?.id) {
+      if (!projectForRestore) restoredFromProjectIdRef.current = null;
       return;
     }
 
-    const projectKey = String(fromProject.id);
+    const projectKey = String(projectForRestore.id);
     if (restoredFromProjectIdRef.current === projectKey) return;
 
-    const projectItems = fromProject.items ?? [];
+    const projectItems = projectForRestore.items ?? [];
     if (projectItems.length === 0) return;
 
     const itemTypeOf = (pi) => pi.itemType ?? pi.ItemType;
@@ -393,7 +448,7 @@ function ConstructorPage() {
     if (hasSoilItem && soilFormulas.length === 0) {
       return;
     }
-    if (fromProject.containerId && containers.length === 0) {
+    if (projectForRestore.containerId && containers.length === 0) {
       return;
     }
 
@@ -403,7 +458,9 @@ function ConstructorPage() {
       if (!resolved) return [];
 
       const { kind, entity } = resolved;
-      const footprint = kind === 'plant' ? estimatePlantFootprint(entity) : 1;
+      const footprint = kind === 'plant'
+        ? estimatePlantFootprint(entity)
+        : projectItemSizeToFootprint(entity.itemMaxSize);
       const r = readProjectItemCoord(pi, 'x');
       const c = readProjectItemCoord(pi, 'y');
       const itemId = pi.itemId ?? pi.ItemId;
@@ -426,8 +483,8 @@ function ConstructorPage() {
     const neededSize = GRID_PRESETS.find((s) => s > maxExtent) ?? GRID_PRESETS[GRID_PRESETS.length - 1];
     setGridSize(neededSize);
 
-    if (fromProject.containerId) {
-      const restoredContainer = containers.find((c) => String(c.id) === String(fromProject.containerId));
+    if (projectForRestore.containerId) {
+      const restoredContainer = containers.find((c) => String(c.id) === String(projectForRestore.containerId));
       if (restoredContainer) {
         setSelectedContainer({
           id: `container-${restoredContainer.id}`,
@@ -469,8 +526,8 @@ function ConstructorPage() {
 
     setPlacedItems(restored);
     restoredFromProjectIdRef.current = projectKey;
-    setSavedProjectId(String(fromProject.id));
-    setSavedProjectPublished(Boolean(fromProject.isPublished));
+    setSavedProjectId(String(projectForRestore.id));
+    setSavedProjectPublished(Boolean(projectForRestore.isPublished));
 
     const accounted = restored.length + (soilResolved ? 1 : 0);
     const skipped = projectItems.length - accounted;
@@ -481,7 +538,7 @@ function ConstructorPage() {
     );
   }, [
     loading,
-    fromProject,
+    projectForRestore,
     plants,
     decorations,
     containers,
@@ -539,7 +596,7 @@ function ConstructorPage() {
         subtitle: `Категорія #${item.category}`,
         details: item.description || 'Декоративний елемент',
         searchText: `${item.name || ''} ${item.description || ''}`,
-        footprint: 1,
+        footprint: projectItemSizeToFootprint(item.itemMaxSize),
         image: resolveImageUrl(item.imageIsometricUrl || item.imageUrl),
         layer: resolveLayer('decoration'),
       })),
@@ -2002,20 +2059,44 @@ function ConstructorPage() {
           </div>
         </header>
 
-        {notice && <p className="constructor-notice">{notice}</p>}
+        {notice && !noticeDismissed && (
+          <div className="constructor-dismissible constructor-dismissible--notice">
+            <p className="constructor-dismissible__text constructor-notice">{notice}</p>
+            <button
+              type="button"
+              className="constructor-dismissible__close"
+              onClick={() => setNoticeDismissed(true)}
+              aria-label="Закрити повідомлення"
+            >
+              ×
+            </button>
+          </div>
+        )}
 
-        <p className="constructor-draft-hint">
-          Галерея показує лише опубліковані роботи. Усі збережені проєкти (чернетки) — у{' '}
-          <Link to="/profile">профілі</Link>
-          {savedProjectId ? (
-            <>
-              {' '}
-              · поточний проєкт:{' '}
-              <strong>{savedProjectPublished ? 'у галереї' : 'чернетка'}</strong>
-            </>
-          ) : null}
-          .
-        </p>
+        {!galleryHintDismissed && (
+          <div className="constructor-dismissible constructor-dismissible--hint">
+            <p className="constructor-dismissible__text constructor-draft-hint">
+              Галерея показує лише опубліковані роботи. Усі збережені проєкти (чернетки) — у{' '}
+              <Link to="/profile">профілі</Link>
+              {savedProjectId ? (
+                <>
+                  {' '}
+                  · поточний проєкт:{' '}
+                  <strong>{savedProjectPublished ? 'у галереї' : 'чернетка'}</strong>
+                </>
+              ) : null}
+              .
+            </p>
+            <button
+              type="button"
+              className="constructor-dismissible__close"
+              onClick={() => setGalleryHintDismissed(true)}
+              aria-label="Закрити підказку про галерею"
+            >
+              ×
+            </button>
+          </div>
+        )}
 
         {soilMixStepBlocked && placedPlantItems.length >= 2 && (
           <div className="constructor-plant-mix-warning" role="alert">
@@ -2045,44 +2126,60 @@ function ConstructorPage() {
           && (floraCompatibility.shouldPrompt || floraCompatibility.pairingVerdictLevel === 'ok')
           && floraCompatibility.userSummary?.title && (
           <div className="constructor-compat-banner" role="status">
-            <strong className="constructor-compat-banner-title">Сумісність рослин і ґрунту</strong>
-            <p
-              className={`constructor-compat-verdict constructor-compat-verdict--${floraCompatibility.userSummary.level}`}
-            >
-              {floraCompatibility.userSummary.title}
-            </p>
-            {floraCompatibility.userSummary.problems?.length ? (
-              <ul className="constructor-compat-user-problems" aria-label="У чому справа">
-                {floraCompatibility.userSummary.problems.map((line, idx) => (
-                  <li key={`compat-p-${idx}-${line.slice(0, 24)}`}>{line}</li>
-                ))}
-              </ul>
-            ) : null}
-            {floraCompatibility.soilCatalogLinks?.length ? (
-              <div className="constructor-compat-soil-links" aria-label="Перейти до формул у каталозі">
-                <span className="constructor-compat-soil-links-label">У каталозі:</span>
-                {floraCompatibility.soilCatalogLinks.map((link) => (
-                  <button
-                    key={link.entityId}
-                    type="button"
-                    className="constructor-compat-soil-link"
-                    onClick={() => focusCatalogSoilFormula(link.entityId, link.label)}
-                  >
-                    {link.label}
-                  </button>
-                ))}
+            <div className="constructor-compat-banner-head">
+              <strong className="constructor-compat-banner-title">Сумісність рослин і ґрунту</strong>
+              <button
+                type="button"
+                className="constructor-compat-banner-toggle"
+                onClick={() => setCompatPanelExpanded((v) => !v)}
+                aria-expanded={compatPanelExpanded}
+                aria-controls="constructor-compat-panel-body"
+                title={compatPanelExpanded ? 'Згорнути' : 'Розгорнути'}
+              >
+                {compatPanelExpanded ? '−' : '+'}
+              </button>
+            </div>
+            {compatPanelExpanded && (
+              <div id="constructor-compat-panel-body" className="constructor-compat-banner-body">
+                <p
+                  className={`constructor-compat-verdict constructor-compat-verdict--${floraCompatibility.userSummary.level}`}
+                >
+                  {floraCompatibility.userSummary.title}
+                </p>
+                {floraCompatibility.userSummary.problems?.length ? (
+                  <ul className="constructor-compat-user-problems" aria-label="У чому справа">
+                    {floraCompatibility.userSummary.problems.map((line, idx) => (
+                      <li key={`compat-p-${idx}-${line.slice(0, 24)}`}>{line}</li>
+                    ))}
+                  </ul>
+                ) : null}
+                {floraCompatibility.soilCatalogLinks?.length ? (
+                  <div className="constructor-compat-soil-links" aria-label="Перейти до формул у каталозі">
+                    <span className="constructor-compat-soil-links-label">У каталозі:</span>
+                    {floraCompatibility.soilCatalogLinks.map((link) => (
+                      <button
+                        key={link.entityId}
+                        type="button"
+                        className="constructor-compat-soil-link"
+                        onClick={() => focusCatalogSoilFormula(link.entityId, link.label)}
+                      >
+                        {link.label}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+                {floraCompatibility.userSummary.whatToDo?.length ? (
+                  <div className="constructor-compat-user-do">
+                    <strong className="constructor-compat-user-do-label">Що зробити</strong>
+                    <ul className="constructor-compat-user-do-list" aria-label="Рекомендовані дії">
+                      {floraCompatibility.userSummary.whatToDo.map((line, idx) => (
+                        <li key={`compat-w-${idx}-${line.slice(0, 24)}`}>{line}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
               </div>
-            ) : null}
-            {floraCompatibility.userSummary.whatToDo?.length ? (
-              <div className="constructor-compat-user-do">
-                <strong className="constructor-compat-user-do-label">Що зробити</strong>
-                <ul className="constructor-compat-user-do-list" aria-label="Рекомендовані дії">
-                  {floraCompatibility.userSummary.whatToDo.map((line, idx) => (
-                    <li key={`compat-w-${idx}-${line.slice(0, 24)}`}>{line}</li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
+            )}
           </div>
         )}
 

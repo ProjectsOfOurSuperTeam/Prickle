@@ -28,7 +28,8 @@ internal sealed class AddDecorationCommandHandler
             command.Description ?? string.Empty,
             command.Category,
             command.ImageUrl ?? string.Empty,
-            command.ImageIsometricUrl ?? string.Empty);
+            command.ImageIsometricUrl ?? string.Empty,
+            command.ItemMaxSize);
 
         if (result.IsFailure)
         {
@@ -45,7 +46,8 @@ internal sealed class AddDecorationCommandHandler
             Description = decoration.Description,
             Category = decoration.Category,
             ImageUrl = decoration.ImageUrl,
-            ImageIsometricUrl = decoration.ImageIsometricUrl
+            ImageIsometricUrl = decoration.ImageIsometricUrl,
+            ItemMaxSize = decoration.ItemMaxSize
         };
         return Result.Success(response);
     }

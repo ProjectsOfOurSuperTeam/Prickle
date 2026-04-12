@@ -1,4 +1,6 @@
-﻿namespace Prickle.Domain.Decorations;
+﻿using Prickle.Domain.Projects;
+
+namespace Prickle.Domain.Decorations;
 
 public sealed class Decoration : Entity
 {
@@ -8,6 +10,7 @@ public sealed class Decoration : Entity
     public DecorationCategory Category { get; private set; }
     public string? ImageUrl { get; private set; }
     public string? ImageIsometricUrl { get; private set; }
+    public ProjectItemSize ItemMaxSize { get; private set; } = default!;
 
     private Decoration() { }
 
@@ -17,7 +20,8 @@ public sealed class Decoration : Entity
         string? description,
         DecorationCategory category,
         string? imageUrl,
-        string? imageIsometricUrl)
+        string? imageIsometricUrl,
+        ProjectItemSize itemMaxSize)
     {
         Id = id;
         Name = name;
@@ -25,6 +29,7 @@ public sealed class Decoration : Entity
         Category = category;
         ImageUrl = imageUrl;
         ImageIsometricUrl = imageIsometricUrl;
+        ItemMaxSize = itemMaxSize;
     }
 
     public static Result<Decoration> Create(
@@ -32,7 +37,8 @@ public sealed class Decoration : Entity
         string? description,
         DecorationCategory category,
         string? imageUrl,
-        string? imageIsometricUrl)
+        string? imageIsometricUrl,
+        ProjectItemSize itemMaxSize)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -45,7 +51,8 @@ public sealed class Decoration : Entity
             description?.Trim() ?? string.Empty,
             category,
             imageUrl,
-            imageIsometricUrl);
+            imageIsometricUrl,
+            itemMaxSize);
 
         return Result.Success(decoration);
     }
@@ -55,7 +62,8 @@ public sealed class Decoration : Entity
         string? description,
         DecorationCategory category,
         string? imageUrl,
-        string? imageIsometricUrl)
+        string? imageIsometricUrl,
+        ProjectItemSize itemMaxSize)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -67,6 +75,7 @@ public sealed class Decoration : Entity
         Category = category;
         ImageUrl = imageUrl;
         ImageIsometricUrl = imageIsometricUrl;
+        ItemMaxSize = itemMaxSize;
         return Result.Success(this);
     }
 }

@@ -36,7 +36,8 @@ internal sealed class UpdateDecorationCommandHandler
             command.Description,
             command.Category,
             command.ImageUrl,
-            command.ImageIsometricUrl);
+            command.ImageIsometricUrl,
+            command.ItemMaxSize);
 
         if (updateResult.IsFailure)
         {
@@ -52,7 +53,8 @@ internal sealed class UpdateDecorationCommandHandler
             Description = updateResult.Value.Description,
             Category = updateResult.Value.Category,
             ImageUrl = updateResult.Value.ImageUrl,
-            ImageIsometricUrl = updateResult.Value.ImageIsometricUrl
+            ImageIsometricUrl = updateResult.Value.ImageIsometricUrl,
+            ItemMaxSize = updateResult.Value.ItemMaxSize
         };
 
         return Result.Success(response);
