@@ -78,11 +78,11 @@
 
 ## Prerequisites
 
-- **.NET SDK 10 or higher** — Required for compiling and running the backend and orchestration layers.
-- **.NET Aspire CLI** — The primary tool used to launch the entire solution.
-- **Docker Desktop** — .NET Aspire relies on a local container runtime to automatically provision and orchestrate dependencies.
-- **Node.js 20 or higher** — .NET Aspire utilizes the local Node environment to execute the Vite development server.
-- **OpenRouter Account** — An active API key is required to utilize the generative AI visualization features.
+- **[.NET SDK 10](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) or higher** — Required for compiling and running the backend and orchestration layers.
+- **[.NET Aspire CLI](https://aspire.dev/get-started/install-cli/)** — The primary tool used to launch the entire solution.
+- **[Docker Desktop](https://www.docker.com/products/docker-desktop/)** — .NET Aspire relies on a local container runtime to automatically provision and orchestrate dependencies.
+- **[Node.js 20](https://nodejs.org/) or higher** — .NET Aspire utilizes the local Node environment to execute the Vite development server.
+- **[OpenRouter Account](https://openrouter.ai/)** — An active API key is required to utilize the generative AI visualization features.
 
 ---
 
